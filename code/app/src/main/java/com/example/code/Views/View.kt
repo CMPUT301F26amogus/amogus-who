@@ -25,7 +25,11 @@ abstract open class View: ViewObserver<Model>{
 
     }
     //Common colors go here
+    protected val light = Color(0xffffffff)
+    protected val dark = Color(0xff000000)
+    protected val gray = Color(0xff7d7e7d)
     protected val entrantHeaderBackgroundColor = Color(0xff28b019)
+    protected val entrantBackgroundColor = Color(0xffcae99d)
     protected val entrantHeaderTextColor = Color(0xffffffff)
     protected val entrantFooterBackgroundColor = Color(0xff93cd8b)
     protected val entrantFooterButtonColor = Color(0xff9bfa8e)
@@ -45,12 +49,17 @@ abstract open class View: ViewObserver<Model>{
 
     //Generic Component Composables go here
     @Composable
-    protected fun header(text: String, backgroundColor: Color, textColor: Color) {
-        Column(Modifier.fillMaxWidth().height(100.dp).background(backgroundColor)) {
+    protected fun header(headerText: String = "", subheaderText:String = "", backgroundColor: Color, textColor: Color) {
+        Column(Modifier.fillMaxWidth().height(120.dp).background(backgroundColor)) {
             Spacer(Modifier.size(25.dp))
-            Row(modifier = Modifier.fillMaxWidth().height(80.dp).background(backgroundColor)) {
+            Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
                 Spacer(Modifier.size(20.dp))
-                Text(text = text, fontSize = 60.sp, color = textColor)
+                Text(text = headerText, fontSize = 50.sp, color = textColor)
+            }
+            Spacer(Modifier.size(5.dp))
+            Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
+                Spacer(Modifier.size(60.dp))
+                Text(text = subheaderText, fontSize = 30.sp, color = textColor)
             }
         }
     }

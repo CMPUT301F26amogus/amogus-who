@@ -21,7 +21,7 @@ class MainActivity : ComponentActivity() {
         var mp = MapView()
         setContent {
             CodeTheme {
-                mp.showScreen()
+                mp.ShowScreen()
             }
         }
     }
