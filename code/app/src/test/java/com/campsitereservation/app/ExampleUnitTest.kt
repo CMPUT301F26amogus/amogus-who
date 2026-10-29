@@ -1,4 +1,4 @@
-package com.example.code
+package com.campsitereservation.app
 
 import org.junit.Test
 

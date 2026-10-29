@@ -1,4 +1,4 @@
-package com.example.code.ui.theme
+package com.campsitereservation.app.ui.theme
 
 import android.app.Activity
 import android.os.Build
