@@ -44,7 +44,6 @@ class AdminMenuView: View() {
         Column() {
             Row() {
                 header(
-                    headerText = "Home",
                     backgroundColor = headerbgColor,
                     textColor = headerTextColor,
                 )

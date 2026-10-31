@@ -64,15 +64,19 @@ abstract open class View: ViewObserver<Model>{
                          headerTextSize: Int = 40,
                          subheaderTextSize: Int = 30) {
         Column(Modifier.fillMaxWidth().height(120.dp).background(backgroundColor)) {
-            Spacer(Modifier.size(25.dp))
-            Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
-                Spacer(Modifier.size(20.dp))
-                Text(text = headerText, fontSize = headerTextSize.sp, color = textColor)
+            if (headerText!="") {
+                Spacer(Modifier.size(25.dp))
+                Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
+                    Spacer(Modifier.size(20.dp))
+                    Text(text = headerText, fontSize = headerTextSize.sp, color = textColor)
+                }
             }
-            Spacer(Modifier.size(5.dp))
-            Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
-                Spacer(Modifier.size(60.dp))
-                Text(text = subheaderText, fontSize = subheaderTextSize.sp, color = textColor)
+            if (subheaderText!="") {
+                Spacer(Modifier.size(5.dp))
+                Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
+                    Spacer(Modifier.size(60.dp))
+                    Text(text = subheaderText, fontSize = subheaderTextSize.sp, color = textColor)
+                }
             }
         }
     }
