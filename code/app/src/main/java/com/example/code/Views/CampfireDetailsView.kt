@@ -37,7 +37,7 @@ class CampfireDetailsView(): View() {
         val footerButtonColor = entrantFooterButtonColor
         Column() {
             Row() {
-                header(
+                TextHeader(
                     headerText = "CAMPSITENAME",
                     subheaderText = "LOCATION",
                     backgroundColor = headerbgColor,

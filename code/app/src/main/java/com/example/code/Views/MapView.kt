@@ -16,7 +16,7 @@ class MapView: View() {
     public fun ShowScreen(){
         Column() {
             Row() {
-                header(
+                TextHeader(
                     headerText = "Map",
                     backgroundColor = entrantHeaderBackgroundColor,
                     textColor = entrantHeaderTextColor,

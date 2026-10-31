@@ -28,7 +28,7 @@ interface ViewObserver<M> {
     fun update( model: M )
 }
 
-abstract open class View: ViewObserver<Model>{
+abstract class View: ViewObserver<Model>{
     override fun update(model: Model) {
 
     }
@@ -54,16 +54,17 @@ abstract open class View: ViewObserver<Model>{
     protected val adminFooterBackgroundColor = Color(0xff5aae8c)
     protected val adminFooterButtonColor = Color(0xff9bfa8e)
     protected val adminFooterTextColor = Color(0xff4a4459)
+    private val headerHeight = 120
 
     //Generic Component Composables go here
     @Composable
-    protected fun header(headerText: String = "",
+    protected fun TextHeader(headerText: String = "",
                          subheaderText:String = "",
                          backgroundColor: Color,
                          textColor: Color,
                          headerTextSize: Int = 40,
                          subheaderTextSize: Int = 30) {
-        Column(Modifier.fillMaxWidth().height(120.dp).background(backgroundColor)) {
+        Column(Modifier.fillMaxWidth().height(headerHeight.dp).background(backgroundColor)) {
             if (headerText!="") {
                 Spacer(Modifier.size(25.dp))
                 Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
@@ -78,6 +79,12 @@ abstract open class View: ViewObserver<Model>{
                     Text(text = subheaderText, fontSize = subheaderTextSize.sp, color = textColor)
                 }
             }
+        }
+    }
+    @Composable
+    protected fun CustomHeader(content: @Composable () -> Unit, backgroundColor: Color){
+        Column(Modifier.fillMaxWidth().height(headerHeight.dp).background(backgroundColor)) {
+            content()
         }
     }
     @Composable

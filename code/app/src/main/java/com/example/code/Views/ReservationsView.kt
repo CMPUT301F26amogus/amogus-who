@@ -32,7 +32,7 @@ class ReservationsView: View() {
     public fun ShowScreen() {
         Column() {
             Row() {
-                header(
+                TextHeader(
                     headerText = "Reservations",
                     backgroundColor = headerbgColor,
                     textColor = headerTextColor,
