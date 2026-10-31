@@ -32,7 +32,7 @@ class LotteriesView: View() {
     public fun ShowScreen() {
         Column() {
             Row() {
-                TextHeader(
+                Header(
                     headerText = "Lotteries",
                     backgroundColor = headerbgColor,
                     textColor = headerTextColor,

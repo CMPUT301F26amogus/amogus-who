@@ -58,33 +58,33 @@ abstract class View: ViewObserver<Model>{
 
     //Generic Component Composables go here
     @Composable
-    protected fun TextHeader(headerText: String = "",
+    protected fun Header(headerText: String = "",
                          subheaderText:String = "",
-                         backgroundColor: Color,
-                         textColor: Color,
+                         backgroundColor: Color = entrantHeaderBackgroundColor,
+                         textColor: Color = entrantHeaderTextColor,
                          headerTextSize: Int = 40,
-                         subheaderTextSize: Int = 30) {
+                         subheaderTextSize: Int = 30,
+                         customcontent: @Composable (() -> Unit)? = null,
+    ) {
         Column(Modifier.fillMaxWidth().height(headerHeight.dp).background(backgroundColor)) {
-            if (headerText!="") {
-                Spacer(Modifier.size(25.dp))
-                Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
-                    Spacer(Modifier.size(20.dp))
-                    Text(text = headerText, fontSize = headerTextSize.sp, color = textColor)
+            if (customcontent==null){
+                if (headerText!="") {
+                    Spacer(Modifier.size(25.dp))
+                    Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
+                        Spacer(Modifier.size(20.dp))
+                        Text(text = headerText, fontSize = headerTextSize.sp, color = textColor)
+                    }
                 }
-            }
-            if (subheaderText!="") {
-                Spacer(Modifier.size(5.dp))
-                Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
-                    Spacer(Modifier.size(60.dp))
-                    Text(text = subheaderText, fontSize = subheaderTextSize.sp, color = textColor)
+                if (subheaderText!="") {
+                    Spacer(Modifier.size(5.dp))
+                    Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
+                        Spacer(Modifier.size(60.dp))
+                        Text(text = subheaderText, fontSize = subheaderTextSize.sp, color = textColor)
+                    }
                 }
+            }else{
+                customcontent()
             }
-        }
-    }
-    @Composable
-    protected fun CustomHeader(content: @Composable () -> Unit, backgroundColor: Color){
-        Column(Modifier.fillMaxWidth().height(headerHeight.dp).background(backgroundColor)) {
-            content()
         }
     }
     @Composable

@@ -43,7 +43,7 @@ class AdminMenuView: View() {
     public fun ShowScreen(){
         Column() {
             Row() {
-                TextHeader(
+                Header(
                     backgroundColor = headerbgColor,
                     textColor = headerTextColor,
                 )
