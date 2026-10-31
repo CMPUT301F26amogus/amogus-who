@@ -1,5 +1,5 @@
 import java.sql.Time
 
-class Message(var messageId: Int, var senderId: Int, var recipientId: Int,
-              var reservationId: Int, val content:String, val timeStamp: Time): Model() {
+class Message(val messageId: Int, val senderId: Int, val recipientId: Int,
+              val reservationId: Int, var content:String, var timeStamp: Time): Model() {
 }

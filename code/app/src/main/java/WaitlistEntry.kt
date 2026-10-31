@@ -1,5 +1,5 @@
 import java.util.Date
 
-class WaitlistEntry(var entryId: Int, var lotId: Int, var entrantId: Int,
-                    val joinedAt: Date, val waitlistStatus: WaitlistStatus): Model() {
+class WaitlistEntry(val entryId: Int, val lotId: Int, val entrantId: Int,
+                    var joinedAt: Date, var waitlistStatus: WaitlistStatus): Model() {
 }

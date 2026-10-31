@@ -1,7 +1,7 @@
 import java.util.Date
 
-class Lottery(var lotId: Int, var campIds: ArrayList<Campsite>,
-              val regStart: Date, val regEnd: Date, val bookStart: Date,
-              val bookEnd: Date, val winnerCount: Int, val waitlistCap: Int,
-              val lotteryStatus: LotteryStatus): Model() {
+class Lottery(val lotId: Int, val campIds: ArrayList<Campsite>,
+              var regStart: Date, var regEnd: Date, var bookStart: Date,
+              var bookEnd: Date, var winnerCount: Int, var waitlistCap: Int,
+              var lotteryStatus: LotteryStatus): Model() {
 }

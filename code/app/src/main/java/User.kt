@@ -1,4 +1,3 @@
-class User(var userId: Int, val name: String, val email: String,
-           val phone: String, val role: UserRole): Model() {
-
+class User(val userId: Int, var name: String, var email: String,
+           var phone: String, val role: UserRole): Model() {
 }

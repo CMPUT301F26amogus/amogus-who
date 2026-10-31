@@ -1,6 +1,6 @@
 import java.util.Date
 
-class Reservation(var reservationId: Int, var entrantId: Int,
-                  var campId: Int, var lotId: Int, val startDate: Date,
-                  val endDate: Date, val reservationStatus: ReservationStatus): Model() {
+class Reservation(val reservationId: Int, val entrantId: Int,
+                  val campId: Int, val lotId: Int, var startDate: Date,
+                  var endDate: Date, var reservationStatus: ReservationStatus): Model() {
 }
