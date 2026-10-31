@@ -15,6 +15,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Views.Option
 
 interface ViewObserver<M> {
     fun update( model: M )
@@ -54,7 +55,7 @@ abstract open class View: ViewObserver<Model>{
             Spacer(Modifier.size(25.dp))
             Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
                 Spacer(Modifier.size(20.dp))
-                Text(text = headerText, fontSize = 50.sp, color = textColor)
+                Text(text = headerText, fontSize = 40.sp, color = textColor)
             }
             Spacer(Modifier.size(5.dp))
             Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {

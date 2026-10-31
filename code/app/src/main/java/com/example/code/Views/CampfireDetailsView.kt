@@ -44,46 +44,46 @@ class CampfireDetailsView(): View() {
                     textColor = headerTextColor,
                 )
             }
-            Row(modifier = Modifier.fillMaxWidth().height(80.dp).background(light)) {
-                Text(text = "Owner:", fontSize = 25.sp, color = gray)
+            Row(modifier = Modifier.fillMaxWidth().height(65.dp).background(light)) {
+                Text(text = "Owner:", fontSize = 20.sp, color = gray)
                 Spacer(Modifier.width(15.dp))
                 Column(Modifier.fillMaxWidth().height(100.dp)){
                     Spacer(Modifier.height(25.dp))
-                    Text(text = "OWNERNAME", fontSize = 35.sp, color = dark)
+                    Text(text = "OWNERNAME", fontSize = 30.sp, color = dark)
                 }
             }
             Row(modifier = Modifier.fillMaxWidth().weight(1f).background(bgColor)) {
                 Column(modifier = Modifier.width(500.dp)) {
                     //main screen here
                     Spacer(modifier = Modifier.height(10.dp))
-                    Row(modifier = Modifier.height(200.dp)) {
+                    Row(modifier = Modifier.height(180.dp)) {
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.width(150.dp).background(bgColor)) {
                             //ratings widget
-                            Row(modifier = Modifier.fillMaxWidth().height(55.dp).background(light)) {
+                            Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
                                 Text(text = "Rating: RATING", fontSize = 15.sp)
                             }
-                            Spacer(modifier = Modifier.height(20.dp).background(bgColor).fillMaxWidth())
-                            Row(modifier = Modifier.fillMaxWidth().height(55.dp).background(light)) {
+                            Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
+                            Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
                                 Text(text = "Max Occupancy: OCCUPANCY", fontSize = 15.sp)
                             }
-                            Spacer(modifier = Modifier.height(20.dp).background(bgColor).fillMaxWidth())
-                            Row(modifier = Modifier.fillMaxWidth().height(55.dp).background(light)) {
+                            Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
+                            Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
                                 Text(text = "Address: ADDRESS", fontSize = 15.sp)
                             }
                         }
-                        Spacer(modifier = Modifier.width(20.dp))
+                        Spacer(modifier = Modifier.width(15.dp))
                         Column(Modifier.width(225.dp).background(light)) {
                             //map widget
                             Spacer(modifier = Modifier.fillMaxHeight())
                         }
-                        Spacer(modifier = Modifier.width(20.dp))
+                        Spacer(modifier = Modifier.width(15.dp))
                     }
                     Spacer(modifier = Modifier.width(5.dp))
                     Row(modifier = Modifier.height(100.dp)){
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.fillMaxWidth().background(bgColor)) {
-                            Spacer(modifier = Modifier.height(20.dp).background(bgColor).fillMaxWidth())
+                            Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.width(400.dp).height(70.dp).background(light)) {
                                 Text(text = "", fontSize = 13.sp)
                             }
@@ -93,28 +93,28 @@ class CampfireDetailsView(): View() {
                     Row(modifier = Modifier.height(100.dp)){
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.fillMaxWidth().background(bgColor)) {
-                            Spacer(modifier = Modifier.height(20.dp).background(bgColor).fillMaxWidth())
+                            Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.width(400.dp).height(70.dp).background(light)) {
                                 Text(text = "Tags:", fontSize = 15.sp)
                             }
                         }
                     }
                     Spacer(modifier = Modifier.width(5.dp))
-                    Row(modifier = Modifier.height(100.dp)){
+                    Row(modifier = Modifier.height(80.dp)){
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.fillMaxWidth().background(bgColor)) {
-                            Spacer(modifier = Modifier.height(20.dp).background(bgColor).fillMaxWidth())
-                            Row(modifier = Modifier.width(400.dp).height(70.dp).background(light)) {
+                            Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
+                            Row(modifier = Modifier.width(400.dp).height(65.dp).background(light)) {
                                 Text(text = "TOS:", fontSize = 15.sp)
                             }
                         }
                     }
                     Spacer(modifier = Modifier.width(5.dp))
-                    Row(modifier = Modifier.height(100.dp)){
+                    Row(modifier = Modifier.height(90.dp)){
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.width(250.dp).background(bgColor)) {
-                            Spacer(modifier = Modifier.height(20.dp).background(bgColor).fillMaxWidth())
-                            Row(modifier = Modifier.width(250.dp).height(70.dp).background(light)) {
+                            Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
+                            Row(modifier = Modifier.width(250.dp).height(65.dp).background(light)) {
                                 Text(text = "Details:", fontSize = 15.sp)
                             }
                         }
