@@ -55,15 +55,15 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.width(150.dp).background(bgColor)) {
                             //ratings widget
                             Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
-                                Text(text = "Rating: RATING", fontSize = 15.sp)
+                                Text(text = "Rating: RATING", fontSize = 15.sp, color = textColor)
                             }
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
-                                Text(text = "Max Occupancy: OCCUPANCY", fontSize = 15.sp)
+                                Text(text = "Max Occupancy: OCCUPANCY", fontSize = 15.sp, color = textColor)
                             }
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
-                                Text(text = "Address: ADDRESS", fontSize = 15.sp)
+                                Text(text = "Address: ADDRESS", fontSize = 15.sp, color = textColor)
                             }
                         }
                         Spacer(modifier = Modifier.width(15.dp))
@@ -89,7 +89,7 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.fillMaxWidth().background(bgColor)) {
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.width(400.dp).height(70.dp).background(light)) {
-                                Text(text = "Tags:", fontSize = 15.sp)
+                                Text(text = "Tags:", fontSize = 15.sp, color = textColor)
                             }
                         }
                     }
@@ -99,7 +99,7 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.fillMaxWidth().background(bgColor)) {
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.width(400.dp).height(65.dp).background(light)) {
-                                Text(text = "TOS:", fontSize = 15.sp)
+                                Text(text = "TOS:", fontSize = 15.sp, color = textColor)
                             }
                         }
                     }
@@ -109,7 +109,7 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.width(250.dp).background(bgColor)) {
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.width(250.dp).height(65.dp).background(light)) {
-                                Text(text = "Details:", fontSize = 15.sp)
+                                Text(text = "Details:", fontSize = 15.sp, color = textColor)
                             }
                         }
                         Spacer(modifier = Modifier.width(5.dp))
