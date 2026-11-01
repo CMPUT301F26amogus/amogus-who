@@ -24,7 +24,7 @@ class MapView: View() {
             }
             Spacer(Modifier.weight(1f))
             Row() {
-                footer(
+                Footer(
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,

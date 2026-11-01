@@ -60,64 +60,108 @@ abstract class View: ViewObserver<Model>{
 
     //Generic Component Composables go here
     @Composable
-    protected fun Header(headerText: String = "",
-                         subheaderText:String = "",
-                         backgroundColor: Color = entrantHeaderBackgroundColor,
-                         textColor: Color = entrantHeaderTextColor,
-                         headerTextSize: Int = 40,
-                         subheaderTextSize: Int = 30,
-                         customcontent: @Composable (() -> Unit)? = null,
+    protected fun Header(
+        headerText: String = "",
+        subheaderText: String = "",
+        backgroundColor: Color = entrantHeaderBackgroundColor,
+        textColor: Color = entrantHeaderTextColor,
+        headerTextSize: Int = 40,
+        subheaderTextSize: Int = 30,
+        customContent: @Composable (() -> Unit)? = null,
     ) {
-        Column(Modifier.fillMaxWidth().height(headerHeight.dp).background(backgroundColor)) {
-            if (customcontent==null){
-                if (headerText!="") {
+        Column(Modifier
+            .fillMaxWidth()
+            .height(headerHeight.dp)
+            .background(backgroundColor)
+        ) {
+            if (customContent == null) {
+                if (headerText != "") {
                     Spacer(Modifier.size(25.dp))
-                    Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .background(backgroundColor)
+                    ) {
                         Spacer(Modifier.size(20.dp))
-                        Text(text = headerText, fontSize = headerTextSize.sp, color = textColor)
+                        Text(
+                            text = headerText,
+                            fontSize = headerTextSize.sp,
+                            color = textColor,
+                        )
                     }
                 }
-                if (subheaderText!="") {
+                if (subheaderText != "") {
                     Spacer(Modifier.size(5.dp))
-                    Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(backgroundColor)) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(50.dp)
+                            .background(backgroundColor)
+                    ) {
                         Spacer(Modifier.size(60.dp))
-                        Text(text = subheaderText, fontSize = subheaderTextSize.sp, color = textColor)
+                        Text(
+                            text = subheaderText,
+                            fontSize = subheaderTextSize.sp,
+                            color = textColor,
+                        )
                     }
                 }
-            }else{
-                customcontent()
+            } else {
+                customContent()
             }
         }
     }
     @Composable
-    protected fun footer(backgroundColor:Color,
-                         textColor:Color,
-                         buttonColor: Color,
-                         excludeButtons: Boolean = false){
-        Column(Modifier.fillMaxWidth().height(100.dp).background(backgroundColor)) {
+    protected fun Footer(
+        backgroundColor: Color,
+        textColor: Color,
+        buttonColor: Color,
+        excludeButtons: Boolean = false,
+    ) {
+        Column(
+            Modifier
+                .fillMaxWidth()
+                .height(100.dp)
+                .background(backgroundColor)
+        ) {
             Spacer(Modifier.size(25.dp))
-            Row(modifier = Modifier.fillMaxWidth().height(80.dp).background(backgroundColor)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(80.dp)
+                    .background(backgroundColor)
+            ) {
                 if (!excludeButtons) {
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
                         onClick = {},
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                     ) {
-                        Text(text = "Back", color = textColor)
+                        Text(
+                            text = "Back",
+                            color = textColor,
+                        )
                     }
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
                         onClick = {},
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                     ) {
-                        Text(text = "Home", color = textColor)
+                        Text(
+                            text = "Home",
+                            color = textColor,
+                        )
                     }
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
                         onClick = {},
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                     ) {
-                        Text(text = "Profile", color = textColor)
+                        Text(
+                            text = "Profile",
+                            color = textColor,
+                        )
                     }
                 }
             }
@@ -140,7 +184,12 @@ abstract class View: ViewObserver<Model>{
                 .height(60.dp)
                 .clickable(enabled = true, onClick = { tab.option })
         ) {
-            Row(modifier = Modifier.background(tab.col).width(120.dp).fillMaxHeight()) {
+            Row(
+                modifier = Modifier
+                    .background(tab.col)
+                    .width(120.dp)
+                    .fillMaxHeight()
+            ) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Column(Modifier.fillMaxSize()) {
                     Spacer(modifier = Modifier.height(10.dp))

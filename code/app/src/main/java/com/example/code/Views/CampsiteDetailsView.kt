@@ -133,7 +133,7 @@ class CampsiteDetailsView(): View() {
                 }
             }
             Row() {
-                footer(
+                Footer(
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -149,7 +149,7 @@ fun CampsiteDetailsPreview() {
     val v = CampsiteDetailsView()
     CodeTheme {
         (
-                v.ShowScreen()
+            v.ShowScreen()
         )
     }
 }
