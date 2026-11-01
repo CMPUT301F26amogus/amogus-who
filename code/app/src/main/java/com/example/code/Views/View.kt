@@ -22,7 +22,6 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.code.Views.Option
 
 interface ViewObserver<M> {
     fun update( model: M )
@@ -209,3 +208,5 @@ class Tab(name: String, color: Color, option: (Unit)->Unit){
     var col = color
     var option = option
 }
+
+class Option(var name: String, var route: String) {}
