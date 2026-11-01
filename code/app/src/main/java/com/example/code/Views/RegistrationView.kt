@@ -122,7 +122,7 @@ class RegistrationView: View() {
                 }
             }
             Row() {
-                footer(
+                Footer(
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
