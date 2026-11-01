@@ -20,7 +20,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
 
-class CampfireDetailsView(): View() {
+class CampsiteDetailsView(): View() {
     @Composable
     public fun ShowScreen(){
         val bgColor = entrantBackgroundColor
@@ -133,7 +133,7 @@ class CampfireDetailsView(): View() {
                 }
             }
             Row() {
-                footer(
+                Footer(
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -145,11 +145,11 @@ class CampfireDetailsView(): View() {
 
 @Preview(showBackground = true)
 @Composable
-fun CampfireDetailsPreview() {
-    val v = CampfireDetailsView()
+fun CampsiteDetailsPreview() {
+    val v = CampsiteDetailsView()
     CodeTheme {
         (
-                v.ShowScreen()
+            v.ShowScreen()
         )
     }
 }

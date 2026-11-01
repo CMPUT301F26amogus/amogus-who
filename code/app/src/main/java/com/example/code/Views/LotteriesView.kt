@@ -48,7 +48,7 @@ class LotteriesView: View() {
 
             }
             Row() {
-                footer(
+                Footer(
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -64,7 +64,7 @@ fun LotteriesViewPreview() {
     val mp = LotteriesView()
     CodeTheme {
         (
-                mp.ShowScreen()
-                )
+            mp.ShowScreen()
+        )
     }
 }

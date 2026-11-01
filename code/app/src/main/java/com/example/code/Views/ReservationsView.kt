@@ -45,7 +45,7 @@ class ReservationsView: View() {
 
             }
             Row() {
-                footer(
+                Footer(
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -61,7 +61,7 @@ fun ReservationsViewPreview() {
     val mp = ReservationsView()
     CodeTheme {
         (
-                mp.ShowScreen()
+            mp.ShowScreen()
         )
     }
 }
