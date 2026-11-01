@@ -16,7 +16,7 @@ class MapView: View() {
     public fun ShowScreen(){
         Column() {
             Row() {
-                header(
+                Header(
                     headerText = "Map",
                     backgroundColor = entrantHeaderBackgroundColor,
                     textColor = entrantHeaderTextColor,
@@ -24,7 +24,7 @@ class MapView: View() {
             }
             Spacer(Modifier.weight(1f))
             Row() {
-                footer(
+                Footer(
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,

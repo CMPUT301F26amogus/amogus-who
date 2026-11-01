@@ -43,8 +43,7 @@ class AdminMenuView: View() {
     public fun ShowScreen(){
         Column() {
             Row() {
-                header(
-                    headerText = "Home",
+                Header(
                     backgroundColor = headerbgColor,
                     textColor = headerTextColor,
                 )
@@ -62,7 +61,7 @@ class AdminMenuView: View() {
                 }
             }
             Row() {
-                footer(
+                Footer(
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -113,7 +112,7 @@ fun AdminMenuViewPreview() {
     val mp = AdminMenuView()
     CodeTheme {
         (
-                mp.ShowScreen()
+            mp.ShowScreen()
         )
     }
 }
