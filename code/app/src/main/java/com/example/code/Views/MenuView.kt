@@ -25,10 +25,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
 
-class Option(name:String,route:String){
-    var name = name
-    var route = route
-}
+class Option(var name: String, var route: String) {}
 class AdminMenuView: View() {
     val bgColor = entrantBackgroundColor
     val headerbgColor = entrantHeaderBackgroundColor
