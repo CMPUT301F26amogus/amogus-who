@@ -9,66 +9,78 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
-class OwnerIntegrationTests {
+class AdminIntegrationTests {
     @get:Rule
-    val composeTestRule = createAndroidComposeRule<OwnerHomeView>() // access MainActivity
+    val composeTestRule = createAndroidComposeRule<MainActivity>() // access MainActivity
+    //TODO Write a before to fill role
     @Test
-    fun owner_navigate_to_messages() {
-        // navigate to Messages
+    fun admin_navigate_to_browse_profiles() {
+        // navigate to browse profiles
         composeTestRule
-            .onNodeWithTag("Messages")
+            .onNodeWithTag("Browse Profiles")
             .performClick()
-        // verify messages
+        // verify browse profiles
         composeTestRule
-            .onNodeWithText("Messages")
+            .onNodeWithText("Browse Profiles")
             .assertExists()
     }
     @Test
-    fun owner_navigate_to_lotteries() {
-        // navigate to lotteries
+    fun admin_navigate_to_browse_campsites() {
+        // navigate to browse campsites
         composeTestRule
-            .onNodeWithTag("Lotteries")
+            .onNodeWithTag("Browse Campsites")
             .performClick()
-        // verify lotteries
+        // verify browse campsites
         composeTestRule
-            .onNodeWithText("Lotteries")
+            .onNodeWithText("Browse Campsites")
             .assertExists()
     }
     @Test
-    fun owner_navigate_to_reservations() {
-        // navigate to reservations
+    fun admin_navigate_to_browse_images() {
+        // navigate to browse images
         composeTestRule
-            .onNodeWithTag("My Reservations")
+            .onNodeWithTag("Browse Images")
             .performClick()
-        // verify reservations
+        // verify browse images
         composeTestRule
-            .onNodeWithText("Reservations")
+            .onNodeWithText("Images")
             .assertExists()
     }
     @Test
-    fun owner_navigate_to_scan() {
-        // navigate to scan
+    fun admin_navigate_to_notification_logs() {
+        // navigate to notification logs
         composeTestRule
-            .onNodeWithTag("QR Codes")
+            .onNodeWithTag("Notification Logs")
             .performClick()
-        // verify reservations
+        // verify notification logs
         composeTestRule
-            .onNodeWithText("QR Code")
+            .onNodeWithText("Notification Logs")
             .assertExists()
     }
     @Test
-    fun owner_navigate_to_profile() {
+    fun admin_navigate_to_message_logs() {
+        // navigate to message logs
+        composeTestRule
+            .onNodeWithTag("Message Logs")
+            .performClick()
+        // verify notification logs
+        composeTestRule
+            .onNodeWithText("Message Logs")
+            .assertExists()
+    }
+    @Test
+    fun admin_navigate_to_profile() {
         // navigate to profile
         composeTestRule
             .onNodeWithTag("Profile")
             .performClick()
-        // verify reservations
+        // verify profile
         composeTestRule
             .onNodeWithText("Profile Settings")
             .assertExists()
     }
     @Test
-    fun owner_navigate_to_campsites() {
+    fun admin_navigate_to_campsites() {
         // navigate to campsites
         composeTestRule
             .onNodeWithTag("My Campsites")

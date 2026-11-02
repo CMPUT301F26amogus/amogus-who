@@ -9,11 +9,12 @@ import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
-class EntrantIntegrationTests {
+class OwnerIntegrationTests {
     @get:Rule
-    val composeTestRule = createAndroidComposeRule<EntrantHomeView>() // access MainActivity
+    val composeTestRule = createAndroidComposeRule<MainActivity>() // access MainActivity
+    //TODO Write a before to fill role
     @Test
-    fun entrant_navigate_to_messages() {
+    fun owner_navigate_to_messages() {
         // navigate to Messages
         composeTestRule
             .onNodeWithTag("Messages")
@@ -24,29 +25,10 @@ class EntrantIntegrationTests {
             .assertExists()
     }
     @Test
-    fun entrant_navigate_to_search() {
-        // navigate to search
-        composeTestRule
-            .onNodeWithTag("Search")
-            .performClick()
-        // verify search
-        composeTestRule
-            .onNodeWithText("Search")
-            .assertExists()
-        // execute a search
-        composeTestRule
-            .onNodeWithTag("Search")
-            .performClick()
-        // verify results page
-        composeTestRule
-            .onNodeWithText("Search Results")
-            .assertExists()
-    }
-    @Test
-    fun entrant_navigate_to_lotteries() {
+    fun owner_navigate_to_lotteries() {
         // navigate to lotteries
         composeTestRule
-            .onNodeWithTag("My Lotteries")
+            .onNodeWithTag("Lotteries")
             .performClick()
         // verify lotteries
         composeTestRule
@@ -54,7 +36,7 @@ class EntrantIntegrationTests {
             .assertExists()
     }
     @Test
-    fun entrant_navigate_to_reservations() {
+    fun owner_navigate_to_reservations() {
         // navigate to reservations
         composeTestRule
             .onNodeWithTag("My Reservations")
@@ -65,36 +47,47 @@ class EntrantIntegrationTests {
             .assertExists()
     }
     @Test
-    fun entrant_navigate_to_scan() {
+    fun owner_navigate_to_scan() {
         // navigate to scan
         composeTestRule
-            .onNodeWithTag("Scan Codes")
+            .onNodeWithTag("QR Codes")
             .performClick()
-        // verify reservations
+        // verify scan
         composeTestRule
-            .onNodeWithText("Scan Codes")
+            .onNodeWithText("QR Code")
             .assertExists()
     }
     @Test
-    fun entrant_navigate_to_profile() {
+    fun owner_navigate_to_profile() {
         // navigate to profile
         composeTestRule
             .onNodeWithTag("Profile")
             .performClick()
-        // verify reservations
+        // verify profile
         composeTestRule
             .onNodeWithText("Profile Settings")
             .assertExists()
     }
     @Test
-    fun _navigate_to_profile() {
-        // navigate to profile
+    fun owner_navigate_to_campsites() {
+        // navigate to campsites
         composeTestRule
-            .onNodeWithTag("Profile")
+            .onNodeWithTag("My Campsites")
             .performClick()
-        // verify reservations
+        // verify campsites
         composeTestRule
-            .onNodeWithText("Profile Settings")
+            .onNodeWithText("My Campsites")
+            .assertExists()
+    }
+    @Test
+    fun owner_navigate_to_notifications() {
+        // navigate to campsites
+        composeTestRule
+            .onNodeWithTag("Notifications")
+            .performClick()
+        // verify campsites
+        composeTestRule
+            .onNodeWithText("Notifications")
             .assertExists()
     }
 }

@@ -4,15 +4,15 @@ import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
-import androidx.compose.ui.test.performTextInput
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
-class IntegrationTests {
+class EntrantIntegrationTests {
     @get:Rule
-    val composeTestRule = createAndroidComposeRule<EntrantHome>() // access MainActivity
+    val composeTestRule = createAndroidComposeRule<MainActivity>() // access MainActivity
+    //TODO Write a before to fill role
     @Test
     fun entrant_navigate_to_messages() {
         // navigate to Messages
@@ -71,7 +71,7 @@ class IntegrationTests {
         composeTestRule
             .onNodeWithTag("Scan Codes")
             .performClick()
-        // verify reservations
+        // verify scan
         composeTestRule
             .onNodeWithText("Scan Codes")
             .assertExists()
@@ -82,20 +82,20 @@ class IntegrationTests {
         composeTestRule
             .onNodeWithTag("Profile")
             .performClick()
-        // verify reservations
+        // verify profile
         composeTestRule
             .onNodeWithText("Profile Settings")
             .assertExists()
     }
     @Test
-    fun _navigate_to_profile() {
-        // navigate to profile
+    fun entrant_navigate_to_notifications() {
+        // navigate to campsites
         composeTestRule
-            .onNodeWithTag("Profile")
+            .onNodeWithTag("Notifications")
             .performClick()
-        // verify reservations
+        // verify campsites
         composeTestRule
-            .onNodeWithText("Profile Settings")
+            .onNodeWithText("Notifications")
             .assertExists()
     }
 }
