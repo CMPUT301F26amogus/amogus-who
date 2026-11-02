@@ -29,10 +29,17 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Notifications
+import androidx.compose.material3.FilledIconButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -55,6 +62,46 @@ abstract class HomeView : View() {
 
     @Composable
     protected open fun CustomHeader() {}
+
+    @Composable
+    protected fun ProfileButton(
+        onClickProfile: () -> Unit,
+        modifier: Modifier = Modifier
+    ) {
+        FilledIconButton(
+            onClick = {},
+            modifier = modifier,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = profilePurple,
+                contentColor = Color.White,
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Person,
+                contentDescription = "Profile",
+            )
+        }
+    }
+
+    @Composable
+    protected fun NotificationsButton(
+        onClickProfile: () -> Unit,
+        modifier: Modifier = Modifier
+    ) {
+        FilledIconButton(
+            onClick = {},
+            modifier = modifier,
+            colors = IconButtonDefaults.filledIconButtonColors(
+                containerColor = Color.White,
+                contentColor = Color.Black,
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Notifications,
+                contentDescription = "Notifications",
+            )
+        }
+    }
 
     @Composable
     private fun OptionRow(option: Option, onClickOption: (Option) -> Unit) {
@@ -147,8 +194,6 @@ abstract class HomeView : View() {
                 )
             }
         }
-
     }
-
 }
 

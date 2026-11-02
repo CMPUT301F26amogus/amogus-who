@@ -1,3 +1,21 @@
+/*
+* View.kt : the base View class
+* Copyright (C) 2026 Cash Popik (cpopik@ualberta.ca), Nathaniel Edillon (nedillon@ualberta.ca)
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <https://www.gnu.org/licenses/>.
+* */
+
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
@@ -55,6 +73,7 @@ abstract class View: ViewObserver<Model>{
     protected val adminFooterTextColor = Color(0xff4a4459)
     protected val textColor = Color(0xff12553a)
     protected val creamBG = Color(0xffe4eeed)
+    protected val profilePurple = Color(0xFF6750A4)
     private val headerHeight = 120
 
     //Generic Component Composables go here
@@ -107,7 +126,8 @@ abstract class View: ViewObserver<Model>{
                     }
                 }
             } else {
-                customContent()
+                Spacer(Modifier.height(30.dp))
+                customContent() // takes up 90.dp
             }
         }
     }
