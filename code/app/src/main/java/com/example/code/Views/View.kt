@@ -29,14 +29,12 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -205,7 +203,7 @@ abstract class View: ViewObserver<Model>{
         ) {
             Row(
                 modifier = Modifier
-                    .background(tab.col)
+                    .background(tab.color)
                     .width(120.dp)
                     .fillMaxHeight()
             ) {
@@ -225,10 +223,6 @@ abstract class View: ViewObserver<Model>{
         }
     }
 }
-class Tab(name: String, color: Color, option: (Unit)->Unit){
-    var name = name
-    var col = color
-    var option = option
-}
+class Tab(var name: String, var color: Color, var option: (Unit) -> Unit) {}
 
 class Option(var name: String, var route: String) {}
