@@ -1,0 +1,53 @@
+# builds the kdoc site with dokka and puts it on github pages
+# runs on every push to dev or by hand from the actions tab
+name: Docs
+
+on:
+  push:
+    branches: [dev]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# only one deploy at a time and dont cancel one thats halfway done
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '25'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: ./code
+      - name: Build docs with Dokka
+        run: ./gradlew :app:dokkaGeneratePublicationHtml
+        working-directory: ./code
+      - name: Setup Pages
+        uses: actions/configure-pages@v5
+      - name: Upload docs
+        uses: actions/upload-pages-artifact@v4
+        with:
+          path: code/app/build/dokka/html
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
