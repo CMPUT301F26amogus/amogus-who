@@ -1,6 +1,25 @@
 package com.example.code.Model
 
-// campsites are equal when they have the same id
+/**
+ * a campsite listed by an owner
+ *
+ * two campsites are equal when they have the same [id]
+ *
+ * @property id unique id for this campsite
+ * @property ownerId device id of the owner who listed it
+ * @property location where it is on the map
+ * @property description what its like and what it has
+ * @property rulesAndPolicy rules and cancellation policy entrants agree to
+ * @property imageUrl link to the promo image or null if there isnt one
+ * @property availability which nights are open and booked
+ * @param name cant be blank
+ * @param maxOccupancy most guests allowed and must be more than 0
+ * @param pricePerNight cost per night and must be 0 or more
+ * @param amenities things like cookhouse or tennis court
+ * @param tags search tags
+ * @param ratings saved ratings to load
+ * @throws IllegalArgumentException if any field is invalid
+ */
 class Campsite(
     val id: String,
     val ownerId: String,
@@ -21,20 +40,35 @@ class Campsite(
         require(ownerId.isNotBlank()) { "Owner ID must not be blank" }
     }
 
+    /**
+     * the campsite name trimmed
+     *
+     * @throws IllegalArgumentException if set to something blank
+     */
     var name: String = validName(name)
         set(value) { field = validName(value) }
 
+    /**
+     * most guests allowed
+     *
+     * @throws IllegalArgumentException if set to 0 or less
+     */
     var maxOccupancy: Int = validOccupancy(maxOccupancy)
         set(value) { field = validOccupancy(value) }
 
+    /**
+     * cost per night
+     *
+     * @throws IllegalArgumentException if set below 0 or not a real number
+     */
     var pricePerNight: Double = validPrice(pricePerNight)
         set(value) { field = validPrice(value) }
 
-    // trimmed with blanks dropped
+    /** amenities trimmed with blanks and duplicates dropped */
     var amenities: List<String> = cleanAmenities(amenities)
         set(value) { field = cleanAmenities(value) }
 
-    // lowercase so filtering by tag doesnt care about caps
+    /** tags in lowercase so filtering by tag doesnt care about caps */
     var tags: Set<String> = cleanTags(tags)
         set(value) { field = cleanTags(value) }
 
@@ -45,27 +79,51 @@ class Campsite(
         ratings.forEach { rate(it) }
     }
 
+    /** every rating with one per user */
     val ratings: List<Rating>
         get() = _ratings.values.toList()
 
+    /** how many people rated it */
     val ratingCount: Int
         get() = _ratings.size
 
-    // null when nobody has rated it yet
+    /** average score or null when nobody has rated it yet */
     val averageRating: Double?
         get() = if (_ratings.isEmpty()) null else _ratings.values.map { it.score }.average()
 
+    /**
+     * checks if a group fits
+     *
+     * @param guests how many people
+     * @return true if guests is between 1 and [maxOccupancy]
+     */
     fun canHold(guests: Int): Boolean = guests in 1..maxOccupancy
 
+    /**
+     * total cost of a stay
+     *
+     * @param stay the dates being booked
+     * @return [pricePerNight] times the number of nights
+     */
     fun priceFor(stay: DateRange): Double = pricePerNight * stay.nights
 
-    // rating again replaces the old one
+    /**
+     * adds a rating and rating again replaces the old one
+     *
+     * @param rating the rating to add
+     * @throws IllegalArgumentException if its for another campsite or from the owner
+     */
     fun rate(rating: Rating) {
         require(rating.campsiteId == id) { "Rating is for campsite ${rating.campsiteId}, not $id" }
         require(rating.userId != ownerId) { "Owners cannot rate their own campsite" }
         _ratings[rating.userId] = rating
     }
 
+    /**
+     * removes a users rating and does nothing if they never rated it
+     *
+     * @param userId whose rating to remove
+     */
     fun removeRating(userId: String) {
         _ratings.remove(userId)
     }

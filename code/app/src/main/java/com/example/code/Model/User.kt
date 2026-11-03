@@ -1,7 +1,21 @@
 package com.example.code.Model
 
-// users are identified by their device so no username or password
-// roles is a set so one person can be an entrant owner and admin at once
+/**
+ * someone using the app
+ *
+ * users are identified by their device so theres no username or password
+ * roles is a set so one person can be an entrant owner and admin at once
+ * two users are equal when they have the same [deviceId]
+ *
+ * @property deviceId id of the device this user signed up on
+ * @property profileImageUrl link to their profile picture or null if they dont have one
+ * @property notificationsEnabled false if they opted out of notifications
+ * @param name shown on their profile and cant be blank
+ * @param email optional and checked if given
+ * @param phone optional and checked if given
+ * @param roles starting roles and must not be empty
+ * @throws IllegalArgumentException if any field is invalid
+ */
 class User(
     val deviceId: String,
     name: String,
@@ -15,19 +29,38 @@ class User(
         require(deviceId.isNotBlank()) { "Device ID must not be blank" }
     }
 
+    /**
+     * the users name trimmed
+     *
+     * @throws IllegalArgumentException if set to something blank
+     */
     var name: String = validName(name)
         set(value) { field = validName(value) }
 
-    // email and phone are optional and null if not given
+    /**
+     * the users email or null if not given
+     *
+     * setting it to blank clears it
+     *
+     * @throws IllegalArgumentException if it doesnt look like an email
+     */
     var email: String? = validEmail(email)
         set(value) { field = validEmail(value) }
 
+    /**
+     * the users phone number or null if not given
+     *
+     * setting it to blank clears it
+     * allows plus spaces dashes dots and brackets with 7 to 15 digits
+     *
+     * @throws IllegalArgumentException if it doesnt look like a phone number
+     */
     var phone: String? = validPhone(phone)
         set(value) { field = validPhone(value) }
 
     private val _roles: MutableSet<Role> = roles.toMutableSet()
 
-    // read only so roles can only change through addRole and removeRole
+    /** read only copy of the users roles so they only change through [addRole] and [removeRole] */
     val roles: Set<Role>
         get() = _roles.toSet()
 
@@ -35,13 +68,29 @@ class User(
         require(_roles.isNotEmpty()) { "A user must have at least one role" }
     }
 
+    /**
+     * checks if the user has a role
+     *
+     * @param role the role to check
+     * @return true if they have it
+     */
     fun hasRole(role: Role): Boolean = role in _roles
 
+    /**
+     * gives the user a role and does nothing if they already have it
+     *
+     * @param role the role to add
+     */
     fun addRole(role: Role) {
         _roles.add(role)
     }
 
-    // cant remove the last role
+    /**
+     * takes a role away from the user
+     *
+     * @param role the role to remove
+     * @throws IllegalArgumentException if its their only role
+     */
     fun removeRole(role: Role) {
         require(_roles != setOf(role)) { "Cannot remove a user's only role" }
         _roles.remove(role)
@@ -72,7 +121,6 @@ class User(
         }
 
         // blank counts as no phone
-        // allows plus spaces dashes dots and brackets with 7 to 15 digits
         fun validPhone(phone: String?): String? {
             val trimmed = phone?.trim()
             if (trimmed.isNullOrEmpty()) return null

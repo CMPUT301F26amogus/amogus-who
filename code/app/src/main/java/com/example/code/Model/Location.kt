@@ -1,6 +1,15 @@
 package com.example.code.Model
 
-// set by the owner and shown to entrants on the map
+/**
+ * where a campsite is
+ *
+ * set by the owner and shown to entrants on the map
+ *
+ * @property latitude between -90 and 90
+ * @property longitude between -180 and 180
+ * @property displayName readable name like jasper ab
+ * @throws IllegalArgumentException if a coordinate is out of range or the name is blank
+ */
 data class Location(
     val latitude: Double,
     val longitude: Double,

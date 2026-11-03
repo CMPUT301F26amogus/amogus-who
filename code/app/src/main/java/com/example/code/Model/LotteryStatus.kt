@@ -1,11 +1,20 @@
 package com.example.code.Model
 
-// OPEN -> DRAWING -> BOOKING -> CLOSED
-// open is when people can join the waitlist
-// booking is when winners pick their dates first come first served
+/**
+ * where a lottery is in its lifecycle
+ *
+ * OPEN -> DRAWING -> BOOKING -> CLOSED
+ */
 enum class LotteryStatus {
+    /** registration period so people can join the waitlist */
     OPEN,
+
+    /** registration is over and winners are being drawn */
     DRAWING,
+
+    /** winners pick their dates first come first served */
     BOOKING,
+
+    /** booking period is over */
     CLOSED,
 }
