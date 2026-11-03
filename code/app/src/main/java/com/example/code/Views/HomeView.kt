@@ -44,6 +44,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
@@ -110,6 +111,7 @@ abstract class HomeView : View() {
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp, vertical = 16.dp)
                 .clickable(enabled = true, onClick = { onClickOption(option) })
+                .testTag(option.name)
         ) {
             Row(
                 modifier = Modifier

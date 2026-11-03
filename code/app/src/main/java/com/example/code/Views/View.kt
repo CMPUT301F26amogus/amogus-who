@@ -73,7 +73,6 @@ abstract class View: ViewObserver<Model>{
     protected val creamBG = Color(0xffe4eeed)
     protected val profilePurple = Color(0xFF6750A4)
     private val headerHeight = 120
-
     //Generic Component Composables go here
     @Composable
     protected fun Header(
@@ -164,6 +163,7 @@ abstract class View: ViewObserver<Model>{
                     ElevatedButton(
                         onClick = {},
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+                        modifier = Modifier.testTag("Home"),
                     ) {
                         Text(
                             text = "Home",
@@ -174,6 +174,7 @@ abstract class View: ViewObserver<Model>{
                     ElevatedButton(
                         onClick = {},
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
+                        modifier = Modifier.testTag("Profile"),
                     ) {
                         Text(
                             text = "Profile",
