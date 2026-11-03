@@ -1,4 +1,4 @@
-package com.campsitereservation.app.model
+package com.example.code.Model
 
 // OPEN -> DRAWING -> BOOKING -> CLOSED
 // open is when people can join the waitlist

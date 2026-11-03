@@ -1,4 +1,4 @@
-package com.campsitereservation.app.model
+package com.example.code.Model
 
 // one entrants score for one campsite
 data class Rating(

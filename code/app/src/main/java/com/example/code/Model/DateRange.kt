@@ -1,4 +1,4 @@
-package com.campsitereservation.app.model
+package com.example.code.Model
 
 import java.time.LocalDate
 import java.time.temporal.ChronoUnit

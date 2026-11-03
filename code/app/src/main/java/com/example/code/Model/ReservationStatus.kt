@@ -1,4 +1,4 @@
-package com.campsitereservation.app.model
+package com.example.code.Model
 
 enum class ReservationStatus {
     ACTIVE,

@@ -1,4 +1,4 @@
-package com.campsitereservation.app.model
+package com.example.code.Model
 
 // users are identified by their device so no username or password
 // roles is a set so one person can be an entrant owner and admin at once

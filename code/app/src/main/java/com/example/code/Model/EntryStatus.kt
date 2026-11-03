@@ -1,4 +1,4 @@
-package com.campsitereservation.app.model
+package com.example.code.Model
 
 // WAITING -> SELECTED -> RESERVED or DECLINED
 // WAITING -> NOT_SELECTED

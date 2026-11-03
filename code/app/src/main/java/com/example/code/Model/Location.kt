@@ -1,4 +1,4 @@
-package com.campsitereservation.app.model
+package com.example.code.Model
 
 // set by the owner and shown to entrants on the map
 data class Location(

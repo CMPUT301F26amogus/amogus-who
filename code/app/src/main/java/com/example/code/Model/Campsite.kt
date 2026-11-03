@@ -1,4 +1,4 @@
-package com.campsitereservation.app.model
+package com.example.code.Model
 
 // campsites are equal when they have the same id
 class Campsite(
