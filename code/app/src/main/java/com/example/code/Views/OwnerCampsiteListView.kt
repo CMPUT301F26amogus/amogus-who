@@ -36,7 +36,7 @@ class OwnerCampsiteListView : View() {
                 Column(
                     modifier = Modifier
                         .fillMaxSize()
-                        .background(secondaryGreenColor)
+                        .background(primaryGreenColor)
                 ) {
 
                 }
