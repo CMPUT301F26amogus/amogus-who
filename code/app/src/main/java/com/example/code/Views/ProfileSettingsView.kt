@@ -67,7 +67,7 @@ class ProfileSettingsView: View() {
                 Box(Modifier.size(120.dp).background(entrantHeaderTextColor, shape = CircleShape))
                 ElevatedButton(
                     onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryPurple),
                     modifier = Modifier.width(160.dp).height(60.dp),
                 ) {
                     Text(text = "Change Picture", color = Color(0xff40139a))
