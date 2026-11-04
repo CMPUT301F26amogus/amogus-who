@@ -20,7 +20,6 @@ package com.example.code.Views
 
 import View
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -42,13 +41,11 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.code.ui.theme.CodeTheme
 
 class ProfileSettingsView: View() {
     @Composable
@@ -64,7 +61,7 @@ class ProfileSettingsView: View() {
                     textColor = entrantHeaderTextColor,
                 )
             }
-            Column(modifier = Modifier.fillMaxWidth().weight(1f).background(entrantBackgroundColor),
+            Column(modifier = Modifier.fillMaxWidth().weight(1f).background(secondaryGreenColor),
                 horizontalAlignment = Alignment.CenterHorizontally){
                 Spacer(modifier = Modifier.height(10.dp))
                 Box(Modifier.size(120.dp).background(entrantHeaderTextColor, shape = CircleShape))

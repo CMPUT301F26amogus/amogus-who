@@ -115,7 +115,7 @@ abstract class HomeView : View() {
         ) {
             Row(
                 modifier = Modifier
-                    .background(entrantFooterBackgroundColor)
+                    .background(primaryGreenColor)
                     .height(60.dp)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -126,14 +126,14 @@ abstract class HomeView : View() {
                             text = option.name,
                             fontSize = 30.sp,
                             modifier = Modifier.weight(1f),
-                            color = ownerHeaderBackgroundColor,
+                            color = primaryGreenTextColor,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
                             text = ">",
                             fontSize = 30.sp,
                             modifier = Modifier.weight(0.1f),
-                            color = ownerHeaderBackgroundColor,
+                            color = primaryGreenTextColor,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.End,
                         )

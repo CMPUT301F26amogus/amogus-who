@@ -52,14 +52,16 @@ abstract class View: ViewObserver<Model>{
     protected val light = Color(0xffffffff)
     protected val dark = Color(0xff000000)
     protected val gray = Color(0xff7d7e7d)
+    protected val primaryGreenColor = Color(0xff93cd8b)
+    protected val secondaryGreenColor = Color(0xffcae99d)
+    protected val primaryGreenTextColor = Color(0xff054f33)
     protected val entrantHeaderBackgroundColor = Color(0xff28b019)
-    protected val entrantBackgroundColor = Color(0xffcae99d)
     protected val entrantHeaderTextColor = Color(0xffffffff)
-    protected val entrantFooterBackgroundColor = Color(0xff93cd8b)
+    protected val entrantFooterBackgroundColor = primaryGreenColor
     protected val entrantFooterButtonColor = Color(0xff9bfa8e)
     protected val entrantFooterTextColor = Color(0xff4a4459)
 
-    protected val ownerHeaderBackgroundColor = Color(0xff054f33)
+    protected val ownerHeaderBackgroundColor = primaryGreenTextColor
     protected val ownerHeaderTextColor = Color(0xffffffff)
     protected val ownerFooterBackgroundColor = Color(0xff57bc78)
     protected val ownerFooterButtonColor = Color(0xff9bfa8e)
@@ -215,7 +217,7 @@ abstract class View: ViewObserver<Model>{
                     Text(
                         text = tab.name,
                         fontSize = 25.sp,
-                        color = ownerHeaderBackgroundColor,
+                        color = primaryGreenTextColor,
                         fontWeight = FontWeight.Bold,
                     )
                     Spacer(modifier = Modifier.height(15.dp))
