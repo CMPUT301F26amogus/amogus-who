@@ -18,7 +18,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             CodeTheme {
-                App()
+                val view = LotteriesView()
+                view.ShowScreen()
             }
         }
     }
