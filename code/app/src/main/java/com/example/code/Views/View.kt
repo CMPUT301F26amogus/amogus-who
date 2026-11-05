@@ -52,27 +52,33 @@ abstract class View: ViewObserver<Model>{
     protected val light = Color(0xffffffff)
     protected val dark = Color(0xff000000)
     protected val gray = Color(0xff7d7e7d)
+    protected val primaryGreenColor = Color(0xff93cd8b)
+    protected val secondaryGreenColor = Color(0xffcae99d)
+    protected val primaryGreenTextColor = Color(0xff054f33)
+    protected val primaryTextColor = Color(0xff4a4459)
+    protected val primaryPurple = Color(0xffe8def8)
+    protected val secondaryPurple = Color(0xFF6750A4)
+    protected val tertiaryPurple = Color(0xfff7f2fa)
     protected val entrantHeaderBackgroundColor = Color(0xff28b019)
-    protected val entrantBackgroundColor = Color(0xffcae99d)
     protected val entrantHeaderTextColor = Color(0xffffffff)
-    protected val entrantFooterBackgroundColor = Color(0xff93cd8b)
+    protected val entrantFooterBackgroundColor = primaryGreenColor
     protected val entrantFooterButtonColor = Color(0xff9bfa8e)
-    protected val entrantFooterTextColor = Color(0xff4a4459)
+    protected val entrantFooterTextColor = primaryTextColor
 
-    protected val ownerHeaderBackgroundColor = Color(0xff054f33)
+    protected val ownerHeaderBackgroundColor = primaryGreenTextColor
     protected val ownerHeaderTextColor = Color(0xffffffff)
     protected val ownerFooterBackgroundColor = Color(0xff57bc78)
     protected val ownerFooterButtonColor = Color(0xff9bfa8e)
-    protected val ownerFooterTextColor = Color(0xff4a4459)
+    protected val ownerFooterTextColor = primaryTextColor
 
     protected val adminHeaderBackgroundColor = Color(0xff033131)
     protected val adminHeaderTextColor = Color(0xffffffff)
     protected val adminFooterBackgroundColor = Color(0xff5aae8c)
     protected val adminFooterButtonColor = Color(0xff9bfa8e)
-    protected val adminFooterTextColor = Color(0xff4a4459)
+    protected val adminFooterTextColor = primaryTextColor
     protected val textColor = Color(0xff12553a)
     protected val creamBG = Color(0xffe4eeed)
-    protected val profilePurple = Color(0xFF6750A4)
+
     private val headerHeight = 120
     //Generic Component Composables go here
     @Composable
@@ -205,7 +211,7 @@ abstract class View: ViewObserver<Model>{
         ) {
             Row(
                 modifier = Modifier
-                    .background(tab.col)
+                    .background(tab.color)
                     .width(120.dp)
                     .fillMaxHeight()
             ) {
@@ -215,7 +221,7 @@ abstract class View: ViewObserver<Model>{
                     Text(
                         text = tab.name,
                         fontSize = 25.sp,
-                        color = ownerHeaderBackgroundColor,
+                        color = primaryGreenTextColor,
                         fontWeight = FontWeight.Bold,
                     )
                     Spacer(modifier = Modifier.height(15.dp))
@@ -225,10 +231,6 @@ abstract class View: ViewObserver<Model>{
         }
     }
 }
-class Tab(name: String, color: Color, option: (Unit)->Unit){
-    var name = name
-    var col = color
-    var option = option
-}
+class Tab(var name: String, var color: Color, var option: (Unit) -> Unit) {}
 
 class Option(var name: String, var route: String) {}

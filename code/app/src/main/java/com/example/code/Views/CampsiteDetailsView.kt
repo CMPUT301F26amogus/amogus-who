@@ -41,7 +41,7 @@ import com.example.code.ui.theme.CodeTheme
 class CampsiteDetailsView(): View() {
     @Composable
     public fun ShowScreen(){
-        val bgColor = entrantBackgroundColor
+        val bgColor = secondaryGreenColor
         val headerbgColor = entrantHeaderBackgroundColor
         val headerTextColor = entrantHeaderTextColor
         val footerTextColor = entrantFooterTextColor
