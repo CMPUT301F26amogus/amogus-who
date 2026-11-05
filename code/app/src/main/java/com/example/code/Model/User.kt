@@ -17,8 +17,8 @@ package com.example.code.Model
  * @throws IllegalArgumentException if any field is invalid
  */
 class User(
-    val deviceId: String,
-    name: String,
+    val deviceId: String="", // The constructor needs to contain default values for every param
+    name: String="",        // in order for us to be able to put an object in the database.
     email: String? = null,
     phone: String? = null,
     var profileImageUrl: String? = null,

@@ -76,4 +76,54 @@ class EntrantModel: Model() {
         return false
     }
 
+    private val userRef = db.collection("Users")
+
+    /**
+     * Takes a user profile and edits the user properties
+     *
+     * 'This function doesnt do any filtering for invalid phone numbers or emails, or names'
+     *
+     * @param user Users object, should be remembered within the controller upon login.
+     * @param name optional, set new name of the user
+     * @param email optional, set new email for user
+     * @param phoneNumber optional, set new phone number for user
+     */
+    fun updateProfile(user: User, name: String="", email: String="", phoneNumber: String=""){
+        if (name != "") {
+            userRef.document(user.deviceId).update(
+                "name", name
+            )
+        }
+        if (email != ""){
+            userRef.document(user.deviceId).update(
+                "email", email
+            )
+        }
+        if(phoneNumber != ""){
+            userRef.document(user.deviceId).update(
+                "phone", phoneNumber
+            )
+        }
+    }
+
+
+
+
+    /**
+     * Deletes the user's profile from the database
+     *
+     * This will work even if the user isnt in the database.
+     *
+     * @param user user's object
+     */
+    fun deleteProfile(user: User){
+        userRef.document(user.deviceId).delete()
+    }
+
+    fun declineWin(user: User){
+        // entrants should be able to decline a lottery win, but we dont have any connections set up
+        // like the entrants should have a list of lotteries they are participating in
+        // I think, but I still need to ask the rest of the group how these classes are working together.
+    }
+
 }
