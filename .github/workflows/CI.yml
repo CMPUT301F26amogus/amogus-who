@@ -1,0 +1,25 @@
+name: Android CI
+on:
+  push:
+    branches: [main, master, "**", dev]
+  pull_request:
+    branches: [main, master, dev]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v6
+      - name: Setup JDK
+        uses: actions/setup-java@v5
+        with:
+          distribution: 'temurin'
+          java-version: '11'
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+        working-directory: ./code
+      - name: Build and test with Gradle
+        run: ./gradlew build --configuration-cache
+        working-directory: ./code
+  #source: Lab-08 Repo
