@@ -1,2 +1,2 @@
-class Admin(val user: User): Model() {
+class Admin(val user: User) {
 }
