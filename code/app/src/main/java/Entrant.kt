@@ -1,10 +1,37 @@
-class Entrant(var user: User, var notificationPref: Boolean) {
+class Entrant(val user: User, var notificationPref: Boolean): Model() {
 
-    public fun updateProfile(name: String, email: String, phone: String) {
-        user.name = name
-        user.email = email
-        user.phone = phone
+    private val userRef = db.collection("User Data")
+
+    /**
+     * Takes a user profile and edits the user properties
+     *
+     * 'This function doesnt do any filtering for invalid phone numbers or emails, or names'
+     *
+     * @param user Users object, should be remembered within the controller upon login.
+     * @param name optional, set new name of the user
+     * @param email optional, set new email for user
+     * @param phoneNumber optional, set new phone number for user
+     */
+    fun updateProfile(user: User,name: String="", email: String="", phoneNumber: String=""){
+        if (name != "") {
+            user.name = name;
+        }
+        if (email != ""){
+            user.email = email
+        }
+        if(phoneNumber != ""){
+            user.phone = phoneNumber
+        }
     }
 
+
+    /**
+     * Deletes the user's profile from the database
+     *
+     * @param user user's object
+     */
+    fun deleteProfile(user: User){
+        userRef.document()
+    }
 
 }
