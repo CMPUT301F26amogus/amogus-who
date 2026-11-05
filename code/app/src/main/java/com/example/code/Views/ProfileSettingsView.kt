@@ -50,9 +50,10 @@ import androidx.compose.ui.unit.sp
 class ProfileSettingsView: View() {
     @Composable
     public fun ShowScreen(){
-        var temp by remember {
-            mutableStateOf("")
-        }
+        var name by remember { mutableStateOf("") }
+        var email by remember { mutableStateOf("") }
+        var number by remember { mutableStateOf("") }
+        var notifications by remember { mutableStateOf("") }
         Column() {
             Row() {
                 Header(
@@ -76,9 +77,9 @@ class ProfileSettingsView: View() {
                 Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
                     .padding(20.dp).width(280.dp)) {
                     TextField(
-                        value = temp,
+                        value = name,
                         onValueChange = {
-                            temp = it
+                            name = it
                         },
                         label = {
                             Text("Full Name")
@@ -91,9 +92,9 @@ class ProfileSettingsView: View() {
                 Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
                     .padding(20.dp).width(280.dp)) {
                     TextField(
-                        value = temp,
+                        value = email,
                         onValueChange = {
-                            temp = it
+                            email = it
                         },
                         label = {
                             Text("email@example.com")
@@ -106,9 +107,9 @@ class ProfileSettingsView: View() {
                 Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
                     .padding(20.dp).width(280.dp)) {
                     TextField(
-                        value = temp,
+                        value = number,
                         onValueChange = {
-                            temp = it
+                            number = it
                         },
                         label = {
                             Text("(555)-555-5555")
