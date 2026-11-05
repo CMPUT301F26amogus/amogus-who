@@ -28,7 +28,10 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.HorizontalDivider
+import androidx.compose.material3.SearchBar
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -54,38 +57,180 @@ class SearchView: View() {
             Row() {
                 Header(
                     customContent = {
+                            Row() {
+                                TextField(
+                                    value = search,
+                                    onValueChange = {
+                                        search = it
+                                    },
+                                    label = {
+                                        Text("Campsite Name")
+                                    },
+                                    modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp)
+                                        .background(color = creamBG).padding(20.dp).width(200.dp)
+                                )
+                                ElevatedButton(
+                                    onClick = {},
+                                    colors = ButtonDefaults.buttonColors(containerColor = light),
+                                    modifier = Modifier.width(100.dp).height(90.dp),
+                                ) {
+                                    Text(text = "Search", color = Color(0xff2a2828))
+                                }
+                            }
+                    }
+                )
+            }
+            HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
+            Row(modifier = Modifier.background(entrantFooterBackgroundColor).height(120.dp).padding(5.dp)){
+                Row(modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
+                    .background(color = creamBG).padding(20.dp).fillMaxWidth()) {
+                    Column(
+                    ) {
+                        Text("Arrival Date", fontSize = 15.sp, color = textColor)
                         TextField(
                             value = search,
                             onValueChange = {
                                 search = it
                             },
                             label = {
-                                Text("Camp Name")
+                                Text("mm/dd/yy", fontSize = 15.sp)
                             },
-                            modifier = Modifier.padding(horizontal = 20.dp, vertical = 5.dp).background(color = creamBG).padding(20.dp).fillMaxWidth()
+                            modifier = Modifier
+                                .background(color = creamBG).width(120.dp)
                         )
                     }
-                )
+                    Column(
+                    ) {
+                        Text("Departure Date", fontSize = 15.sp, color = textColor)
+                        TextField(
+                            value = search,
+                            onValueChange = {
+                                search = it
+                            },
+                            label = {
+                                Text("mm/dd/yy", fontSize = 15.sp)
+                            },
+                            modifier = Modifier
+                                .background(color = creamBG).width(120.dp)
+                        )
+                    }
+                    ElevatedButton(
+                        onClick = {},
+                        colors = ButtonDefaults.buttonColors(containerColor = light),
+                        modifier = Modifier.width(90.dp).height(90.dp).padding(horizontal = 15.dp),
+                    ) {
+                        Text(text = "X", color = Color(0xff2a2828), fontSize = 25.sp)
+                    }
+                }
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
-            Row(modifier = Modifier.background(entrantFooterBackgroundColor).height(120.dp).fillMaxWidth()){
-
+            Row(modifier = Modifier.background(entrantBackgroundColor).padding(5.dp).height(120.dp).fillMaxWidth()){
+                Row(modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
+                    .background(color = creamBG).padding(20.dp).fillMaxWidth()) {
+                    Column(
+                    ) {
+                        Text("Park", fontSize = 15.sp, color = textColor)
+                        TextField(
+                            value = search,
+                            onValueChange = {
+                                search = it
+                            },
+                            label = {
+                                Text("name", fontSize = 15.sp)
+                            },
+                            modifier = Modifier
+                                .background(color = creamBG).width(120.dp)
+                        )
+                    }
+                    Column(
+                    ) {
+                        Text("Campsite", fontSize = 15.sp, color = textColor)
+                        TextField(
+                            value = search,
+                            onValueChange = {
+                                search = it
+                            },
+                            label = {
+                                Text("name", fontSize = 15.sp)
+                            },
+                            modifier = Modifier
+                                .background(color = creamBG).width(120.dp)
+                        )
+                    }
+                    ElevatedButton(
+                        onClick = {},
+                        colors = ButtonDefaults.buttonColors(containerColor = light),
+                        modifier = Modifier.width(90.dp).height(90.dp).padding(horizontal = 15.dp),
+                    ) {
+                        Text(text = "X", color = Color(0xff2a2828), fontSize = 25.sp)
+                    }
+                }
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
-            Row(modifier = Modifier.background(entrantBackgroundColor).height(120.dp).fillMaxWidth()){
-
+            Row(modifier = Modifier.background(entrantFooterBackgroundColor).padding(5.dp).height(120.dp).fillMaxWidth()){
+                Row(modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
+                    .background(color = creamBG).padding(20.dp).width(160.dp)) {
+                    Column(
+                    ) {
+                        Text("Number of Guests:", fontSize = 15.sp, color = textColor)
+                        TextField(
+                            value = search,
+                            onValueChange = {
+                                search = it
+                            },
+                            label = {
+                                Text("Number", fontSize = 15.sp)
+                            },
+                            modifier = Modifier
+                                .background(color = creamBG).width(120.dp)
+                        )
+                    }
+                }
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
-            Row(modifier = Modifier.background(entrantFooterBackgroundColor).height(120.dp).fillMaxWidth()){
-
+            Row(modifier = Modifier.background(entrantBackgroundColor).padding(5.dp).height(120.dp).fillMaxWidth()){
+                Row(modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
+                    .background(color = creamBG).padding(20.dp).width(120.dp)) {
+                    Column(
+                    ) {
+                        Text("Tags:", fontSize = 15.sp, color = textColor)
+                        TextField(
+                            value = search,
+                            onValueChange = {
+                                search = it
+                            },
+                            label = {
+                                Text("tags", fontSize = 15.sp)
+                            },
+                            modifier = Modifier
+                                .background(color = creamBG).width(120.dp)
+                        )
+                    }
+                }
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
-            Row(modifier = Modifier.background(entrantBackgroundColor).height(120.dp).fillMaxWidth()){
-
-            }
-            HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
-            Row(modifier = Modifier.background(entrantFooterBackgroundColor).height(120.dp).fillMaxWidth()){
-
+            Row(modifier = Modifier.background(entrantFooterBackgroundColor).padding(5.dp).height(50.dp).fillMaxWidth()){
+                ElevatedButton(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = light),
+                    modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
+                ) {
+                    Text(text = "< Return", color = Color(0xff5530a4), fontSize = 13.sp)
+                }
+                ElevatedButton(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = light),
+                    modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
+                ) {
+                    Text(text = "X CLEAR", color = Color(0xff5530a4), fontSize = 13.sp)
+                }
+                ElevatedButton(
+                    onClick = {},
+                    colors = ButtonDefaults.buttonColors(containerColor = light),
+                    modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
+                ) {
+                    Text(text = "Search", color = Color(0xff5530a4), fontSize = 13.sp)
+                }
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
             Row() {
