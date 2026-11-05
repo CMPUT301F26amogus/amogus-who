@@ -76,38 +76,50 @@ class ProfileSettingsView: View() {
                     Text(text = "Change Picture", color = Color(0xff40139a))
                 }
                 Spacer(modifier = Modifier.height(10.dp))
-                TextField(
-                    value = temp,
-                    onValueChange = {
-                        temp = it
-                    },
-                    label = {
-                        Text("Full Name")
-                    },
-                    modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG).padding(20.dp).width(290.dp)
-                )
+                Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
+                    .padding(20.dp).width(280.dp)) {
+                    TextField(
+                        value = temp,
+                        onValueChange = {
+                            temp = it
+                        },
+                        label = {
+                            Text("Full Name")
+                        },
+                        modifier = Modifier.width(220.dp)
+                    )
+                    Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp), color = textColor)
+                }
                 Spacer(modifier = Modifier.height(10.dp))
-                TextField(
-                    value = temp,
-                    onValueChange = {
-                        temp = it
-                    },
-                    label = {
-                        Text("email@example.com")
-                    },
-                    modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG).padding(20.dp).width(290.dp)
-                )
+                Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
+                    .padding(20.dp).width(280.dp)) {
+                    TextField(
+                        value = temp,
+                        onValueChange = {
+                            temp = it
+                        },
+                        label = {
+                            Text("email@example.com")
+                        },
+                        modifier = Modifier.width(220.dp)
+                    )
+                    Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp), color = textColor)
+                }
                 Spacer(modifier = Modifier.height(10.dp))
-                TextField(
-                    value = temp,
-                    onValueChange = {
-                        temp = it
-                    },
-                    label = {
-                        Text("(555)-555-5555")
-                    },
-                    modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG).padding(20.dp).width(290.dp)
-                )
+                Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
+                    .padding(20.dp).width(280.dp)) {
+                    TextField(
+                        value = temp,
+                        onValueChange = {
+                            temp = it
+                        },
+                        label = {
+                            Text("(555)-555-5555")
+                        },
+                        modifier = Modifier.width(220.dp)
+                    )
+                    Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp), color = textColor)
+                }
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(modifier = Modifier.background(color = creamBG).padding(20.dp).width(290.dp)){
                     Text("Allow Notifications?",modifier = Modifier.padding(horizontal = 20.dp)
