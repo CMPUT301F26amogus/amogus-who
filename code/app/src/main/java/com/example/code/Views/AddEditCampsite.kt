@@ -36,6 +36,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import java.sql.Date
@@ -361,6 +362,13 @@ class AddEditCampsite : View() {
 
             }
         }
+    }
+
+    @Preview(showBackground = true)
+    @Composable
+    fun AddEditCampsitePreview() {
+        val aView = AddEditCampsite()
+        aView.ShowScreen()
     }
 
 }
