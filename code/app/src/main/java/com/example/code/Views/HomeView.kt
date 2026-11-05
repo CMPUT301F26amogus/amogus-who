@@ -92,7 +92,7 @@ abstract class HomeView : View() {
             modifier = modifier,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = primaryPurple,
-                contentColor = Color.Black,
+                contentColor = primaryTextColor,
             )
         ) {
             Icon(

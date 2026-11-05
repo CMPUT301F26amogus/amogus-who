@@ -21,9 +21,19 @@ package com.example.code.Views
 import Option
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Search
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.FilledIconButton
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButtonDefaults
+import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
@@ -46,6 +56,29 @@ class EntrantHomeView : HomeView() {
     )
 
     @Composable
+    private fun SearchPill(
+        modifier: Modifier = Modifier
+    ) {
+        Button(
+            onClick = { /*TODO*/ },
+            modifier = modifier
+                .fillMaxHeight(),
+            colors = ButtonDefaults.buttonColors(
+                containerColor = primaryPurple,
+                contentColor = primaryTextColor,
+            )
+        ) {
+            Icon(
+                imageVector = Icons.Outlined.Search,
+                contentDescription = "Search",
+            )
+            Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+            Text("Search")
+        }
+
+    }
+
+    @Composable
     override fun CustomHeader() {
         Row(
             modifier = Modifier
@@ -58,6 +91,10 @@ class EntrantHomeView : HomeView() {
             )
 
             Spacer(modifier = Modifier.weight(1f))
+
+            SearchPill(modifier = Modifier)
+
+            Spacer(modifier = Modifier.width(10.dp))
 
             NotificationsButton(
                 onClickProfile = { /*TODO*/ },
