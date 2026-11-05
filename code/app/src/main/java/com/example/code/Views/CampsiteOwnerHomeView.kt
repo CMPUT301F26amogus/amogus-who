@@ -31,7 +31,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
 class CampsiteOwnerHomeView : HomeView() {
-    override val bgColor = entrantBackgroundColor
+    override val bgColor = secondaryGreenColor
     override val headerColor = ownerHeaderBackgroundColor
     override val headerTextColor = ownerHeaderTextColor
     override val footerColor = ownerFooterBackgroundColor

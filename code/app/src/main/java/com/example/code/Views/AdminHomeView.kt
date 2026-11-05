@@ -24,7 +24,7 @@ import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.tooling.preview.Preview
 
 class AdminHomeView : HomeView() {
-    override val bgColor = entrantBackgroundColor
+    override val bgColor = secondaryGreenColor
     override val headerColor = adminHeaderBackgroundColor
     override val headerTextColor = adminHeaderTextColor
     override val footerColor = adminFooterBackgroundColor

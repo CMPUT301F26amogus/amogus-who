@@ -41,7 +41,7 @@ import androidx.core.text.isDigitsOnly
 import java.sql.Date
 
 class AddEditCampsite : View() {
-    val bgColor = entrantBackgroundColor
+    val bgColor = secondaryGreenColor
     val headerbgColor = ownerHeaderBackgroundColor
     val headerTextColor = ownerHeaderTextColor
     val footerTextColor = ownerFooterBackgroundColor

@@ -24,7 +24,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -43,7 +42,7 @@ import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
 
 class ReservationsView: View() {
-    val bgColor = entrantBackgroundColor
+    val bgColor = secondaryGreenColor
     val headerbgColor = entrantHeaderBackgroundColor
     val headerTextColor = entrantHeaderTextColor
     val footerTextColor = entrantFooterTextColor
@@ -51,7 +50,7 @@ class ReservationsView: View() {
     val footerButtonColor = entrantFooterButtonColor
     val tabs = mutableStateListOf(
         Tab(name = "Current", color = entrantFooterBackgroundColor, option = {}),
-        Tab(name = "Previous", color = entrantBackgroundColor, option = {}),
+        Tab(name = "Previous", color = secondaryGreenColor, option = {}),
     )
     @Composable
     public fun ShowScreen() {
