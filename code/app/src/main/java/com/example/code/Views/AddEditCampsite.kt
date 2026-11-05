@@ -32,7 +32,7 @@ import androidx.compose.ui.unit.dp
 import java.sql.Date
 
 class AddEditCampsite : View() {
-    val bgColor = entrantBackgroundColor
+    val bgColor = secondaryGreenColor
     val headerbgColor = ownerHeaderBackgroundColor
     val headerTextColor = ownerHeaderTextColor
     val footerTextColor = ownerFooterBackgroundColor

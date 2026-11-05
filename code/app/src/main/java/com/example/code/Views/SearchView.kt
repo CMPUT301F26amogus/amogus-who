@@ -38,8 +38,10 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
 
 class SearchView: View() {
@@ -117,7 +119,7 @@ class SearchView: View() {
                 }
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
-            Row(modifier = Modifier.background(entrantBackgroundColor).padding(5.dp).height(120.dp).fillMaxWidth()){
+            Row(modifier = Modifier.background(secondaryGreenColor).padding(5.dp).height(120.dp).fillMaxWidth()){
                 Row(modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
                     .background(color = creamBG).padding(20.dp).fillMaxWidth()) {
                     Column(
@@ -181,7 +183,7 @@ class SearchView: View() {
                 }
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
-            Row(modifier = Modifier.background(entrantBackgroundColor).padding(5.dp).height(120.dp).fillMaxWidth()){
+            Row(modifier = Modifier.background(secondaryGreenColor).padding(5.dp).height(120.dp).fillMaxWidth()){
                 Row(modifier = Modifier.padding(horizontal = 5.dp, vertical = 5.dp)
                     .background(color = creamBG).padding(20.dp).width(120.dp)) {
                     Column(

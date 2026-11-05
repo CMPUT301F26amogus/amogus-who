@@ -112,7 +112,7 @@ class OwnerCampsiteListView : View() {
 
                     Column(
                         modifier = Modifier
-                            .width(100.dp)
+                            .width(95.dp)
                             .height(35.dp)
                     ) {
                         ExtendedFloatingActionButton(
