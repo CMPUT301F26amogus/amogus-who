@@ -1,5 +1,7 @@
 package com.example.code.Model
 
+import Model
+
 /**
  * a campsite listed by an owner
  *

@@ -18,6 +18,10 @@
 
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.compose.foundation.clickable
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -41,7 +45,7 @@ import com.example.code.ui.theme.CodeTheme
 
 class SearchResultsView: View() {
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         Column() {
             Row() {
                 Header(
@@ -59,6 +63,7 @@ class SearchResultsView: View() {
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
@@ -67,7 +72,7 @@ class SearchResultsView: View() {
         }
     }
     @Composable
-    private fun CampsiteRow(){
+    private fun CampsiteRow(navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(210.dp).width(500.dp)){
             Column() {
                 Row(
@@ -102,7 +107,8 @@ class SearchResultsView: View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
                     )
                 }
             }
@@ -116,7 +122,7 @@ fun searchResultsViewPreview() {
     val mp = SearchResultsView()
     CodeTheme {
         (
-            mp.ShowScreen()
+            mp.ShowScreen(rememberNavController())
         )
     }
 }

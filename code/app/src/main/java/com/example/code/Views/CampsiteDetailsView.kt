@@ -18,6 +18,8 @@
 
 package com.example.code.Views
 
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -40,7 +42,7 @@ import com.example.code.ui.theme.CodeTheme
 
 class CampsiteDetailsView(): View() {
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         val bgColor = secondaryGreenColor
         val headerbgColor = entrantHeaderBackgroundColor
         val headerTextColor = entrantHeaderTextColor
@@ -134,17 +136,17 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.width(200.dp).background(bgColor)) {
                             ElevatedButton(
                                 onClick = {},
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
+                                colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
-                                Text(text = "Edit Photos", color = Color(0xff40139a))
+                                Text(text = "Join Lottery", color = Color(0xff40139a))
                             }
                             ElevatedButton(
                                 onClick = {},
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xfffad2cc)),
+                                colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
-                                Text(text = "Delete", color = Color(0xff2a2828))
+                                Text(text = "Join Waitlist", color = Color(0xff2a2828))
                             }
                         }
                     }
@@ -152,6 +154,7 @@ class CampsiteDetailsView(): View() {
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -167,7 +170,7 @@ fun CampsiteDetailsPreview() {
     val v = CampsiteDetailsView()
     CodeTheme {
         (
-            v.ShowScreen()
+            v.ShowScreen(rememberNavController())
         )
     }
 }

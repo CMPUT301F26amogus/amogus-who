@@ -18,9 +18,14 @@
 
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.compose.foundation.clickable
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import Tab
 import View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,7 +37,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -48,12 +57,13 @@ class ReservationsView: View() {
     val footerTextColor = entrantFooterTextColor
     val footerbgColor = entrantFooterBackgroundColor
     val footerButtonColor = entrantFooterButtonColor
-    val tabs = mutableStateListOf(
-        Tab(name = "Current", color = entrantFooterBackgroundColor, option = {}),
-        Tab(name = "Previous", color = secondaryGreenColor, option = {}),
-    )
     @Composable
-    public fun ShowScreen() {
+    public fun ShowScreen(navController: NavController) {
+        var state by remember { mutableStateOf("Current") }
+        val tabs = mutableListOf<Tab>(
+            Tab(name = "Current", color = entrantFooterBackgroundColor, option = {state = "Current"}),
+            Tab(name = "Previous", color = secondaryGreenColor, option = {state = "Previous"})
+        )
         Column() {
             Row() {
                 Header(
@@ -63,26 +73,29 @@ class ReservationsView: View() {
                 )
             }
             Row(modifier = Modifier.height(50.dp)){
-                TabManager(tabs)
+                TabManager(tabs,state)
             }
-            Row(modifier = Modifier.fillMaxWidth().weight(1f).background(bgColor)){
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
+            if (state=="Current") {
+                Row(modifier = Modifier.weight(1f).background(entrantFooterBackgroundColor)) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
 
+                    }
                 }
-            }
-            Row() {
-                Footer(
-                    textColor = footerTextColor,
-                    backgroundColor = footerbgColor,
-                    buttonColor = footerButtonColor,
-                )
+            }else{
+                Row(modifier = Modifier.weight(1f).background(secondaryGreenColor)) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+
+                    }
+                }
             }
         }
     }
     @Composable
-    private fun CurrentReservationRow(){
+    private fun CurrentReservationRow(navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -117,20 +130,22 @@ class ReservationsView: View() {
                     Text(
                         "X Cancel", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+
                     )
                     Spacer(modifier = Modifier.width(105.dp))
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
                     )
                 }
             }
         }
     }
     @Composable
-    private fun PreviousReservationRow(){
+    private fun PreviousReservationRow(navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -165,7 +180,8 @@ class ReservationsView: View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
                     )
                 }
             }
@@ -179,7 +195,7 @@ fun ReservationsViewPreview() {
     val mp = ReservationsView()
     CodeTheme {
         (
-            mp.ShowScreen()
+            mp.ShowScreen(rememberNavController())
         )
     }
 }

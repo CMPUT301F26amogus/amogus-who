@@ -18,6 +18,9 @@
 
 package com.example.code.Views
 
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.code.Routes
 import View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -41,15 +44,15 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import com.example.code.Controllers.RegistrationController
 import com.example.code.ui.theme.CodeTheme
+import Model
 
-class RegistrationView: View() {
+class RegistrationView(M:Model): View() {
+    var controller = RegistrationController(M)
     @Composable
-    public fun ShowScreen(){
-        var username by remember {
-            mutableStateOf("")
-        }
-        var password by remember {
+    public fun ShowScreen(navController: NavController) {
+        var name by remember {
             mutableStateOf("")
         }
         var number by remember {
@@ -69,47 +72,17 @@ class RegistrationView: View() {
             Row(modifier = Modifier.weight(1f)){
                 Column(){
                     Spacer(modifier = Modifier.height(50.dp))
-                    Text("Username",
+                    Text("Name",
                         modifier = Modifier.padding(horizontal = 20.dp),
                         color = textColor,
                         fontWeight = FontWeight.Bold)
                     TextField(
-                        value = username,
+                        value = name,
                         onValueChange = {
-                            username = it
+                            name = it
                         },
                         label = {
-                            Text("username")
-                        },
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text("Password",
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = textColor,
-                        fontWeight = FontWeight.Bold)
-                    TextField(
-                        value = password,
-                        onValueChange = {
-                            password = it
-                        },
-                        label = {
-                            Text("Enter your password")
-                        },
-                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
-                    )
-                    Spacer(modifier = Modifier.height(20.dp))
-                    Text("Phone Number",
-                        modifier = Modifier.padding(horizontal = 20.dp),
-                        color = textColor,
-                        fontWeight = FontWeight.Bold)
-                    TextField(
-                        value = number,
-                        onValueChange = {
-                            number = it
-                        },
-                        label = {
-                            Text("Enter your phone number")
+                            Text("Enter your full name")
                         },
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
                     )
@@ -129,18 +102,51 @@ class RegistrationView: View() {
                         modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
                     )
                     Spacer(modifier = Modifier.height(20.dp))
-                    ElevatedButton(
-                        onClick = {},
-                        colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
-                        modifier = Modifier.width(160.dp).height(60.dp).padding(horizontal = 20.dp),
-                    ) {
-                        Text(text = "Register", color = Color(0xff40139a))
+                    Text("Phone Number",
+                        modifier = Modifier.padding(horizontal = 20.dp),
+                        color = textColor,
+                        fontWeight = FontWeight.Bold)
+                    TextField(
+                        value = number,
+                        onValueChange = {
+                            number = it
+                        },
+                        label = {
+                            Text("Enter your phone number")
+                        },
+                        modifier = Modifier.fillMaxWidth().padding(horizontal = 20.dp)
+                    )
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Spacer(modifier = Modifier.height(20.dp))
+                    Row() {
+                        ElevatedButton(
+                            onClick = {
+                                controller.register(name = name, email = email, phoneNumber = number)
+                                goToHome(navController, Routes.ENTRANT_HOME)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
+                            modifier = Modifier.width(160.dp).height(60.dp)
+                                .padding(horizontal = 20.dp),
+                        ) {
+                            Text(text = "Register As Entrant", color = Color(0xff40139a))
+                        }
+                        ElevatedButton(
+                            onClick = {
+                                controller.register(name = name, email = email, phoneNumber = number)
+                                goToHome(navController, Routes.OWNER_HOME)
+                            },
+                            colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
+                            modifier = Modifier.width(160.dp).height(60.dp).padding(horizontal = 20.dp),
+                        ) {
+                            Text(text = "Register As Owner", color = Color(0xff40139a))
+                        }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
                 }
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
@@ -149,15 +155,25 @@ class RegistrationView: View() {
             }
         }
     }
+
+    /**
+     * Opens [homeRoute] and removes registration from the back stack, so Back can't return to it.
+     */
+    private fun goToHome(navController: NavController, homeRoute: String) {
+        navController.navigate(homeRoute) {
+            popUpTo(Routes.REGISTRATION) { inclusive = true }
+        }
+    }
 }
 
 @Preview(showBackground = true)
 @Composable
 fun RegistrationViewPreview() {
-    val mp = RegistrationView()
+    val M = Model()
+    val mp = RegistrationView(M)
     CodeTheme {
         (
-                mp.ShowScreen()
-                )
+        mp.ShowScreen(rememberNavController())
+        )
     }
 }

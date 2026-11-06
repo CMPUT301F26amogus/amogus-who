@@ -16,8 +16,12 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * */
 
+import androidx.navigation.NavController
+import com.example.code.Routes
+import com.example.code.goHome
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +37,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -49,7 +57,7 @@ abstract class View: ViewObserver<Model>{
 
     }
     //Common colors go here
-    protected val light = Color(0xffffffff)
+    protected val light = Color(0xfff3fff3)
     protected val dark = Color(0xff000000)
     protected val gray = Color(0xff7d7e7d)
     protected val primaryGreenColor = Color(0xff93cd8b)
@@ -78,6 +86,9 @@ abstract class View: ViewObserver<Model>{
     protected val adminFooterTextColor = primaryTextColor
     protected val textColor = Color(0xff12553a)
     protected val creamBG = Color(0xffe4eeed)
+    protected val cardPrimary = Color(0xffcad9c8)
+    protected val cardAccent = light
+
 
     private val headerHeight = 120
     //Generic Component Composables go here
@@ -110,6 +121,7 @@ abstract class View: ViewObserver<Model>{
                             text = headerText,
                             fontSize = headerTextSize.sp,
                             color = textColor,
+                            modifier = Modifier.testTag("Header: $headerText")
                         )
                     }
                 }
@@ -125,7 +137,7 @@ abstract class View: ViewObserver<Model>{
                         Text(
                             text = subheaderText,
                             fontSize = subheaderTextSize.sp,
-                            color = textColor,
+                            color = textColor
                         )
                     }
                 }
@@ -137,6 +149,7 @@ abstract class View: ViewObserver<Model>{
     }
     @Composable
     protected fun Footer(
+        navController: NavController,
         backgroundColor: Color,
         textColor: Color,
         buttonColor: Color,
@@ -158,7 +171,12 @@ abstract class View: ViewObserver<Model>{
                 if (!excludeButtons) {
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
-                        onClick = {},
+                        onClick = {
+                            // only go back if there is a screen to go back to
+                            if (navController.previousBackStackEntry != null) {
+                                navController.popBackStack()
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                     ) {
                         Text(
@@ -168,7 +186,7 @@ abstract class View: ViewObserver<Model>{
                     }
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
-                        onClick = {},
+                        onClick = { navController.goHome() },
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                         modifier = Modifier.testTag("Home"),
                     ) {
@@ -179,7 +197,7 @@ abstract class View: ViewObserver<Model>{
                     }
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
-                        onClick = {},
+                        onClick = { navController.navigate(Routes.PROFILE) },
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                         modifier = Modifier.testTag("Profile"),
                     ) {
@@ -193,21 +211,21 @@ abstract class View: ViewObserver<Model>{
         }
     }
     @Composable
-    protected fun TabManager(tabs:List<Tab>){
+    protected fun TabManager(tabs:List<Tab>, state:String){
         Column(modifier = Modifier.height(50.dp)) {
             LazyRow(modifier = Modifier.height(50.dp)) {
                 itemsIndexed(tabs) { index,tab: Tab ->
-                    TabCol(tab = tab)
+                    TabCol(tab = tab, state)
                 }
             }
         }
     }
     @Composable
-    private fun TabCol(tab: Tab) {
+    private fun TabCol(tab: Tab, state: String) {
         Column(
             modifier = Modifier
                 .height(60.dp)
-                .clickable(enabled = true, onClick = { tab.option })
+                .clickable(enabled = true, onClick = { tab.option(state) })
         ) {
             Row(
                 modifier = Modifier
@@ -231,6 +249,5 @@ abstract class View: ViewObserver<Model>{
         }
     }
 }
-class Tab(var name: String, var color: Color, var option: (Unit) -> Unit) {}
-
+class Tab(var name: String, var color: Color, var option: (String) -> Unit) {}
 class Option(var name: String, var route: String) {}

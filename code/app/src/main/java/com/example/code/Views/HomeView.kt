@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import androidx.navigation.NavController
 import Option
 import View
 import androidx.compose.foundation.background
@@ -60,7 +61,7 @@ abstract class HomeView : View() {
     abstract val options: MutableList<Option>
 
     @Composable
-    protected open fun CustomHeader() {}
+    protected open fun CustomHeader(navController: NavController) {}
 
     @Composable
     protected fun ProfileButton(
@@ -68,7 +69,7 @@ abstract class HomeView : View() {
         modifier: Modifier = Modifier
     ) {
         FilledIconButton(
-            onClick = {},
+            onClick = onClickProfile,
             modifier = modifier,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = secondaryPurple,
@@ -84,15 +85,15 @@ abstract class HomeView : View() {
 
     @Composable
     protected fun NotificationsButton(
-        onClickProfile: () -> Unit,
+        onClickNotifications: () -> Unit,
         modifier: Modifier = Modifier
     ) {
         FilledIconButton(
-            onClick = {},
+            onClick = onClickNotifications,
             modifier = modifier,
             colors = IconButtonDefaults.filledIconButtonColors(
                 containerColor = primaryPurple,
-                contentColor = Color.Black,
+                contentColor = primaryTextColor,
             )
         ) {
             Icon(
@@ -144,7 +145,7 @@ abstract class HomeView : View() {
     }
 
     @Composable
-    fun ShowScreen() {
+    fun ShowScreen(navController: NavController) {
 
         Column(
             modifier = Modifier.fillMaxSize()
@@ -155,7 +156,7 @@ abstract class HomeView : View() {
                 Header(
                     backgroundColor = headerColor,
                     textColor = headerTextColor,
-                    customContent = { CustomHeader() },
+                    customContent = { CustomHeader(navController) },
                 )
             }
 
@@ -174,7 +175,10 @@ abstract class HomeView : View() {
                         OptionRow(
                             option = option,
                             onClickOption = {
-                                //navController.navigate(option.)
+                                // options without a screen yet have an empty route
+                                if (option.route.isNotEmpty()) {
+                                    navController.navigate(option.route)
+                                }
                             }
                         )
                         if (index < options.lastIndex) {
@@ -188,6 +192,7 @@ abstract class HomeView : View() {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Footer(
+                    navController = navController,
                     backgroundColor = footerColor,
                     textColor = footerTextColor,
                     buttonColor = footerButtonColor,

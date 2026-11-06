@@ -18,9 +18,13 @@
 
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import Tab
 import View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -32,6 +36,10 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -49,10 +57,11 @@ class LotteriesView: View() {
     val footerbgColor = entrantFooterBackgroundColor
     val footerButtonColor = entrantFooterButtonColor
     @Composable
-    public fun ShowScreen() {
+    public fun ShowScreen(navController: NavController) {
+        var state by remember {mutableStateOf("Current")}
         val tabs = mutableListOf<Tab>(
-            Tab(name = "Current", color = entrantFooterBackgroundColor, option = {}),
-            Tab(name = "Previous", color = secondaryGreenColor, option = {}),
+            Tab(name = "Current", color = entrantFooterBackgroundColor, option = {state="Current"}),
+            Tab(name = "Previous", color = secondaryGreenColor, option = {state="Previous"}),
         )
         Column() {
             Row() {
@@ -63,9 +72,9 @@ class LotteriesView: View() {
                 )
             }
             Row(modifier = Modifier.height(50.dp)){
-                TabManager(tabs)
+                TabManager(tabs,state)
             }
-            if (true) {
+            if (state=="Current") {
                 Row(modifier = Modifier.weight(1f).background(entrantFooterBackgroundColor)) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
@@ -84,6 +93,7 @@ class LotteriesView: View() {
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -92,7 +102,7 @@ class LotteriesView: View() {
         }
     }
     @Composable
-    private fun CurrentCampsiteLotteryRow(){
+    private fun CurrentCampsiteLotteryRow(navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -132,7 +142,8 @@ class LotteriesView: View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
                     )
                     Spacer(modifier = Modifier.width(25.dp))
                     Text(
@@ -145,7 +156,7 @@ class LotteriesView: View() {
         }
     }
     @Composable
-    private fun PreviousCampsiteLotteryRow(){
+    private fun PreviousCampsiteLotteryRow(navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -196,7 +207,9 @@ class LotteriesView: View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp, textAlign = TextAlign.Center,
-                        modifier = Modifier.width(500.dp)
+                        modifier = Modifier
+                            .width(500.dp)
+                            .clickable { navController.navigate(Routes.CAMPSITE_DETAILS) }
                     )
                 }
             }
@@ -211,7 +224,7 @@ fun LotteriesViewPreview() {
     val mp = LotteriesView()
     CodeTheme {
         (
-            mp.ShowScreen()
+            mp.ShowScreen(rememberNavController())
         )
     }
 }
