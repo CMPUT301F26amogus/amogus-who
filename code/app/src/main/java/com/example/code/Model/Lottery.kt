@@ -38,28 +38,7 @@ class Lottery(
     waitlist: List<WaitlistEntry> = emptyList(),
 ) {
 
-    /**
-     * makes a lottery from date ranges instead of strings
-     *
-     * @param registrationPeriod when entrants can join the waitlist
-     * @param bookingPeriod when winners can reserve their dates
-     */
-    constructor(
-        id: String,
-        ownerId: String,
-        campsiteIds: List<String>,
-        registrationPeriod: DateRange,
-        bookingPeriod: DateRange,
-        numWinners: Int,
-        waitlistCapacity: Int? = null,
-        status: LotteryStatus = LotteryStatus.OPEN,
-        waitlist: List<WaitlistEntry> = emptyList(),
-    ) : this(
-        id, ownerId, campsiteIds,
-        registrationPeriod.start.toString(), registrationPeriod.end.toString(),
-        bookingPeriod.start.toString(), bookingPeriod.end.toString(),
-        numWinners, waitlistCapacity, status, waitlist,
-    )
+
 
     /** first day of registration like 2027-05-01 and it only changes through [setRegistrationPeriod] */
     var registrationStart: String = registrationStart
