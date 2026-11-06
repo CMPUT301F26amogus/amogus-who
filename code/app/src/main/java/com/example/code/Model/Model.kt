@@ -614,12 +614,8 @@ open class Model: ModelUpdater<View>{
      *      if returns null, then the view is the sign-up page
      *      if returns user, then view is homepage
      */
-    fun signIn(): User? {
-        getUserObj { user ->
-            // When getUserObj finishes, forward the result to the caller of signIn
-            return@getUserObj
-        }
-        return null
+    fun signIn(onResult: (User?) -> Unit){
+        getUserObj(onResult)
     }
 
     /**
@@ -783,7 +779,7 @@ open class Model: ModelUpdater<View>{
      *
      * @return Returns a list of lotteries that the user is in
      */
-    fun getWaitlist(): ArrayList<Lottery>{
+    fun getWaitlist(onResult: (List<Lottery>) -> Unit){
         val lotteries = ArrayList<Lottery>()
         dataRef.document(currentDeviceId).get().addOnSuccessListener {
             snapshot ->
@@ -791,8 +787,8 @@ open class Model: ModelUpdater<View>{
                 val user = snapshot.toObject(User::class.java)
                 lotteries.addAll(user!!.lotteries!!)
             }
+            onResult(lotteries)
         }
-        return lotteries
     }
 
 
@@ -814,7 +810,10 @@ open class Model: ModelUpdater<View>{
         setUserObj(tempuser!!)
     }
 
-    fun getNotifications(): ArrayList<Notification>{
+    /**
+     *
+     */
+    fun getNotifications(onResult: (List<Notification>) -> Unit){
         val notifications = ArrayList<Notification>()
 
         setNotifCount {notificationCount = it}
@@ -825,8 +824,8 @@ open class Model: ModelUpdater<View>{
                     notifications.add(it.toObject(Notification::class.java)!!)
                 }
             }
+            onResult(notifications)
         }
-        return notifications
     }
 
 
