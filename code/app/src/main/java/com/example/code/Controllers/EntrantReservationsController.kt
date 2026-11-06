@@ -28,7 +28,7 @@ class EntrantReservationsController(
                 tempCampsite = result
             }
         }
-        model.setTempCampsite(tempCampsite)
+        model.settTempCampsite(tempCampsite)
         navController.navigate(Routes.CAMPSITE_DETAILS)
     }
 }
