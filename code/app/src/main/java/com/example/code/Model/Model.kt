@@ -165,27 +165,12 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
-     * sets when entrants can join a lottery as the owner
+     * saves a lottery to the database eg after changing its periods
      *
-     * @param lottery the lottery to change
-     * @param period the new registration period
+     * @param lottery the lottery to save
      */
-    fun setRegistrationPeriod(lottery: Lottery, period: DateRange) {
-        lottery.registrationPeriod = period
+    fun saveLottery(lottery: Lottery) {
         lotteryRef.document(lottery.id).set(lottery)
-        lottery.notifyViews()
-    }
-
-    /**
-     * sets when lottery winners can book as the owner
-     *
-     * @param lottery the lottery to change
-     * @param period the new booking period
-     */
-    fun setBookingPeriod(lottery: Lottery, period: DateRange) {
-        lottery.bookingPeriod = period
-        lotteryRef.document(lottery.id).set(lottery)
-        lottery.notifyViews()
     }
 
 }
