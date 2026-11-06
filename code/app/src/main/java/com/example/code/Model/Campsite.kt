@@ -27,7 +27,7 @@ class Campsite(
     val ownerId: String,
     name: String,
     var location: String,
-    var lottery: Lottery
+    var lottery: Lottery = Lottery(),
     maxOccupancy: Int,
     pricePerNight: Double,
     var description: String = "",
