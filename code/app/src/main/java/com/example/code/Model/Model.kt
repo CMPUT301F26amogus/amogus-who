@@ -138,8 +138,8 @@ open class Model: ModelUpdater<View>{
     private val waitlistRef by lazy { db.collection("waitlist") }
 
     public var campsiteList: ArrayList<Campsite> = arrayListOf()
-        set(newArray) {
-            field = newArray
+        fun setCampsite(newArray: ArrayList<Campsite>) {
+            campsiteList = newArray
             notifyViews()
         }
 
@@ -872,7 +872,15 @@ open class Model: ModelUpdater<View>{
      * @param campsiteId id of the campsite
      */
     fun getLottery(campsiteId: String, onResult: (Lottery?) -> Unit) {
-        dataRef.document(campsiteId).get()
+        dataRef.document(campsiteId).get().addOnSuccessListener {
+            snapshot ->
+            if (snapshot.exists()) {
+                val campsite = snapshot.toObject(Campsite::class.java)
+                onResult(campsite?.lottery)
+            } else {
+                onResult(null)
+            }
+        }
     }
 
 
