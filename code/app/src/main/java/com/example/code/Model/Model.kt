@@ -1,9 +1,6 @@
 import androidx.compose.runtime.mutableStateListOf
-import com.example.code.Model.DateRange
 import com.example.code.Model.Lottery
 import com.example.code.Model.Reservation
-// alias since the old Campsite in the default package is still used by createCampsite and friends
-import com.example.code.Model.Campsite as CampsiteModel
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 interface ModelUpdater<V>{
@@ -57,11 +54,6 @@ open class Model: ModelUpdater<View>{
     private val reservationRef by lazy { db.collection("reservations") }
     private val lotteryRef by lazy { db.collection("lotteries") }
 
-    fun createCampsite(campsite: Campsite) {
-        campsiteRef.document(campsite.campId).set(campsite)
-        notifyViews()
-    }
-
     fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double,
                        rating: Double) {
         campsite.campName = campName
@@ -107,10 +99,10 @@ open class Model: ModelUpdater<View>{
      * @param campId id of the campsite
      * @param onResult gets the campsite or null if it wasnt found
      */
-    fun getCampsiteInfo(campId: String, onResult: (CampsiteModel?) -> Unit) {
+    fun getCampsiteInfo(campId: String, onResult: (Campsite?) -> Unit) {
         campsiteRef.document(campId).get()
             .addOnSuccessListener { document ->
-                val campsite = document.toObject(CampsiteModel::class.java)
+                val campsite = document.toObject(Campsite::class.java)
                 onResult(campsite)
             }
             .addOnFailureListener {
@@ -133,18 +125,6 @@ open class Model: ModelUpdater<View>{
             .addOnFailureListener {
                 onResult(emptyList())
             }
-    }
-
-    /**
-     * gets the booked dates of a campsite for its owner
-     *
-     * @param campId id of the campsite
-     * @param onResult gets each booking or an empty list if it failed
-     */
-    fun getBookedDates(campId: String, onResult: (List<DateRange>) -> Unit) {
-        getCampsiteInfo(campId) { campsite ->
-            onResult(campsite?.availability?.bookings ?: emptyList())
-        }
     }
 
     /**
