@@ -47,7 +47,7 @@ class Lottery(
     constructor(
         id: String,
         ownerId: String,
-        campsiteIds: List<String>,
+        campsites: List<Campsite>,
         registrationPeriod: DateRange,
         bookingPeriod: DateRange,
         numWinners: Int,
@@ -55,7 +55,7 @@ class Lottery(
         status: LotteryStatus = LotteryStatus.OPEN,
         waitlist: List<WaitlistEntry> = emptyList(),
     ) : this(
-        id, ownerId, campsiteIds,
+        id, ownerId, campsites,
         registrationPeriod.start.toString(), registrationPeriod.end.toString(),
         bookingPeriod.start.toString(), bookingPeriod.end.toString(),
         numWinners, waitlistCapacity, status, waitlist,
