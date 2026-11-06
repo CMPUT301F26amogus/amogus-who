@@ -159,7 +159,17 @@ open class Model: ModelUpdater<View>{
     /**
      * Register that just holds a single campsite cause why not
      */
-    var campsite: Campsite? = null
+    var tempCampsite: Campsite? = null
+
+    fun getTempCampsite(): Campsite? {
+        return tempCampsite
+    }
+
+    fun setTempCampsite(campsite: Campsite) {
+        tempCampsite = campsite
+        notifyViews()
+    }
+
 
 
 
@@ -853,6 +863,14 @@ open class Model: ModelUpdater<View>{
 
     // Add
 
+    /**
+     * get lottery associated with campsite
+     *
+     * @param campsiteId id of the campsite
+     */
+    fun getLottery(campsiteId: String, onResult: (Lottery?) -> Unit) {
+        dataRef.document(campsiteId).get()
+    }
 
 
 
