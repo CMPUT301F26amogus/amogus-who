@@ -156,6 +156,13 @@ open class Model: ModelUpdater<View>{
             notifyViews()
         }
 
+    /**
+     * Register that just holds a single campsite cause why not
+     */
+    var campsite: Campsite? = null
+
+
+
     fun createCampsite(campsite: Campsite) {
         campsiteRef.document(campsite.id).set(campsite)
     }
