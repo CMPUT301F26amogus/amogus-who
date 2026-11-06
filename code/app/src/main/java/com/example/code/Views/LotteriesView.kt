@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import Campsite
 import com.example.code.Routes
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
@@ -48,12 +49,14 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.EntrantLotteriesController
 import com.example.code.ui.theme.CodeTheme
 
-class LotteriesView: View() {
+class LotteriesView(M: Model): View() {
     override fun update(model: Model) {
 
     }
+    val controller = EntrantLotteriesController(M)
     val bgColor = secondaryGreenColor
     val headerbgColor = entrantHeaderBackgroundColor
     val headerTextColor = entrantHeaderTextColor
@@ -106,7 +109,7 @@ class LotteriesView: View() {
         }
     }
     @Composable
-    private fun CurrentCampsiteLotteryRow(navController: NavController) {
+    private fun CurrentCampsiteLotteryRow(campsite: Campsite,navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -140,14 +143,15 @@ class LotteriesView: View() {
                     Text(
                         "X Cancel", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable {controller.cancelLottery()},
                     )
                     Spacer(modifier = Modifier.width(25.dp))
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
+                        modifier = Modifier.clickable { controller.viewSite()},
                     )
                     Spacer(modifier = Modifier.width(25.dp))
                     Text(
@@ -160,7 +164,7 @@ class LotteriesView: View() {
         }
     }
     @Composable
-    private fun PreviousCampsiteLotteryRow(navController: NavController) {
+    private fun PreviousCampsiteLotteryRow(campsite: Campsite, navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -174,13 +178,13 @@ class LotteriesView: View() {
                             ) {
                                 Row() {
                                     Text(
-                                        "Campsite Name",
+                                        campsite.campName,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
                                 }
                                 Row() {
-                                    Text("Park/Location")
+                                    Text(campsite.location)
                                 }
                                 Spacer(modifier = Modifier.height(15.dp))
                             }
@@ -188,7 +192,7 @@ class LotteriesView: View() {
                                 Spacer(modifier = Modifier.height(15.dp))
                                 Row() {
                                     Text(
-                                        "Rating",
+                                        campsite.rating.toString(),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp
                                     )
@@ -213,7 +217,7 @@ class LotteriesView: View() {
                         fontSize = 20.sp, textAlign = TextAlign.Center,
                         modifier = Modifier
                             .width(500.dp)
-                            .clickable { navController.navigate(Routes.CAMPSITE_DETAILS) }
+                            .clickable { controller.viewSite() }
                     )
                 }
             }
@@ -225,7 +229,7 @@ class LotteriesView: View() {
 @Preview(showBackground = true)
 @Composable
 fun LotteriesViewPreview() {
-    val mp = LotteriesView()
+    val mp = LotteriesView(Model())
     CodeTheme {
         (
             mp.ShowScreen(rememberNavController())

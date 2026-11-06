@@ -1,6 +1,7 @@
 package com.example.code
 
 import Model
+import View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -110,7 +111,6 @@ fun App(id: String, model: Model) {
         }
         return
     }
-
     NavHost(navController = navController, startDestination = start) {
         composable(Routes.REGISTRATION) { remember { RegistrationView(model) }.ShowScreen(navController) }
 
@@ -124,9 +124,9 @@ fun App(id: String, model: Model) {
         composable(Routes.MAP) { remember { MapView() }.ShowScreen(navController) }
 
         composable(Routes.RESERVATIONS) { remember { ReservationsView() }.ShowScreen(navController) }
-        composable(Routes.LOTTERIES) { remember { LotteriesView() }.ShowScreen(navController) }
-        composable(Routes.SEARCH) { remember { SearchView() }.ShowScreen(navController) }
-        composable(Routes.SEARCH_RESULTS) { remember { SearchResultsView() }.ShowScreen(navController) }
+        composable(Routes.LOTTERIES) { remember { LotteriesView(model) }.ShowScreen(navController) }
+        composable(Routes.SEARCH) { remember { SearchView(model) }.ShowScreen(navController) }
+        composable(Routes.SEARCH_RESULTS) { remember { SearchResultsView(model) }.ShowScreen(navController) }
 
         composable(Routes.OWNER_CAMPSITES) { remember { OwnerCampsiteListView() }.ShowScreen(navController) }
         composable(Routes.OWNER_RESERVATIONS) { remember { OwnerReservationsView() }.ShowScreen(navController) }

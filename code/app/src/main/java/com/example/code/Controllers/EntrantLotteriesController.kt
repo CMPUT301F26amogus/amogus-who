@@ -22,7 +22,7 @@ class EntrantLotteriesController(
     /**
      * Sets the active site to view
      */
-    public fun setSiteToView(){
+    public fun viewSite(){
 
     }
 }

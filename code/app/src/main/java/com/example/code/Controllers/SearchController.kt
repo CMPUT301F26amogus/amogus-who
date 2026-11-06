@@ -2,6 +2,8 @@ package com.example.code.Controllers
 
 import Campsite
 import Model
+import androidx.navigation.NavController
+import com.example.code.Routes
 
 class SearchController(
     private val model : Model
@@ -9,7 +11,7 @@ class SearchController(
     /**
      * Searches for campsites
      */
-    public fun search(name: String){
+    public fun search(name: String, navController: NavController){
         var tempResult: List<Campsite>? = null
         model.searchCampsite(campName = name){
                 result ->
@@ -17,6 +19,7 @@ class SearchController(
                 tempResult = result
             }
         }
-
+        //set site to view
+        navController.navigate(Routes.SEARCH_RESULTS)
     }
 }

@@ -20,7 +20,6 @@ class MainActivity : ComponentActivity() {
         val id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
         val M = Model()
         M.setDeviceInformation(id)
-
         setContent {
             CodeTheme {
                 App(id, M)

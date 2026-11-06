@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import Model
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -36,6 +37,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import com.example.code.ui.theme.CodeTheme
 
 class CampsiteDetailsView(): View() {
