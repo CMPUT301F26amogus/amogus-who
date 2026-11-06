@@ -238,7 +238,7 @@ open class Model: ModelUpdater<View>{
 
     fun updateLottery(lottery: Lottery, onResult: (Result<Unit>) -> Unit) {
         val updates = mapOf(
-            "campsiteIds" to lottery.campsiteIds,
+            "campsites" to lottery.campsites,
             "registrationStart" to lottery.registrationStart,
             "registrationEnd" to lottery.registrationEnd,
             "bookingStart" to lottery.bookingStart,
