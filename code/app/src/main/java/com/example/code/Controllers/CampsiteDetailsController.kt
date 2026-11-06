@@ -1,6 +1,7 @@
 package com.example.code.Controllers
 
 import Model
+import com.example.code.Model.Lottery
 
 class CampsiteDetailsController(
     private val model : Model
@@ -8,14 +9,18 @@ class CampsiteDetailsController(
     /**
      * Joins a lottery for the active user and site
      */
-    public fun joinLottery(){
-
+    public fun joinLottery(lottery: Lottery){
+        model.joinWaitlist(
+            lottery = lottery,
+        ){}
     }
     /**
      * Leaves a lottery for the active user and site
      */
-    public fun leaveLottery(){
-
+    public fun leaveLottery(lottery: Lottery){
+        model.leaveWaitlist(
+            lottery = lottery,
+        ){}
     }
 
     /**

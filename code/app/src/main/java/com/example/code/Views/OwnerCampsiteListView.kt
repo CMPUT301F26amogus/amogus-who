@@ -3,6 +3,7 @@ package com.example.code.Views
 import com.example.code.Routes
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import Model
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -57,9 +58,7 @@ class DummyCampsite(
  *
  */
 class OwnerCampsiteListView : View() {
-
-//    val controller by lazy { OwnerCampsiteListController(model = M) }
-
+//   val controller by lazy { OwnerCampsiteListController(model = M) }
     // modify to pull real list from model
     val campsites = mutableListOf(
         DummyCampsite(
