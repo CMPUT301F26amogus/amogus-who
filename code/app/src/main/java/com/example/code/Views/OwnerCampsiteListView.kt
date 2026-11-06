@@ -55,8 +55,7 @@ class DummyCampsite(
  *
  */
 class OwnerCampsiteListView : View() {
-//    val controller by lazy { OwnerCampsiteListController(model = M) }
-
+//   val controller by lazy { OwnerCampsiteListController(model = M) }
     // modify to pull real list from model
     val campsites = mutableListOf(
         DummyCampsite(
