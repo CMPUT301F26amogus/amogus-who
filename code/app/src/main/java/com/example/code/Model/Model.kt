@@ -783,7 +783,7 @@ open class Model: ModelUpdater<View>{
      *
      * @return Returns a list of lotteries that the user is in
      */
-    fun getWaitlist(): ArrayList<Lottery>{
+    fun getWaitlist(onResult: (List<Lottery>) -> Unit){
         val lotteries = ArrayList<Lottery>()
         dataRef.document(currentDeviceId).get().addOnSuccessListener {
             snapshot ->
@@ -791,8 +791,8 @@ open class Model: ModelUpdater<View>{
                 val user = snapshot.toObject(User::class.java)
                 lotteries.addAll(user!!.lotteries!!)
             }
+            onResult(lotteries)
         }
-        return lotteries
     }
 
 
@@ -814,6 +814,9 @@ open class Model: ModelUpdater<View>{
         setUserObj(tempuser!!)
     }
 
+    /**
+     *
+     */
     fun getNotifications(): ArrayList<Notification>{
         val notifications = ArrayList<Notification>()
 
