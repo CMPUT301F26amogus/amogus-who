@@ -136,6 +136,8 @@ class Campsite(
 
     override fun toString(): String = "Campsite(id=$id, name=$name)"
 
+
+
     private companion object {
         fun validName(name: String): String {
             require(name.isNotBlank()) { "Name must not be blank" }
