@@ -2,6 +2,7 @@ package com.example.code.Controllers
 
 import Model
 import androidx.navigation.NavController
+import com.example.code.Model.Campsite
 import com.example.code.Model.Reservation
 import com.example.code.Routes
 
@@ -20,6 +21,14 @@ class EntrantReservationsController(
      */
     public fun viewCampsite(cid: String, navController: NavController){
         //set campsite to view
+        var tempCampsite: Campsite? = null
+        model.getCampsite(cid){
+                result ->
+            if (result != null) {
+                tempCampsite = result
+            }
+        }
+        model.setTempCampsite(tempCampsite)
         navController.navigate(Routes.CAMPSITE_DETAILS)
     }
 }

@@ -19,7 +19,6 @@ class SearchController(
                 tempResult = result
             }
         }
-        //set site to view
         navController.navigate(Routes.SEARCH_RESULTS)
     }
 }

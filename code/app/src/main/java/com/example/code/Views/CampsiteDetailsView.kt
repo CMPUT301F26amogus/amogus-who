@@ -47,7 +47,7 @@ class CampsiteDetailsView(M:Model): View() {
     var campsiteToView: Campsite? = null
     val controller = CampsiteDetailsController(M)
     override fun update(model: Model) {
-
+        campsiteToView = model.tempCampsite
     }
 
     @Composable
