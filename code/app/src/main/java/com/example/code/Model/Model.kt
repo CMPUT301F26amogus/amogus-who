@@ -138,33 +138,10 @@ open class Model: ModelUpdater<View>{
     private val waitlistRef by lazy { db.collection("waitlist") }
 
     public var campsiteList: ArrayList<Campsite> = arrayListOf()
-        fun setCampsite(newArray: ArrayList<Campsite>?) {
+        fun setCampsiteList(newArray: ArrayList<Campsite>) {
             campsiteList = newArray
             notifyViews()
         }
-
-    public var id: String = ""
-        set(value) {
-            field = value
-            notifyViews()
-        }
-
-    /**
-     * Register that just holds a single campsite cause why not
-     */
-    var tempCampsite: Campsite? = null
-
-    fun getTempCampsite(): Campsite? {
-        return tempCampsite
-    }
-
-    fun setTempCampsite(campsite: Campsite?) {
-        tempCampsite = campsite
-        notifyViews()
-    }
-
-
-
 
     fun createCampsite(campsite: Campsite) {
         campsiteRef.document(campsite.id).set(campsite)
