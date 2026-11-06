@@ -197,17 +197,24 @@ class EntrantModel: Model() {
     }
 
 
-    // should have a function to notify the user when they won a lottery
-    fun notifyWinner(): Notification {
+    /**
+     * Produces a notification object that is associated with the user
+     *
+     * @param notification The notification message
+     * @return The notification object
+     */
+    fun notifyUser(notification: String): Notification {
         var tempuser: User? = null
         getUserObj({ user -> tempuser = user })
 
         if (tempuser!!.notificationsEnabled) {
-            return Notification("",  listOf(tempuser!!.deviceId), "You won a lottery")
+            return Notification("",  listOf(tempuser!!.deviceId), notification)
         }
         return Notification("", emptyList(), "") // Return an empty notification if the user doesnt have notifs enabled
 
     }
+
+
 
 
 

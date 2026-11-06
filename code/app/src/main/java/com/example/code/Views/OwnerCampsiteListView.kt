@@ -41,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.OwnerCampsiteListController
 
 class DummyCampsite(
     val campsiteName: String,
@@ -51,8 +52,15 @@ class DummyCampsite(
     val rating: Double,
 ) {}
 
+/**
+ *  OwnerCampsiteListView: the view for the owner to see their campsites
+ *
+ */
 class OwnerCampsiteListView : View() {
 
+//    val controller by lazy { OwnerCampsiteListController(model = M) }
+
+    // modify to pull real list from model
     val campsites = mutableListOf(
         DummyCampsite(
             campsiteName = "Lodge A",
@@ -282,6 +290,10 @@ class OwnerCampsiteListView : View() {
         }
     }
 
+    /**
+     *  ShowScreen: render the page
+     *
+     */
     @Composable
     fun ShowScreen(navController: NavController) {
         Column(

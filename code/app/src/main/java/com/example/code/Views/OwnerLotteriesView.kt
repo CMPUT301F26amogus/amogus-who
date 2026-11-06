@@ -2,6 +2,7 @@ package com.example.code.Views
 
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import Model
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -36,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.OwnerLotteriesController
 
 class DummyLottery(
     val campsiteName: String,
@@ -46,8 +48,16 @@ class DummyLottery(
     val state: String,
 ) {}
 
+/**
+ *  OwnerLotteriesView: the view for the owner to see their lotteries
+ *
+ */
 class OwnerLotteriesView : View() {
 
+
+//    val controller by lazy { OwnerLotteriesController(model = M) }
+
+    // modify to pull real lotteries from model
     val lotteries = mutableListOf(
         DummyLottery(
             campsiteName = "Site Alpha",
@@ -101,6 +111,8 @@ class OwnerLotteriesView : View() {
         drawDate: String,
         state: String,
     ) {
+        val action = if (state == "Open") "Draw now" else "View winners"
+
         Column(
             modifier = Modifier
                 .clip(shape = RoundedCornerShape(12.dp))
@@ -149,7 +161,8 @@ class OwnerLotteriesView : View() {
                             modifier = Modifier
                                 .height(35.dp),
                             colors = ButtonDefaults.buttonColors(
-                                containerColor = Color(0xff9bfa8f),
+                                containerColor =
+                                    if (state == "Open") Color(0xff9bfa8f) else Color(0xffe2dde6),
                                 contentColor = primaryGreenTextColor,
                             )
                         ) {
@@ -195,7 +208,7 @@ class OwnerLotteriesView : View() {
                     .padding(10.dp),
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
+                    onClick = { /* controller.navigateToOwnerLottery() */ },
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -213,17 +226,17 @@ class OwnerLotteriesView : View() {
                 )
 
                 ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
+                    onClick = { /* controller.onLotteryActionClick() */ },
                     shape = CircleShape,
                     containerColor = primaryPurple,
                     contentColor = secondaryPurple,
                     icon = {
                         Icon(
                             imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = "Details",
+                            contentDescription = "Draw or View",
                         )
                     },
-                    text = { Text("Draw now") }
+                    text = { Text(action) }
                 )
             }
         }
@@ -264,6 +277,10 @@ class OwnerLotteriesView : View() {
         }
     }
 
+    /**
+     *  ShowScreen: render the page
+     *
+     */
     @Composable
     fun ShowScreen(navController: NavController) {
         Column(

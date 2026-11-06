@@ -89,9 +89,12 @@ fun NavController.goHome() {
 /**
  * Sets up navigation between all the views in the app.
  * Waits for [model] to load the current user, then starts on the screen for their role.
+ *
+ * @param id this device's id, the same one given to [model]
+ * @param model the app's model, already set up with [id]
  */
 @Composable
-fun App(model: Model) {
+fun App(id: String, model: Model) {
     val navController = rememberNavController()
     var startDestination by remember { mutableStateOf<String?>(null) }
 
@@ -109,14 +112,14 @@ fun App(model: Model) {
     }
 
     NavHost(navController = navController, startDestination = start) {
-        composable(Routes.REGISTRATION) { remember { RegistrationView() }.ShowScreen(navController) }
+        composable(Routes.REGISTRATION) { remember { RegistrationView(model) }.ShowScreen(navController) }
 
         composable(Routes.ENTRANT_HOME) { remember { EntrantHomeView() }.ShowScreen(navController) }
         composable(Routes.OWNER_HOME) { remember { CampsiteOwnerHomeView() }.ShowScreen(navController) }
         composable(Routes.ADMIN_HOME) { remember { AdminHomeView() }.ShowScreen(navController) }
 
-        composable(Routes.PROFILE) { remember { ProfileSettingsView() }.ShowScreen(navController) }
-        composable(Routes.NOTIFICATIONS) { remember { NotificationsView(model.currentDeviceId) }.ShowScreen(navController) }
+        composable(Routes.PROFILE) { remember { ProfileSettingsView(model) }.ShowScreen(navController) }
+        composable(Routes.NOTIFICATIONS) { remember { NotificationsView(id) }.ShowScreen(navController) }
         composable(Routes.CAMPSITE_DETAILS) { remember { CampsiteDetailsView() }.ShowScreen(navController) }
         composable(Routes.MAP) { remember { MapView() }.ShowScreen(navController) }
 

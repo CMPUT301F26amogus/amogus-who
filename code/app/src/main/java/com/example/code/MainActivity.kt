@@ -16,13 +16,14 @@ class MainActivity : ComponentActivity() {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
 
-        val deviceId = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
-        val model = Model()
-        model.setDeviceInformation(deviceId)
+        // set up once here, not inside setContent, so they aren't recreated on every redraw
+        val id = Settings.Secure.getString(contentResolver, Settings.Secure.ANDROID_ID)
+        val M = Model()
+        M.setDeviceInformation(id)
 
         setContent {
             CodeTheme {
-                App(model)
+                App(id, M)
             }
         }
     }

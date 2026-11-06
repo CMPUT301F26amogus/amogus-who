@@ -121,6 +121,7 @@ abstract class View: ViewObserver<Model>{
                             text = headerText,
                             fontSize = headerTextSize.sp,
                             color = textColor,
+                            modifier = Modifier.testTag("Header: $headerText")
                         )
                     }
                 }
@@ -136,7 +137,7 @@ abstract class View: ViewObserver<Model>{
                         Text(
                             text = subheaderText,
                             fontSize = subheaderTextSize.sp,
-                            color = textColor,
+                            color = textColor
                         )
                     }
                 }
