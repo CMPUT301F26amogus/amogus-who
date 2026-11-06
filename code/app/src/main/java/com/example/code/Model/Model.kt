@@ -13,6 +13,7 @@ import com.example.code.Model.ReservationStatus
 import com.example.code.Model.User
 import com.example.code.Model.WaitlistEntry
 import com.google.firebase.firestore.FieldValue
+import com.example.code.Model.Reservation
 import com.example.code.Model.Campsite
 
 interface ModelUpdater<V>{
@@ -55,6 +56,19 @@ open class Model: ModelUpdater<View>{
                 }
             }
     }
+
+    fun setNotifCount(onResult: (Int) -> Unit){
+        dataRef.document(currentDeviceId).get().addOnSuccessListener { snapshot ->
+            if (snapshot.exists()) {
+                val user = snapshot.toObject(User::class.java)
+                notificationCount = user!!.notificationCount
+                onResult(notificationCount)
+            } else {
+                onResult(0)
+            }
+        }
+    }
+
 
     /**
      * Sets the user's object, useful after getUserObj()
@@ -127,7 +141,7 @@ open class Model: ModelUpdater<View>{
 
     fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double,
                        rating: Double) {
-        campsite.campName = campName
+        campsite.name = campName
         campsite.location = location
         campsite.desc = desc
         campsite.maxOcc = maxOcc
@@ -439,10 +453,9 @@ open class Model: ModelUpdater<View>{
 
 
     /**
-     * Produces a notification object that is associated with the user
+     * Sends a notification to the user
      *
      * @param notification The notification message
-     * @return The notification object
      */
     fun notifyUser(notification: String) {
         var tempuser: User? = null
@@ -451,11 +464,15 @@ open class Model: ModelUpdater<View>{
         if (tempuser!!.notificationsEnabled) {
             dataRef.document("Notifications/$currentDeviceId/$notificationCount").set(Notification("", currentDeviceId, notification))
         }
-        notificationCount++
+        tempuser!!.notificationCount++
+        setUserObj(tempuser!!)
     }
 
     fun getNotifications(): ArrayList<Notification>{
         val notifications = ArrayList<Notification>()
+
+        setNotifCount {notificationCount = it}
+
         for (i in 0..notificationCount){
             dataRef.document("Notifications/$currentDeviceId/$i").get().addOnSuccessListener {
                 if (it.exists()){
