@@ -145,8 +145,8 @@ open class Model: ModelUpdater<View>{
     private val waitlistRef by lazy { db.collection("waitlist") }
 
     public var campsiteList: ArrayList<Campsite> = arrayListOf()
-        set(newArray) {
-            field = newArray
+        fun setCampsite(newArray: ArrayList<Campsite>) {
+            campsiteList = newArray
             notifyViews()
         }
 
