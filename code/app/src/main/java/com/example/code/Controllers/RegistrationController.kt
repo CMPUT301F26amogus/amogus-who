@@ -9,6 +9,6 @@ class RegistrationController(
      * Registers a user
      */
     public fun register(name: String, phoneNumber: String, email: String){
-        model.signUp(name = name, phoneNumber = phoneNumber, email = email)
+        model.signUp(name = name, phoneNumber = phoneNumber, email = email){}
     }
 }
