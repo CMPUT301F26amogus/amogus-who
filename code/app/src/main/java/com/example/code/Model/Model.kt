@@ -12,6 +12,7 @@ import com.example.code.Model.Notification
 import com.example.code.Model.ReservationStatus
 import com.example.code.Model.User
 import com.example.code.Model.WaitlistEntry
+import com.google.firebase.firestore.FieldValue
 
 interface ModelUpdater<V>{
     fun addView(v:V)
@@ -30,6 +31,7 @@ open class Model: ModelUpdater<View>{
     // excluded so it doesnt get saved into every document
     @get:Exclude
     var currentDeviceId: String = ""
+    var campId: String = ""
 
 
 
@@ -39,7 +41,7 @@ open class Model: ModelUpdater<View>{
      * Always check for null, if this is null then user doesnt exist.
      * Otherwise this returns user as an object
      */
-    fun getUserObj(onResult: (User?) -> Unit) {
+    fun getUserObj( onResult: (User?) -> Unit) {
         dataRef.document(currentDeviceId).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
@@ -166,6 +168,15 @@ open class Model: ModelUpdater<View>{
             }
     }
 
+    fun getCampId(campName: String, onResult: (String) -> Unit){
+        campsiteRef.whereEqualTo("campName", campName).get()
+            .addOnSuccessListener { documents ->
+                val campsite = documents.toObjects(Campsite::class.java)
+                onResult(campsite[0].campId)
+            }
+    }
+
+
     /**
      * gets an entrants reservations that are still active
      *
@@ -271,11 +282,12 @@ open class Model: ModelUpdater<View>{
      *      if returns null, then the view is the sign-up page
      *      if returns user, then view is homepage
      */
-    fun signIn(onResult: (User?) -> Unit) {
+    fun signIn(): User? {
         getUserObj { user ->
             // When getUserObj finishes, forward the result to the caller of signIn
-            onResult(user)
+            return@getUserObj
         }
+        return null
     }
 
     // needs further improvement
@@ -283,11 +295,13 @@ open class Model: ModelUpdater<View>{
      * Signs entrant up for lottery
      *
      *
-     * @param Lottery the lottery the entrant wants to join
+     * @param lottery the lottery the entrant wants to join
      * @return The lottery that the entrant joined, if zero then lottery failed to join
      */
-    fun joinLottery(Lottery: String): Boolean{
-        return false
+    fun joinLottery(lottery: Lottery){
+        dataRef.document(lottery.id).update(
+            "entrants", FieldValue.arrayUnion(currentDeviceId)
+        )
     }
 
     /**
@@ -442,7 +456,7 @@ open class Model: ModelUpdater<View>{
      * @param notification The notification message
      * @return The notification object
      */
-    fun notifyUser(notification: String): com.example.code.Model.Notification {
+    fun notifyUser(notification: String): Notification {
         var tempuser: User? = null
         getUserObj({ user -> tempuser = user })
 
