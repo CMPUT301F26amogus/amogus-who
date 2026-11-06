@@ -29,6 +29,7 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
+import java.util.Date
 import kotlin.text.toInt
 
 class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
@@ -39,7 +40,12 @@ class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
     val footerTextColor = ownerFooterBackgroundColor
     val footerBackgroundColor = ownerFooterButtonColor
     val footerButtonColor = ownerFooterTextColor
+    val fieldModifier = Modifier
+        .padding(horizontal = 20.dp)
+        .background(color = creamBG)
+        .padding(20.dp).width(290.dp)
     var headerName = if (isEdit) { "Edit Lottery" } else { "Add Lottery" }
+
 
     var oldLottery : Lottery? = null
     var lotteryCampsiteID = 0
@@ -53,12 +59,22 @@ class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
         if (isEdit){
 //            oldLottery = model.getLotteryToDisplay()
             //  extract oldLottery variables
+            if (oldLottery != null) {
+                val date: Date = this.oldLottery!!.bookStart
+                drawDate = dateToString(date)
+            }
         }
         else { clear() }
     }
 
     @Composable
     public fun ShowScreen() {
+        val lotteryCampsiteIDState = rememberTextFieldState("")
+        val waitListCapacityState = rememberTextFieldState("")
+        val drawDateState = rememberTextFieldState("")
+        val numberOfWinnersState = rememberTextFieldState("")
+
+
         Column() {
             Row() {  //  Header of screen
                 Header(
@@ -75,14 +91,11 @@ class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
             ) {
                 // campsite input field, by campsite ID
                 Row() {
-                    lotteryCampsiteID =
-                        variableDigitIntField(
+                    VariableDigitIntField(
+                        lotteryCampsiteIDState,
                         "Campsite ID",
                         7,
-                        Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
+                        fieldModifier
                     )
                 }
 
@@ -90,44 +103,35 @@ class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
 
                 //  max number of people allowed in waitlist input field
                 Row() {
-                    waitListCapacity =
-                        variableDigitIntField(
-                            "Max Entrants in Waitlist",
-                            5,
-                            Modifier
-                                .padding(horizontal = 20.dp)
-                                .background(color = creamBG)
-                                .padding(20.dp).width(290.dp)
-                        )
+                    VariableDigitIntField(
+                        waitListCapacityState,
+                        "Max Entrants in Waitlist",
+                        5,
+                        fieldModifier
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 //  date draw opens input field
                 Row() {
-                    drawDate =
-                        dateField(
-                            "Draw Opens",
-                            Modifier
-                                .padding(horizontal = 20.dp)
-                                .background(color = creamBG)
-                                .padding(20.dp).width(290.dp)
-                        )
+                    DateField(
+                        drawDateState,
+                        "Draw Opens",
+                        fieldModifier
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
                 //  number of winners in a lottery input field
                 Row() {
-                    numberOfWinners =
-                        variableDigitIntField(
-                            "Draw Duration (days)",
-                            3,
-                            Modifier
-                                .padding(horizontal = 20.dp)
-                                .background(color = creamBG)
-                                .padding(20.dp).width(290.dp)
-                        )
+                    VariableDigitIntField(
+                        numberOfWinnersState,
+                        "Draw Duration (days)",
+                        3,
+                        fieldModifier
+                    )
                 }
 
                 Spacer(modifier = Modifier.height(10.dp))

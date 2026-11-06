@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.text.input.InputTransformation
@@ -41,13 +42,20 @@ import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import java.sql.Date
 
-class AddEditCampsite : View() {
+class AddEditCampsite (isEdit: Boolean): View(), InputFieldFunctions {
     val bgColor = secondaryGreenColor
     val headerbgColor = ownerHeaderBackgroundColor
     val headerTextColor = ownerHeaderTextColor
     val footerTextColor = ownerFooterBackgroundColor
-    val footerbgColor = ownerFooterButtonColor
+    val footerBackgroundColor = ownerFooterButtonColor
     val footerButtonColor = ownerFooterTextColor
+    val fieldModifier = Modifier
+        .padding(horizontal = 20.dp)
+        .background(color = creamBG)
+        .padding(20.dp).width(290.dp)
+    val fieldModifierDate = Modifier
+        .background(color = creamBG)
+        .padding(15.dp).width(135.dp)
 
     var oldCampsite : Campsite? = null
     var campsiteName : String = ""
@@ -65,9 +73,9 @@ class AddEditCampsite : View() {
 
     var bookingPeriodEnd : String = ""
 
-    var tags : String = ""
+//    var tags : String = ""
 
-    var headerName = ""
+    var headerName = if (isEdit) {"Edit Campsite"} else { "Add Campsite" }
 
     override fun update(model: Model) {
 //        val tempCampsite = model.getCampsiteToDisplay()
@@ -100,6 +108,15 @@ class AddEditCampsite : View() {
     @Composable
     public fun ShowScreen() {
 
+        val campsiteNameState = TextFieldState("")
+        val parkNameState = TextFieldState("")
+        val campDescriptionState = TextFieldState("")
+        val addressState = TextFieldState("")
+        val maxGuestsState = TextFieldState("")
+        val pricePerNightState = TextFieldState("")
+        val bookingPeriodStartState = TextFieldState("")
+        val bookingPeriodEndState = TextFieldState("")
+
         Column() {
             Row() {
                 Header(
@@ -108,70 +125,42 @@ class AddEditCampsite : View() {
                     textColor = headerTextColor,
                 )
             }
-            Column(
-                modifier = Modifier.fillMaxWidth()
-                    .weight(1f)
-                    .background(bgColor),
-                horizontalAlignment = Alignment.CenterHorizontally
+            Column (
+                Modifier
+                .fillMaxWidth()
+                .weight(1f).background(secondaryGreenColor)
             ) {
                 // Campsite name input field
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextField(
-                        value = campsiteName,
-                        onValueChange = {
-                            campsiteName = it
-                        },
-                        label = {
-                            Text("Campsite Name")
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
-                    ) // end of camp name input
+                    StringField(
+                        campsiteNameState,
+                        "Campsite Name",
+                        fieldModifier
+                    )
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
 
                 // park / area name input field
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextField(
-                        value = parkName,
-                        onValueChange = {
-                            parkName = it
-                        },
-                        label = {
-                            Text("Park / Area")
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
-                    ) // end of park / area name input
+                    StringField(
+                        parkNameState,
+                        "Park / Area",
+                        fieldModifier
+                    )
+                     // end of park / area name input
                 }
-
-                Spacer(modifier = Modifier.height(10.dp))
 
                 // description input field
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextField(
-                        value = campDescription,
-                        onValueChange = {
-                            campDescription = it
-                        },
-                        label = {
-                            Text("Description")
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
+                    StringField(
+                        campDescriptionState,
+                        "Description",
+                        fieldModifier
                     )
                 } // end of description input
 
@@ -181,18 +170,10 @@ class AddEditCampsite : View() {
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextField(
-                        value = address,
-                        onValueChange = {
-                            address = it
-                        },
-                        label = {
-                            Text("Address")
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
+                    StringField(
+                        addressState,
+                        "Address",
+                        fieldModifier
                     )
                 }
 
@@ -202,143 +183,58 @@ class AddEditCampsite : View() {
                 Row(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    TextField(
-                        value = maxGuests,
-                        onValueChange = {
-                            maxGuests = it
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        ),
-                        label = {
-                            Text("Max Guests")
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
+                    Spacer(modifier = Modifier.width(20.dp))
+
+                    VariableDigitIntField(
+                        maxGuestsState,
+                        "Max Guests",
+                        2,
+                        fieldModifierDate
                     )
-                }
 
                 // price per night input field
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    TextField(
-                        value = pricePerNight,
-                        onValueChange = {
-                            pricePerNight = it
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Number
-                        ),
-                        label = {
-                            Text("Max Guests")
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
-                    )
-                }
-
-                // price per night input field
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val maxGuestsState = rememberTextFieldState("")
-                    TextField(
-                        state = maxGuestsState,
-                        label = {
-                            Text("Max Guests")
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Phone
-                        ),
-                        inputTransformation = InputTransformation.maxLength(2).then {
-                            if (!asCharSequence().isDigitsOnly()) {
-                                revertAllChanges()
-                            }
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
+                    VariableDigitIntField(
+                        pricePerNightState,
+                        "Price Per Night",
+                        4,
+                        fieldModifierDate
                     )
                 }
 
                 // bookings open and close date input field
                 Row(
                     modifier = Modifier.fillMaxWidth()
+
                 ) {
-                    val periodStartState = rememberTextFieldState("")
-                    TextField(
-                        state = periodStartState,
-                        label = {
-                            Text("Bookings Open")
-                        },
-                        placeholder = {
-                            Text("Mo/Da/Year")
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Phone
-                        ),
-                        inputTransformation = InputTransformation.maxLength(8).then {
-                            if (!asCharSequence().isDigitsOnly()) {
-                                revertAllChanges()
-                            }
-                        },
-                        outputTransformation = OutputTransformation {
-                            if (length > 2) insert(2, "/")
-                            if (length > 5) insert(5, "/")
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
-                    )
-                    bookingPeriodStart = periodStartState.text.toString()
+                    Spacer(modifier = Modifier.width(20.dp))
+                    Column() {
+                        DateField(
+                            bookingPeriodStartState,
+                            "Bookings Open",
+                            fieldModifierDate
+                        )
+                    }
+
+                    Column() {
+                        DateField(
+                            bookingPeriodEndState,
+                            "Bookings End",
+                            fieldModifierDate
+                        )
+                    }
                 }
 
-                // bookings open and close date input field
-                Row(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    val periodEndState = rememberTextFieldState("")
-                    TextField(
-                        state = periodEndState,
-                        label = {
-                            Text("Bookings Close")
-                        },
-                        placeholder = {
-                            Text("Mo/Da/Year")
-                        },
-                        keyboardOptions = KeyboardOptions(
-                            keyboardType = KeyboardType.Phone
-                        ),
-                        inputTransformation = InputTransformation.maxLength(8).then {
-                            if (!asCharSequence().isDigitsOnly()) {
-                                revertAllChanges()
-                            }
-                        },
-                        outputTransformation = OutputTransformation {
-                            if (length > 2) insert(2, "/")
-                            if (length > 5) insert(5, "/")
-                        },
-                        modifier = Modifier
-                            .padding(horizontal = 20.dp)
-                            .background(color = creamBG)
-                            .padding(20.dp).width(290.dp)
-                    )
-                    bookingPeriodEnd = periodEndState.text.toString()
-                }
+                Spacer(modifier = Modifier.width(20.dp))
 
                 // cancel and save changes
                 Row() {
                     Button(
                         onClick = {
                             // call Controller to navController to pop
-                        }
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp)
+                            .padding(15.dp)
                     ){
                         Text("Cancel")
                     }
@@ -354,20 +250,35 @@ class AddEditCampsite : View() {
 //                                //  call Controller to call newCampsite()
 //                            }
                             // call Controller to navController to pop
-                        }
+                        },
+                        modifier = Modifier
+                            .padding(horizontal = 20.dp)
+                            .padding(15.dp)
                     ){
                         Text("Save Changes")
                     }
                 }
 
             }
+            Row() {  //  Footer of screen
+                Footer(
+                    textColor = footerTextColor,
+                    backgroundColor = footerBackgroundColor,
+                    buttonColor = footerButtonColor,
+                )
+            }
         }
     }
 
-    @Preview(showBackground = true)
     @Composable
-    fun AddEditCampsitePreview() {
-        val aView = AddEditCampsite()
+    fun AddCampsitePreview() {
+        val aView = AddEditCampsite(false)
+        aView.ShowScreen()
+    }
+
+    @Composable
+    fun EditCampsitePreview() {
+        val aView = AddEditCampsite(true)
         aView.ShowScreen()
     }
 
