@@ -18,6 +18,9 @@
 
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -48,7 +51,7 @@ import com.example.code.ui.theme.CodeTheme
 
 class SearchView: View() {
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         var search by remember {mutableStateOf("")}
         var arrival by remember {mutableStateOf("")}
         var departure by remember {mutableStateOf("")}
@@ -221,9 +224,7 @@ class SearchView: View() {
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
             Row(modifier = Modifier.background(entrantFooterBackgroundColor).padding(5.dp).height(50.dp).fillMaxWidth()){
                 ElevatedButton(
-                    onClick = {
-
-                    },
+                    onClick = { navController.popBackStack() },
                     colors = ButtonDefaults.buttonColors(containerColor = light),
                     modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
                 ) {
@@ -245,9 +246,7 @@ class SearchView: View() {
                     Text(text = "X CLEAR", color = Color(0xff5530a4), fontSize = 13.sp)
                 }
                 ElevatedButton(
-                    onClick = {
-
-                    },
+                    onClick = { navController.navigate(Routes.SEARCH_RESULTS) },
                     colors = ButtonDefaults.buttonColors(containerColor = light),
                     modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
                 ) {
@@ -257,6 +256,7 @@ class SearchView: View() {
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
@@ -272,7 +272,7 @@ fun SearchViewPreview() {
     val mp = SearchView()
     CodeTheme {
         (
-            mp.ShowScreen()
+            mp.ShowScreen(rememberNavController())
         )
     }
 }

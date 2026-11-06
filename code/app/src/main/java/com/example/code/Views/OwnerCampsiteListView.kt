@@ -1,5 +1,8 @@
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -110,6 +113,8 @@ class OwnerCampsiteListView : View() {
         requests: Int,
         lotteryStatus: String,
         rating: Double,
+        onClickEdit: () -> Unit,
+        onClickDetails: () -> Unit,
     ) {
         Column(
             modifier = Modifier
@@ -208,7 +213,7 @@ class OwnerCampsiteListView : View() {
                     .padding(10.dp),
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { /* controller.onEditCampsite() */ },
+                    onClick = onClickEdit,
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -226,7 +231,7 @@ class OwnerCampsiteListView : View() {
                 )
 
                 ExtendedFloatingActionButton(
-                    onClick = { /* controller.onCampsiteDetails() */ },
+                    onClick = onClickDetails,
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -244,7 +249,7 @@ class OwnerCampsiteListView : View() {
     }
 
     @Composable
-    private fun Content() {
+    private fun Content(navController: NavController) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize(),
@@ -258,6 +263,8 @@ class OwnerCampsiteListView : View() {
                     requests = campsites[campsite].requests,
                     lotteryStatus = campsites[campsite].lotteryStatus,
                     rating = campsites[campsite].rating,
+                    onClickEdit = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
+                    onClickDetails = { navController.navigate(Routes.CAMPSITE_DETAILS) },
                 )
                 Spacer(
                     modifier = Modifier
@@ -267,7 +274,7 @@ class OwnerCampsiteListView : View() {
 
             item {
                 ExtendedFloatingActionButton(
-                    onClick = { /* controller.onRegisterCampsite() */ },
+                    onClick = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
                     shape = CircleShape,
                     containerColor = primaryPurple,
                     contentColor = primaryTextColor,
@@ -288,7 +295,7 @@ class OwnerCampsiteListView : View() {
      *
      */
     @Composable
-    fun ShowScreen() {
+    fun ShowScreen(navController: NavController) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -314,11 +321,13 @@ class OwnerCampsiteListView : View() {
                         .fillMaxSize()
                         .padding(20.dp),
                 ) {
-                    Content()
+                    Content(navController)
                 }
             }
 
             Footer(
+
+                navController = navController,
                 backgroundColor = ownerFooterBackgroundColor,
                 textColor = ownerFooterTextColor,
                 buttonColor = ownerFooterButtonColor,
@@ -332,5 +341,5 @@ class OwnerCampsiteListView : View() {
 @Composable
 fun OwnerCampsiteListViewPreview() {
     val listView = OwnerCampsiteListView()
-    listView.ShowScreen()
+    listView.ShowScreen(rememberNavController())
 }

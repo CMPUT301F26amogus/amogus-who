@@ -18,6 +18,9 @@
 
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import Option
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
@@ -36,8 +39,8 @@ class AdminHomeView : HomeView() {
         Option("Browse Images", ""),
         Option("Notification Logs", ""),
         Option("Message Logs", ""),
-        Option("View as Camper", ""),
-        Option("View as Owner", ""),
+        Option("View as Camper", Routes.ENTRANT_HOME),
+        Option("View as Owner", Routes.OWNER_HOME),
     )
 }
 
@@ -45,5 +48,5 @@ class AdminHomeView : HomeView() {
 @Composable
 fun AdminHomeViewPreview() {
     val homeView = AdminHomeView()
-    homeView.ShowScreen()
+    homeView.ShowScreen(rememberNavController())
 }

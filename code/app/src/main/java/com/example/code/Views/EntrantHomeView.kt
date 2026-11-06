@@ -18,6 +18,9 @@
 
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import Option
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -48,19 +51,20 @@ class EntrantHomeView : HomeView() {
     override val footerTextColor = entrantFooterTextColor
     override val footerButtonColor = entrantFooterButtonColor
     override val options = mutableStateListOf(
-        Option("My Reservations", ""),
-        Option("My Lotteries", ""),
-        Option("Search", ""),
+        Option("My Reservations", Routes.RESERVATIONS),
+        Option("My Lotteries", Routes.LOTTERIES),
+        Option("Search", Routes.SEARCH),
         Option("Scan QR Codes", ""),
         Option("Messages", ""),
     )
 
     @Composable
     private fun SearchPill(
+        onClick: () -> Unit,
         modifier: Modifier = Modifier
     ) {
         Button(
-            onClick = { /*TODO*/ },
+            onClick = onClick,
             modifier = modifier
                 .fillMaxHeight(),
             colors = ButtonDefaults.buttonColors(
@@ -79,25 +83,25 @@ class EntrantHomeView : HomeView() {
     }
 
     @Composable
-    override fun CustomHeader() {
+    override fun CustomHeader(navController: NavController) {
         Row(
             modifier = Modifier
                 .padding(20.dp)
                 .fillMaxWidth()
         ) {
             ProfileButton(
-                onClickProfile = { /*TODO*/ },
+                onClickProfile = { navController.navigate(Routes.PROFILE) },
                 modifier = Modifier.size(50.dp)
             )
 
             Spacer(modifier = Modifier.weight(1f))
 
-            SearchPill(modifier = Modifier)
+            SearchPill(onClick = { navController.navigate(Routes.SEARCH) }, modifier = Modifier)
 
             Spacer(modifier = Modifier.width(10.dp))
 
             NotificationsButton(
-                onClickProfile = { /*TODO*/ },
+                onClickNotifications = { navController.navigate(Routes.NOTIFICATIONS) },
                 modifier = Modifier.size(50.dp)
             )
         }
@@ -108,5 +112,5 @@ class EntrantHomeView : HomeView() {
 @Composable
 fun EntrantHomeViewPreview() {
     val homeView = EntrantHomeView()
-    homeView.ShowScreen()
+    homeView.ShowScreen(rememberNavController())
 }

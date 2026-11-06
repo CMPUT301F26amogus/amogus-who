@@ -18,6 +18,8 @@
 
 package com.example.code.Views
 
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
 import android.graphics.drawable.shapes.Shape
 import androidx.compose.foundation.background
@@ -58,7 +60,7 @@ import com.example.code.Controllers.ProfileSettingsController
 class ProfileSettingsView(M: Model): View() {
     private var controller = ProfileSettingsController(M)
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         var name by remember { mutableStateOf("") }
         var email by remember { mutableStateOf("") }
         var number by remember { mutableStateOf("") }
@@ -216,6 +218,7 @@ class ProfileSettingsView(M: Model): View() {
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
@@ -230,5 +233,5 @@ class ProfileSettingsView(M: Model): View() {
 fun ProfileSettingsViewPreview() {
     val M = Model()
     val mp = ProfileSettingsView(M)
-    mp.ShowScreen()
+    mp.ShowScreen(rememberNavController())
 }
