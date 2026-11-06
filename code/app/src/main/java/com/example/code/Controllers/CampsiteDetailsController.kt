@@ -10,9 +10,9 @@ class CampsiteDetailsController(
      * Joins a lottery for the active user and site
      */
     public fun joinLottery(lottery: Lottery){
-        model.joinLottery(
+        model.joinWaitlist(
             lottery = lottery,
-        )
+        ){}
     }
     /**
      * Leaves a lottery for the active user and site

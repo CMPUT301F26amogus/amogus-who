@@ -1,7 +1,9 @@
 package com.example.code.Controllers
 
 import Model
+import androidx.navigation.NavController
 import com.example.code.Model.Lottery
+import com.example.code.Routes
 
 class EntrantLotteriesController(
     private val model : Model
@@ -25,7 +27,8 @@ class EntrantLotteriesController(
     /**
      * Sets the active site to view
      */
-    public fun viewSite(){
-
+    public fun viewCampsite(cid: String, navController: NavController){
+        //set campsite to view
+        navController.navigate(Routes.CAMPSITE_DETAILS)
     }
 }

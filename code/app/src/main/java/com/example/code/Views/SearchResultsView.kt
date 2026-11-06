@@ -18,7 +18,6 @@
 
 package com.example.code.Views
 
-import Campsite
 import Model
 import com.example.code.Routes
 import androidx.compose.foundation.clickable
@@ -44,6 +43,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.Controllers.SearchResultsController
+import com.example.code.Model.Campsite
 import com.example.code.ui.theme.CodeTheme
 
 class SearchResultsView(M:Model): View() {
@@ -88,7 +88,7 @@ class SearchResultsView(M:Model): View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text(campsite.campName, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = light)
+                            Text(campsite.name, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = light)
                         }
                         Row() {
                             Text(campsite.location, color = light)
@@ -101,7 +101,7 @@ class SearchResultsView(M:Model): View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text(campsite.rating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp, color = light)
+                            Text(campsite.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp, color = light)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
@@ -115,7 +115,7 @@ class SearchResultsView(M:Model): View() {
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { controller.viewCampsite(campsite.campId, navController = navController) },
+                        modifier = Modifier.clickable { controller.viewCampsite(campsite.id, navController = navController) },
                     )
                 }
             }

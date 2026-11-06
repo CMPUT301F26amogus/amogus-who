@@ -18,12 +18,9 @@
 
 package com.example.code.Views
 
-import Campsite
-import com.example.code.Routes
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import Model
-import Reservation
 import Tab
 import View
 import androidx.compose.foundation.background
@@ -52,7 +49,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.Controllers.EntrantLotteriesController
+import com.example.code.Model.Campsite
 import com.example.code.Model.Lottery
+import com.example.code.Model.Reservation
 import com.example.code.ui.theme.CodeTheme
 
 class LotteriesView(M: Model): View() {
@@ -62,7 +61,7 @@ class LotteriesView(M: Model): View() {
         model.getCancelledReservations(entrantId = model.currentDeviceId){
             result -> previousLotteries = result
         }
-        model.getWaitlist(entrantId = model.currentDeviceId){
+        model.getWaitlist(){
                 result -> currentLotteries = result
         }
     }
@@ -99,6 +98,7 @@ class LotteriesView(M: Model): View() {
                         itemsIndexed(currentLotteries) { index, lottery ->
                             for (campsite in lottery.campsites)
                                 when (campsite) {
+                                    campsite ->
                                     CurrentCampsiteLotteryRow(
                                         lottery = lottery,
                                         campsite = campsite,
@@ -134,7 +134,7 @@ class LotteriesView(M: Model): View() {
         }
     }
     @Composable
-    private fun CurrentCampsiteLotteryRow(lottery: Lottery, campsite: Campsite,navController: NavController) {
+    private fun CurrentCampsiteLotteryRow(lottery: Lottery, campsite: Campsite, navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -143,7 +143,7 @@ class LotteriesView(M: Model): View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text(campsite.campName, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            Text(campsite.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                         Row() {
                             Text(campsite.location)
@@ -156,7 +156,7 @@ class LotteriesView(M: Model): View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text(campsite.rating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(campsite.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
@@ -176,7 +176,7 @@ class LotteriesView(M: Model): View() {
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { controller.viewSite()},
+                        modifier = Modifier.clickable { controller.viewCampsite(campsite.id, navController = navController)},
                     )
                     Spacer(modifier = Modifier.width(25.dp))
                     Text(
@@ -190,7 +190,7 @@ class LotteriesView(M: Model): View() {
         }
     }
     @Composable
-    private fun PreviousCampsiteLotteryRow(lottery: Lottery, campsite: Campsite, navController: NavController) {
+    private fun PreviousCampsiteLotteryRow(lottery: Lottery, campsite: Campsite?, navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -204,13 +204,13 @@ class LotteriesView(M: Model): View() {
                             ) {
                                 Row() {
                                     Text(
-                                        campsite.campName,
+                                        campsite!!.name,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
                                 }
                                 Row() {
-                                    Text(campsite.location)
+                                    Text(campsite!!.location)
                                 }
                                 Spacer(modifier = Modifier.height(15.dp))
                             }
@@ -218,7 +218,7 @@ class LotteriesView(M: Model): View() {
                                 Spacer(modifier = Modifier.height(15.dp))
                                 Row() {
                                     Text(
-                                        campsite.rating.toString(),
+                                        campsite!!.averageRating.toString(),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp
                                     )
@@ -243,7 +243,7 @@ class LotteriesView(M: Model): View() {
                         fontSize = 20.sp, textAlign = TextAlign.Center,
                         modifier = Modifier
                             .width(500.dp)
-                            .clickable { controller.viewSite() }
+                            .clickable { controller.viewCampsite(campsite!!.id, navController = navController) }
                     )
                 }
             }

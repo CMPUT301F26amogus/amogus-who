@@ -19,7 +19,6 @@
 package com.example.code.Views
 
 import Model
-import Reservation
 import com.example.code.Routes
 import androidx.compose.foundation.clickable
 import androidx.navigation.NavController
@@ -53,6 +52,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.Controllers.EntrantReservationsController
 import com.example.code.Model.Lottery
+import com.example.code.Model.Reservation
 import com.example.code.ui.theme.CodeTheme
 
 class ReservationsView(model: Model): View() {
@@ -125,10 +125,10 @@ class ReservationsView(model: Model): View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text(reservation.campsite.campName, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            Text(reservation.campsite!!.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                         Row() {
-                            Text(reservation.campsite.location)
+                            Text(reservation.campsite!!.location)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth()) {
@@ -138,7 +138,7 @@ class ReservationsView(model: Model): View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text(reservation.campsite.rating, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(reservation.campsite!!.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
@@ -160,7 +160,7 @@ class ReservationsView(model: Model): View() {
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
+                        modifier = Modifier.clickable { controller.viewCampsite(reservation.campsite!!.id, navController = navController) },
                     )
                 }
             }
@@ -176,10 +176,10 @@ class ReservationsView(model: Model): View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text(reservation.campsite.campName, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            Text(reservation.campsite!!.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                         Row() {
-                            Text(reservation.campsite.location)
+                            Text(reservation.campsite!!.location)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth()) {
@@ -189,7 +189,7 @@ class ReservationsView(model: Model): View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text(reservation.campsite.rating, fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(reservation.campsite!!.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
@@ -203,7 +203,7 @@ class ReservationsView(model: Model): View() {
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
+                        modifier = Modifier.clickable { controller.viewCampsite(reservation.campsite!!.id, navController = navController) },
                     )
                 }
             }

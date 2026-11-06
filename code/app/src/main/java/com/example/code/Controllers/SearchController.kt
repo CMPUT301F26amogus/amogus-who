@@ -2,6 +2,7 @@ package com.example.code.Controllers
 
 import Model
 import androidx.navigation.NavController
+import com.example.code.Model.Campsite
 import com.example.code.Routes
 
 class SearchController(

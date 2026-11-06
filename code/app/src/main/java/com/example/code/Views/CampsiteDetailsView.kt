@@ -39,9 +39,13 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.code.Controllers.CampsiteDetailsController
 import com.example.code.ui.theme.CodeTheme
+import com.example.code.Model.Campsite
 
-class CampsiteDetailsView(): View() {
+class CampsiteDetailsView(M:Model): View() {
+    var campsiteToView: Campsite? = null
+    val controller = CampsiteDetailsController(M)
     override fun update(model: Model) {
 
     }
@@ -57,8 +61,8 @@ class CampsiteDetailsView(): View() {
         Column() {
             Row() {
                 Header(
-                    headerText = "CAMPSITENAME",
-                    subheaderText = "LOCATION",
+                    headerText = campsiteToView!!.name,
+                    subheaderText = campsiteToView!!.location,
                     backgroundColor = headerbgColor,
                     textColor = headerTextColor,
                 )
@@ -80,15 +84,15 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.width(150.dp).background(bgColor)) {
                             //ratings widget
                             Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
-                                Text(text = "Rating: RATING", fontSize = 15.sp, color = textColor)
+                                Text(text = "Rating: ${campsiteToView!!.averageRating.toString()}", fontSize = 15.sp, color = textColor)
                             }
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
-                                Text(text = "Max Occupancy: OCCUPANCY", fontSize = 15.sp, color = textColor)
+                                Text(text = "Max Occupancy: ${campsiteToView!!.maxOccupancy}", fontSize = 15.sp, color = textColor)
                             }
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.fillMaxWidth().height(50.dp).background(light)) {
-                                Text(text = "Address: ADDRESS", fontSize = 15.sp, color = textColor)
+                                Text(text = "Address: ${campsiteToView!!.location}", fontSize = 15.sp, color = textColor)
                             }
                         }
                         Spacer(modifier = Modifier.width(15.dp))
@@ -124,7 +128,7 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.fillMaxWidth().background(bgColor)) {
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.width(400.dp).height(65.dp).background(light)) {
-                                Text(text = "TOS:", fontSize = 15.sp, color = textColor)
+                                Text(text = "TOS: ${campsiteToView!!.rulesAndPolicy}", fontSize = 15.sp, color = textColor)
                             }
                         }
                     }
@@ -134,20 +138,20 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.width(250.dp).background(bgColor)) {
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
                             Row(modifier = Modifier.width(250.dp).height(65.dp).background(light)) {
-                                Text(text = "Details:", fontSize = 15.sp, color = textColor)
+                                Text(text = "Details: ${campsiteToView!!.description}", fontSize = 15.sp, color = textColor)
                             }
                         }
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.width(200.dp).background(bgColor)) {
                             ElevatedButton(
-                                onClick = {},
+                                onClick = {controller.joinLottery(campsiteToView!!.lottery())},
                                 colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
                                 Text(text = "Join Lottery", color = Color(0xff40139a))
                             }
                             ElevatedButton(
-                                onClick = {},
+                                onClick = {controller.leaveLottery(campsiteToView!!.lottery())},
                                 colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
@@ -172,7 +176,7 @@ class CampsiteDetailsView(): View() {
 @Preview(showBackground = true)
 @Composable
 fun CampsiteDetailsPreview() {
-    val v = CampsiteDetailsView()
+    val v = CampsiteDetailsView(Model())
     CodeTheme {
         (
             v.ShowScreen(rememberNavController())
