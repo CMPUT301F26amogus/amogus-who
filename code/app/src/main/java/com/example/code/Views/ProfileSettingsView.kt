@@ -18,9 +18,13 @@
 
 package com.example.code.Views
 
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
+import android.graphics.drawable.shapes.Shape
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -33,6 +37,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
+import androidx.compose.material3.Shapes
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
@@ -42,20 +47,24 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.RectangleShape
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
-import com.example.code.ui.theme.CodeTheme
+import Model
+import com.example.code.Controllers.ProfileSettingsController
 
-class ProfileSettingsView: View() {
+class ProfileSettingsView(M: Model): View() {
+    private var controller = ProfileSettingsController(M)
     @Composable
-    public fun ShowScreen(){
-        var temp by remember {
-            mutableStateOf("")
-        }
+    public fun ShowScreen(navController: NavController) {
+        var name by remember { mutableStateOf("") }
+        var email by remember { mutableStateOf("") }
+        var number by remember { mutableStateOf("") }
+        var notifications by remember { mutableStateOf(true) }
         Column() {
             Row() {
                 Header(
@@ -64,64 +73,143 @@ class ProfileSettingsView: View() {
                     textColor = entrantHeaderTextColor,
                 )
             }
-            Column(modifier = Modifier.fillMaxWidth().weight(1f).background(entrantBackgroundColor),
+            Column(modifier = Modifier.fillMaxWidth().weight(1f).background(secondaryGreenColor),
                 horizontalAlignment = Alignment.CenterHorizontally){
                 Spacer(modifier = Modifier.height(10.dp))
                 Box(Modifier.size(120.dp).background(entrantHeaderTextColor, shape = CircleShape))
                 ElevatedButton(
                     onClick = {},
-                    colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
+                    colors = ButtonDefaults.buttonColors(containerColor = primaryPurple),
                     modifier = Modifier.width(160.dp).height(60.dp),
                 ) {
                     Text(text = "Change Picture", color = Color(0xff40139a))
                 }
                 Spacer(modifier = Modifier.height(10.dp))
-                TextField(
-                    value = temp,
-                    onValueChange = {
-                        temp = it
-                    },
-                    label = {
-                        Text("Full Name")
-                    },
-                    modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG).padding(20.dp).width(290.dp)
-                )
+                Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
+                    .padding(20.dp).width(280.dp)) {
+                    TextField(
+                        value = name,
+                        onValueChange = {
+                            name = it
+                        },
+                        label = {
+                            Text("Full Name")
+                        },
+                        modifier = Modifier.width(220.dp)
+                    )
+                    Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
+                        enabled = true,
+                        onClick = {
+                            notifications = false
+                            controller.updateProfile(name = name, email = email, number = number)
+                        }), color = textColor)
+                }
                 Spacer(modifier = Modifier.height(10.dp))
-                TextField(
-                    value = temp,
-                    onValueChange = {
-                        temp = it
-                    },
-                    label = {
-                        Text("email@example.com")
-                    },
-                    modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG).padding(20.dp).width(290.dp)
-                )
+                Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
+                    .padding(20.dp).width(280.dp)) {
+                    TextField(
+                        value = email,
+                        onValueChange = {
+                            email = it
+                        },
+                        label = {
+                            Text("email@example.com")
+                        },
+                        modifier = Modifier.width(220.dp)
+                    )
+                    Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
+                        enabled = true,
+                        onClick = {
+                            notifications = false
+                            controller.updateProfile(name = name, email = email, number = number)
+                        }), color = textColor)
+                }
                 Spacer(modifier = Modifier.height(10.dp))
-                TextField(
-                    value = temp,
-                    onValueChange = {
-                        temp = it
-                    },
-                    label = {
-                        Text("(555)-555-5555")
-                    },
-                    modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG).padding(20.dp).width(290.dp)
-                )
+                Row(modifier = Modifier.padding(horizontal = 20.dp).background(color = creamBG)
+                    .padding(20.dp).width(280.dp)) {
+                    TextField(
+                        value = number,
+                        onValueChange = {
+                            number = it
+                        },
+                        label = {
+                            Text("(555)-555-5555")
+                        },
+                        modifier = Modifier.width(220.dp)
+                    )
+                    Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
+                        enabled = true,
+                        onClick = {
+                            notifications = false
+                            controller.updateProfile(name = name, email = email, number = number)
+                        }), color = textColor)
+                }
                 Spacer(modifier = Modifier.height(10.dp))
                 Row(modifier = Modifier.background(color = creamBG).padding(20.dp).width(290.dp)){
                     Text("Allow Notifications?",modifier = Modifier.padding(horizontal = 20.dp)
                         , color = textColor,
                         fontWeight = FontWeight.Bold)
-                    Text("No",modifier = Modifier, color = textColor)
-                    Text(" | ",modifier = Modifier.padding(horizontal = 11.dp),
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 25.sp)
-                    Text("Yes",modifier = Modifier, color = textColor)
+                    if (notifications) {
+                        Text(
+                            "No",
+                            modifier = Modifier.clickable(
+                                enabled = true,
+                                onClick = {
+                                    notifications = false
+                                    controller.updateProfile(name = name, email = email, number = number)
+                                })
+                            ,
+                            color = textColor,
+                            fontSize = 17.sp
+                        )
+                        Text(" | ",modifier = Modifier.padding(horizontal = 11.dp),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 25.sp)
+                        Box(
+                            modifier = Modifier.width(30.dp).height(30.dp).border(
+                                width = 1.dp,
+                                color = dark,
+                                shape = RectangleShape)
+                        ) {
+                            Text(
+                                "Yes",
+                                color = textColor,
+                                fontSize = 17.sp
+                            )
+                        }
+                    }else{
+                        Box(
+                            modifier = Modifier.width(30.dp).height(30.dp).border(
+                                width = 1.dp,
+                                color = dark,
+                                shape = RectangleShape,
+                            )
+                        ) {
+                            Text(
+                                "No",
+                                color = textColor,
+                                fontSize = 17.sp
+                            )
+                        }
+                        Text(" | ",modifier = Modifier.padding(horizontal = 11.dp),
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 25.sp)
+                        Text(
+                            "Yes",
+                            modifier = Modifier.clickable(
+                                enabled = true,
+                                onClick = {
+                                    notifications = true
+                                    controller.updateProfile(name = name, email = email, number = number)
+                                }),
+                            color = textColor,
+                            fontSize = 17.sp
+                        )
+                    }
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 ElevatedButton(
-                    onClick = {},
+                    onClick = {controller.deleteProfile()},
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xfffad2cc)),
                     modifier = Modifier.width(140.dp),
                 ) {
@@ -130,6 +218,7 @@ class ProfileSettingsView: View() {
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
@@ -142,6 +231,7 @@ class ProfileSettingsView: View() {
 @Preview(showBackground = true)
 @Composable
 fun ProfileSettingsViewPreview() {
-    val mp = ProfileSettingsView()
-    mp.ShowScreen()
+    val M = Model()
+    val mp = ProfileSettingsView(M)
+    mp.ShowScreen(rememberNavController())
 }

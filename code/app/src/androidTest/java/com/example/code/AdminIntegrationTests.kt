@@ -21,7 +21,7 @@ class AdminIntegrationTests {
             .performClick()
         // verify browse profiles
         composeTestRule
-            .onNodeWithText("Browse Profiles")
+            .onNodeWithTag("Header: Browse Profiles")
             .assertExists()
     }
     @Test
@@ -32,7 +32,7 @@ class AdminIntegrationTests {
             .performClick()
         // verify browse campsites
         composeTestRule
-            .onNodeWithText("Browse Campsites")
+            .onNodeWithTag("Header: Browse Campsites")
             .assertExists()
     }
     @Test
@@ -43,7 +43,7 @@ class AdminIntegrationTests {
             .performClick()
         // verify browse images
         composeTestRule
-            .onNodeWithText("Images")
+            .onNodeWithTag("Header: Images")
             .assertExists()
     }
     @Test
@@ -54,7 +54,7 @@ class AdminIntegrationTests {
             .performClick()
         // verify notification logs
         composeTestRule
-            .onNodeWithText("Notification Logs")
+            .onNodeWithTag("Header: Notification Logs")
             .assertExists()
     }
     @Test
@@ -65,7 +65,7 @@ class AdminIntegrationTests {
             .performClick()
         // verify notification logs
         composeTestRule
-            .onNodeWithText("Message Logs")
+            .onNodeWithTag("Header: Message Logs")
             .assertExists()
     }
     @Test
@@ -76,7 +76,7 @@ class AdminIntegrationTests {
             .performClick()
         // verify profile
         composeTestRule
-            .onNodeWithText("Profile Settings")
+            .onNodeWithTag("Header: Profile Settings")
             .assertExists()
     }
     @Test
@@ -87,7 +87,7 @@ class AdminIntegrationTests {
             .performClick()
         // verify campsites
         composeTestRule
-            .onNodeWithText("My Campsites")
+            .onNodeWithTag("Header: My Campsites")
             .assertExists()
     }
 }

@@ -18,6 +18,11 @@
 
 package com.example.code.Views
 
+import Model
+import com.example.code.Routes
+import androidx.compose.foundation.clickable
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -29,6 +34,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -37,11 +43,18 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.SearchResultsController
+import com.example.code.Model.Campsite
 import com.example.code.ui.theme.CodeTheme
 
-class SearchResultsView: View() {
+class SearchResultsView(M:Model): View() {
+    var CampsiteList: List<Campsite> = emptyList()
+    override fun update(model: Model) {
+        CampsiteList = model.campsiteList
+    }
+    val controller = SearchResultsController(M)
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         Column() {
             Row() {
                 Header(
@@ -54,11 +67,17 @@ class SearchResultsView: View() {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-
+                    itemsIndexed(CampsiteList) { index, campsite ->
+                        CampsiteRow(
+                            campsite = campsite,
+                            navController = navController
+                        )
+                    }
                 }
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
@@ -67,7 +86,7 @@ class SearchResultsView: View() {
         }
     }
     @Composable
-    private fun CampsiteRow(){
+    private fun CampsiteRow(campsite: Campsite, navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(210.dp).width(500.dp)){
             Column() {
                 Row(
@@ -76,10 +95,10 @@ class SearchResultsView: View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text("Campsite Name", fontWeight = FontWeight.Bold, fontSize = 20.sp, color = light)
+                            Text(campsite.name, fontWeight = FontWeight.Bold, fontSize = 20.sp, color = light)
                         }
                         Row() {
-                            Text("Park/Location", color = light)
+                            Text(campsite.location, color = light)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth().height(80.dp)) {
@@ -89,7 +108,7 @@ class SearchResultsView: View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text("Rating", fontWeight = FontWeight.Bold, fontSize = 15.sp, color = light)
+                            Text(campsite.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp, color = light)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
@@ -102,7 +121,8 @@ class SearchResultsView: View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { controller.viewCampsite(campsite.id, navController = navController) },
                     )
                 }
             }
@@ -113,10 +133,10 @@ class SearchResultsView: View() {
 @Preview(showBackground = true)
 @Composable
 fun searchResultsViewPreview() {
-    val mp = SearchResultsView()
+    val mp = SearchResultsView(Model())
     CodeTheme {
         (
-            mp.ShowScreen()
+            mp.ShowScreen(rememberNavController())
         )
     }
 }

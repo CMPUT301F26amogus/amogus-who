@@ -1,5 +1,7 @@
 package com.example.code.Model
 
+import Model
+
 /**
  * a campsite listed by an owner
  *
@@ -24,7 +26,8 @@ class Campsite(
     val id: String,
     val ownerId: String,
     name: String,
-    var location: Location,
+    var location: String,
+    var lottery: Lottery = Lottery(),
     maxOccupancy: Int,
     pricePerNight: Double,
     var description: String = "",
@@ -133,6 +136,8 @@ class Campsite(
     override fun hashCode(): Int = id.hashCode()
 
     override fun toString(): String = "Campsite(id=$id, name=$name)"
+
+
 
     private companion object {
         fun validName(name: String): String {

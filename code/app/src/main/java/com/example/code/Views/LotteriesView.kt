@@ -18,16 +18,16 @@
 
 package com.example.code.Views
 
-import Option
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import Model
 import Tab
 import View
-import android.annotation.SuppressLint
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -35,11 +35,9 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
-import androidx.compose.material3.HorizontalDivider
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -50,20 +48,36 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.EntrantLotteriesController
+import com.example.code.Model.Campsite
+import com.example.code.Model.Lottery
+import com.example.code.Model.Reservation
 import com.example.code.ui.theme.CodeTheme
 
-class LotteriesView: View() {
-    val bgColor = entrantBackgroundColor
+class LotteriesView(M: Model): View() {
+    var currentLotteries = emptyList<Lottery>()
+    var previousLotteries = emptyList<Reservation>()
+    override fun update(model: Model) {
+        model.getCancelledReservations(entrantId = model.currentDeviceId){
+            result -> previousLotteries = result
+        }
+        model.getWaitlist(){
+                result -> currentLotteries = result
+        }
+    }
+    val controller = EntrantLotteriesController(M)
+    val bgColor = secondaryGreenColor
     val headerbgColor = entrantHeaderBackgroundColor
     val headerTextColor = entrantHeaderTextColor
     val footerTextColor = entrantFooterTextColor
     val footerbgColor = entrantFooterBackgroundColor
     val footerButtonColor = entrantFooterButtonColor
     @Composable
-    public fun ShowScreen() {
+    public fun ShowScreen(navController: NavController) {
+        var state by remember {mutableStateOf("Current")}
         val tabs = mutableListOf<Tab>(
-            Tab(name = "Current", color = entrantFooterBackgroundColor, option = {}),
-            Tab(name = "Previous", color = entrantBackgroundColor, option = {}),
+            Tab(name = "Current", color = entrantFooterBackgroundColor, option = {state="Current"}),
+            Tab(name = "Previous", color = secondaryGreenColor, option = {state="Previous"}),
         )
         Column() {
             Row() {
@@ -74,27 +88,44 @@ class LotteriesView: View() {
                 )
             }
             Row(modifier = Modifier.height(50.dp)){
-                TabManager(tabs)
+                TabManager(tabs,state)
             }
-            if (true) {
+            if (state=="Current") {
                 Row(modifier = Modifier.weight(1f).background(entrantFooterBackgroundColor)) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-
+                        itemsIndexed(currentLotteries) { index, lottery ->
+                            for (campsite in lottery.campsites)
+                                when (campsite) {
+                                    campsite ->
+                                    CurrentCampsiteLotteryRow(
+                                        lottery = lottery,
+                                        campsite = campsite,
+                                        navController = navController
+                                    )
+                                }
+                        }
                     }
                 }
             }else{
-                Row(modifier = Modifier.weight(1f).background(entrantBackgroundColor)) {
+                Row(modifier = Modifier.weight(1f).background(secondaryGreenColor)) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-
+                        itemsIndexed(previousLotteries) { index, reservation ->
+                            PreviousCampsiteLotteryRow(
+                                lottery = reservation.campsite!!.lottery,
+                                campsite = reservation.campsite,
+                                navController = navController
+                            )
+                        }
                     }
                 }
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -103,7 +134,7 @@ class LotteriesView: View() {
         }
     }
     @Composable
-    private fun CurrentCampsiteLotteryRow(){
+    private fun CurrentCampsiteLotteryRow(lottery: Lottery, campsite: Campsite, navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -112,20 +143,20 @@ class LotteriesView: View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text("Campsite Name", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            Text(campsite.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                         Row() {
-                            Text("Park/Location")
+                            Text(campsite.location)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth()) {
-                            Text("Winner!")
+                            Text(lottery.status.toString())
                         }
                     }
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text("Rating", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(campsite.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
@@ -137,26 +168,29 @@ class LotteriesView: View() {
                     Text(
                         "X Cancel", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable {controller.cancelLottery(lottery)},
                     )
                     Spacer(modifier = Modifier.width(25.dp))
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { controller.viewCampsite(campsite.id, navController = navController)},
                     )
                     Spacer(modifier = Modifier.width(25.dp))
                     Text(
                         "Confirm", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { controller.confirmLottery(lottery)},
                     )
                 }
             }
         }
     }
     @Composable
-    private fun PreviousCampsiteLotteryRow(){
+    private fun PreviousCampsiteLotteryRow(lottery: Lottery, campsite: Campsite?, navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -170,13 +204,13 @@ class LotteriesView: View() {
                             ) {
                                 Row() {
                                     Text(
-                                        "Campsite Name",
+                                        campsite!!.name,
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 20.sp
                                     )
                                 }
                                 Row() {
-                                    Text("Park/Location")
+                                    Text(campsite!!.location)
                                 }
                                 Spacer(modifier = Modifier.height(15.dp))
                             }
@@ -184,7 +218,7 @@ class LotteriesView: View() {
                                 Spacer(modifier = Modifier.height(15.dp))
                                 Row() {
                                     Text(
-                                        "Rating",
+                                        campsite!!.averageRating.toString(),
                                         fontWeight = FontWeight.Bold,
                                         fontSize = 15.sp
                                     )
@@ -198,7 +232,7 @@ class LotteriesView: View() {
                                     .padding(horizontal = 10.dp)
                                     .width(500.dp)
                             ) {
-                                Text("Winner!")
+                                Text(lottery.status.toString())
                             }
                         }
                     }
@@ -207,7 +241,9 @@ class LotteriesView: View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp, textAlign = TextAlign.Center,
-                        modifier = Modifier.width(500.dp)
+                        modifier = Modifier
+                            .width(500.dp)
+                            .clickable { controller.viewCampsite(campsite!!.id, navController = navController) }
                     )
                 }
             }
@@ -219,10 +255,10 @@ class LotteriesView: View() {
 @Preview(showBackground = true)
 @Composable
 fun LotteriesViewPreview() {
-    val mp = LotteriesView()
+    val mp = LotteriesView(Model())
     CodeTheme {
         (
-            mp.ShowScreen()
+            mp.ShowScreen(rememberNavController())
         )
     }
 }

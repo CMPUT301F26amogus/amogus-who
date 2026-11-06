@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import Model
 import Option
 import View
 import androidx.compose.foundation.background
@@ -29,7 +30,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -47,9 +47,9 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 abstract class HomeView : View() {
 
@@ -60,9 +60,10 @@ abstract class HomeView : View() {
     abstract val footerTextColor: Color
     abstract val footerButtonColor: Color
     abstract val options: MutableList<Option>
+    override fun update(model: Model) {}
 
     @Composable
-    protected open fun CustomHeader() {}
+    protected open fun CustomHeader(navController: NavController) {}
 
     @Composable
     protected fun ProfileButton(
@@ -70,10 +71,10 @@ abstract class HomeView : View() {
         modifier: Modifier = Modifier
     ) {
         FilledIconButton(
-            onClick = {},
+            onClick = onClickProfile,
             modifier = modifier,
             colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = profilePurple,
+                containerColor = secondaryPurple,
                 contentColor = Color.White,
             )
         ) {
@@ -86,15 +87,15 @@ abstract class HomeView : View() {
 
     @Composable
     protected fun NotificationsButton(
-        onClickProfile: () -> Unit,
+        onClickNotifications: () -> Unit,
         modifier: Modifier = Modifier
     ) {
         FilledIconButton(
-            onClick = {},
+            onClick = onClickNotifications,
             modifier = modifier,
             colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = Color.White,
-                contentColor = Color.Black,
+                containerColor = primaryPurple,
+                contentColor = primaryTextColor,
             )
         ) {
             Icon(
@@ -115,7 +116,7 @@ abstract class HomeView : View() {
         ) {
             Row(
                 modifier = Modifier
-                    .background(entrantFooterBackgroundColor)
+                    .background(primaryGreenColor)
                     .height(60.dp)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -126,14 +127,14 @@ abstract class HomeView : View() {
                             text = option.name,
                             fontSize = 30.sp,
                             modifier = Modifier.weight(1f),
-                            color = ownerHeaderBackgroundColor,
+                            color = primaryGreenTextColor,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
                             text = ">",
                             fontSize = 30.sp,
                             modifier = Modifier.weight(0.1f),
-                            color = ownerHeaderBackgroundColor,
+                            color = primaryGreenTextColor,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.End,
                         )
@@ -146,7 +147,7 @@ abstract class HomeView : View() {
     }
 
     @Composable
-    fun ShowScreen() {
+    fun ShowScreen(navController: NavController) {
 
         Column(
             modifier = Modifier.fillMaxSize()
@@ -157,7 +158,7 @@ abstract class HomeView : View() {
                 Header(
                     backgroundColor = headerColor,
                     textColor = headerTextColor,
-                    customContent = { CustomHeader() },
+                    customContent = { CustomHeader(navController) },
                 )
             }
 
@@ -176,7 +177,10 @@ abstract class HomeView : View() {
                         OptionRow(
                             option = option,
                             onClickOption = {
-                                //navController.navigate(option.)
+                                // options without a screen yet have an empty route
+                                if (option.route.isNotEmpty()) {
+                                    navController.navigate(option.route)
+                                }
                             }
                         )
                         if (index < options.lastIndex) {
@@ -190,6 +194,7 @@ abstract class HomeView : View() {
                 modifier = Modifier.fillMaxWidth()
             ) {
                 Footer(
+                    navController = navController,
                     backgroundColor = footerColor,
                     textColor = footerTextColor,
                     buttonColor = footerButtonColor,
