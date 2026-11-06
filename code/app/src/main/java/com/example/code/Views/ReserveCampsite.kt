@@ -8,7 +8,9 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.TextFieldState
@@ -20,6 +22,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.Model.Campsite
@@ -33,7 +36,7 @@ class ReserveCampsite : View(), InputFieldFunctions {
     val footerTextColor = entrantFooterBackgroundColor
     val footerBackgroundColor = entrantFooterButtonColor
     val footerButtonColor = entrantFooterTextColor
-    val contentBackground = secondaryGreenColor
+    val contentBackground = creamBG
     val headerName = "Reserve Site"
 
     val fieldModifierDate = Modifier
@@ -41,14 +44,14 @@ class ReserveCampsite : View(), InputFieldFunctions {
         .padding(8.dp).width(135.dp)
 
     var cID = 0
-    var name = ""
-    var park = ""
-    var details = ""
-    var tos = ""
-    var rating = 0.0
+    var name = "Campsite Name"
+    var park = "Park"
+    var details = "Toilets, plug-ins etc"
+    var tos = "Don't feed animals, etc"
+    var rating = 4.9
 
     override fun update(model: Model) {
-//        c = model.getCampsiteToDisplay()
+//        val c = model.getCampsiteToDisplay()
 //        campsiteID = c.
 //        campsiteName = c.
 //        campsitePark = c.
@@ -77,96 +80,163 @@ class ReserveCampsite : View(), InputFieldFunctions {
                     .background(bgColor),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
+
+                Spacer(Modifier.padding(15.dp))
+
                 Box(
                     modifier = Modifier
                         .clip(shape = RoundedCornerShape(8.dp))
                         .background(color = contentBackground)
-                        .padding(20.dp).width(290.dp),
+                        .padding(20.dp)
+                        .width(320.dp),
                 ) {
                     Row {  //  box with campsite name, location, and rating
-                        Column {
-                            Row {
+                        Column(
+                            modifier = Modifier
+                                .padding(horizontal = 15.dp)
+                                .padding(vertical = 10.dp)
+                        ) {
+                            Box(
+                                modifier = Modifier
+                                    .size(width = 140.dp, height = 60.dp)
+                            ) {
                                 Text(
                                     text = name,
-                                    fontSize = 30.sp
+                                    fontSize = 30.sp,
+                                    modifier = Modifier.testTag("campsiteNameBox")
                                 )
                             }
-                            Row {
-                                Text (
+                            Box(
+                                modifier = Modifier
+                                    .padding(vertical = 8.dp)
+                            ) {
+                                Text(
                                     text = park,
-                                    fontSize = 15.sp
+                                    fontSize = 20.sp,
+                                    modifier = Modifier.testTag("parkAreaBox")
                                 )
                             }
                         }
-                        Row {
-                            Text (
-                                "Rating: $rating"
-                            )
+                        Row(
+                            modifier = Modifier
+                                .padding(20.dp)
+                        ) {
+                            Text("Rating: ")
+                            Spacer(modifier = Modifier.padding(horizontal = 5.dp))
+                            Text(
+                                text = rating.toString(),
+                                modifier = Modifier.testTag("ratingBox"))
                         }
                     }
                 }
 
-                Spacer(Modifier.padding(20.dp))
 
-                Box (
+                Spacer(Modifier.padding(8.dp))
+
+                Box(
                     modifier = Modifier
                         .clip(shape = RoundedCornerShape(8.dp))
                         .background(color = contentBackground)
-                        .padding(20.dp).width(290.dp),
+                        .padding(20.dp).width(320.dp),
                 ) {
                     Row {
+                        //  arrival date input
                         DateField(
                             arrivalDateState,
                             "Arrival Date",
                             fieldModifierDate
+                                .testTag("arrivalDateInputField")
                         )
 
-                        VerticalDivider()
-
+                        //  departure date input
                         DateField(
                             departureDateState,
                             "Departure Date",
                             fieldModifierDate
+                                .testTag("departureDateInputField")
                         )
                     }
                 }
 
-                Spacer(Modifier.padding(20.dp))
+                Spacer(Modifier.padding(8.dp))
 
                 Row {
+                    //  number of guests input field
                     VariableDigitIntField(
                         numberOfGuestsState,
                         "Number of Guests",
                         2,
                         fieldModifierDate
+                            .testTag("numberOfGuestsInputField")
                     )
+
+                    Spacer(modifier = Modifier
+                        .padding(horizontal = 8.dp))
+
+                    Box(
+                        modifier = Modifier
+                            .clip(shape = RoundedCornerShape(8.dp))
+                            .background(color = contentBackground)
+                            .padding(20.dp).width(160.dp).height(80.dp)
+                    ) {
+                        Column {
+                            Text("Details: ")
+                            Text(
+                                text = details,
+                                fontSize = 14.sp,
+                                modifier = Modifier.testTag("detailsBox")
+                            )
+                        }
+                    }
                 }
 
-                Text(
-                    text = details,
-                    fontSize = 14.sp
-                )
+                Spacer(Modifier.padding(8.dp))
 
-                Spacer(Modifier.padding(20.dp))
+                Box(
+                    modifier = Modifier
+                        .clip(shape = RoundedCornerShape(8.dp))
+                        .background(color = contentBackground)
+                        .padding(20.dp).width(290.dp)
+                ) {
+                    Column {
+                        Text("TOS: ")
+                        Text(
+                            text = tos,
+                            fontSize = 14.sp,
+                            modifier = Modifier.testTag("tosBox")
+                        )
+                    }
 
-                Text(
-                    text = tos,
-                    fontSize = 14.sp
-                )
+                }
 
-                Spacer(Modifier.padding(20.dp))
+                Spacer(Modifier.padding(8.dp))
 
                 Button(
                     onClick = {
-                        val arrivalDate : Date = stringToDate(arrivalDateState .text.toString())
-                        val departureDate: Date = stringToDate(departureDateState.text.toString())
-                        val numberOfGuests = numberOfGuestsState.text.toString().toInt()
+                        if (
+                            !arrivalDateState.text.isBlank() ||
+                            !departureDateState.text.isBlank() ||
+                            !numberOfGuestsState.text.isBlank()
+                            ) {
+//                            val arrivalDate: Date = stringToDate(arrivalDateState.text.toString())
+//                            val departureDate: Date = stringToDate(departureDateState.text.toString())
+                            val numberOfGuests = numberOfGuestsState.text.toString().toInt()
 
-                        //  call controller.makeReservation() with these fields and pop novController
-                    }
+                            val arrivalDate = arrivalDateState.text.toString()
+                            val departureDate = departureDateState.text.toString()
+
+                            //  call controller.makeReservation() with these fields and pop novController
+                        }
+                    },
+                    modifier = Modifier.testTag("reserveCampsiteButton")
                 ) {
                     Text(" Make Reservation")
                 }
+                Footer(
+                    textColor = entrantFooterTextColor,
+                    backgroundColor = entrantFooterBackgroundColor,
+                    buttonColor = entrantFooterButtonColor,
+                )
             }
         }
 
