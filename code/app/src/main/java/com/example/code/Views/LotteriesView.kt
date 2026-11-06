@@ -115,7 +115,7 @@ class LotteriesView(M: Model): View() {
                     ) {
                         itemsIndexed(previousLotteries) { index, reservation ->
                             PreviousCampsiteLotteryRow(
-                                lottery = reservation.lottery,
+                                lottery = reservation.campsite.lottery,
                                 campsite = reservation.campsite,
                                 navController = navController
                             )

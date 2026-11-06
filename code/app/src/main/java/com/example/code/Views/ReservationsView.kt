@@ -109,7 +109,12 @@ class ReservationsView(model: Model): View() {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-
+                        itemsIndexed(previousReservations) { index, reservation ->
+                            PreviousReservationRow(
+                                reservation = reservation,
+                                navController = navController
+                            )
+                        }
                     }
                 }
             }

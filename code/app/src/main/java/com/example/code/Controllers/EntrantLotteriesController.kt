@@ -29,6 +29,7 @@ class EntrantLotteriesController(
      */
     public fun viewCampsite(cid: String, navController: NavController){
         //set campsite to view
+
         navController.navigate(Routes.CAMPSITE_DETAILS)
     }
 }

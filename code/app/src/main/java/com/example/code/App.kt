@@ -120,10 +120,10 @@ fun App(id: String, model: Model) {
 
         composable(Routes.PROFILE) { remember { ProfileSettingsView(model) }.ShowScreen(navController) }
         composable(Routes.NOTIFICATIONS) { remember { NotificationsView(id) }.ShowScreen(navController) }
-        composable(Routes.CAMPSITE_DETAILS) { remember { CampsiteDetailsView() }.ShowScreen(navController) }
+        composable(Routes.CAMPSITE_DETAILS) { remember { CampsiteDetailsView(model) }.ShowScreen(navController) }
         composable(Routes.MAP) { remember { MapView() }.ShowScreen(navController) }
 
-        composable(Routes.RESERVATIONS) { remember { ReservationsView() }.ShowScreen(navController) }
+        composable(Routes.RESERVATIONS) { remember { ReservationsView(model) }.ShowScreen(navController) }
         composable(Routes.LOTTERIES) { remember { LotteriesView(model) }.ShowScreen(navController) }
         composable(Routes.SEARCH) { remember { SearchView(model) }.ShowScreen(navController) }
         composable(Routes.SEARCH_RESULTS) { remember { SearchResultsView(model) }.ShowScreen(navController) }

@@ -47,6 +47,7 @@ import com.example.code.Model.Campsite
 import com.example.code.ui.theme.CodeTheme
 
 class SearchResultsView(M:Model): View() {
+    var CampsiteList: List<Campsite> = emptyList()
     override fun update(model: Model) {
 
     }

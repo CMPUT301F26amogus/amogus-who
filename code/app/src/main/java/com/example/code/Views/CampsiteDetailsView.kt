@@ -144,14 +144,14 @@ class CampsiteDetailsView(M:Model): View() {
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.width(200.dp).background(bgColor)) {
                             ElevatedButton(
-                                onClick = {controller.joinLottery(campsiteToView!!.lottery())},
+                                onClick = {controller.joinLottery(campsiteToView!!.lottery)},
                                 colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
                                 Text(text = "Join Lottery", color = Color(0xff40139a))
                             }
                             ElevatedButton(
-                                onClick = {controller.leaveLottery(campsiteToView!!.lottery())},
+                                onClick = {controller.leaveLottery(campsiteToView!!.lottery)},
                                 colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
