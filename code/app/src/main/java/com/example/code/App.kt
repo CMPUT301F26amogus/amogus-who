@@ -173,10 +173,12 @@ fun App(id: String, model: Model) {
         model.addView(ownerReservationsView)
         composable(Routes.OWNER_RESERVATIONS) { ownerReservationsView.ShowScreen(navController) }
 
+        model.addView(ownerLotteriesView)
+        composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
+
         model.addView(addEditCampsiteView)
         composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen() }
 
-        model.addView(ownerLotteriesView)
-        composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
+
     }
 }
