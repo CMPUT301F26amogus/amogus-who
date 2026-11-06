@@ -138,7 +138,7 @@ open class Model: ModelUpdater<View>{
     private val waitlistRef by lazy { db.collection("waitlist") }
 
     public var campsiteList: ArrayList<Campsite> = arrayListOf()
-        fun setCampsiteList(newArray: ArrayList<Campsite>?) {
+        fun settCampsiteList(newArray: ArrayList<Campsite>?) {
             if (newArray != null) {
                 campsiteList = newArray
             }
@@ -155,11 +155,11 @@ open class Model: ModelUpdater<View>{
      */
     var tempCampsite: Campsite? = null
 
-    fun getTempCampsite(): Campsite? {
+    fun gettTempCampsite(): Campsite? {
         return tempCampsite
     }
 
-    fun setTempCampsite(campsite: Campsite?) {
+    fun settTempCampsite(campsite: Campsite?) {
         tempCampsite = campsite
         notifyViews()
     }
