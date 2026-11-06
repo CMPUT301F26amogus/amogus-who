@@ -19,6 +19,7 @@ class SearchController(
                 tempResult = result
             }
         }
+
         navController.navigate(Routes.SEARCH_RESULTS)
     }
 }
