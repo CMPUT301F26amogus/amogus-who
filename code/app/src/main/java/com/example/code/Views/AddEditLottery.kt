@@ -36,7 +36,7 @@ import com.example.code.ui.theme.CodeTheme
 import java.util.Date
 import kotlin.text.toInt
 
-class AddEditLottery(model: Model, val isEdit : Boolean) : View(), InputFieldFunctions{
+class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), InputFieldFunctions{
 
     val bgColor = secondaryGreenColor
     val headerBackgroundColor = ownerHeaderBackgroundColor

@@ -23,7 +23,7 @@ import com.example.code.Model.Campsite
 import com.example.code.Model.Location
 import com.example.code.ui.theme.CodeTheme
 
-class AddEditCampsite (model: Model, val isEdit: Boolean): View(), InputFieldFunctions {
+class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), InputFieldFunctions {
     val bgColor = secondaryGreenColor
     val headerbgColor = ownerHeaderBackgroundColor
     val headerTextColor = ownerHeaderTextColor
