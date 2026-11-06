@@ -1,5 +1,8 @@
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -38,6 +41,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.OwnerCampsiteListController
 
 class DummyCampsite(
     val campsiteName: String,
@@ -48,8 +52,15 @@ class DummyCampsite(
     val rating: Double,
 ) {}
 
+/**
+ *  OwnerCampsiteListView: the view for the owner to see their campsites
+ *
+ */
 class OwnerCampsiteListView : View() {
 
+//    val controller by lazy { OwnerCampsiteListController(model = M) }
+
+    // modify to pull real list from model
     val campsites = mutableListOf(
         DummyCampsite(
             campsiteName = "Lodge A",
@@ -102,6 +113,8 @@ class OwnerCampsiteListView : View() {
         requests: Int,
         lotteryStatus: String,
         rating: Double,
+        onClickEdit: () -> Unit,
+        onClickDetails: () -> Unit,
     ) {
         Column(
             modifier = Modifier
@@ -200,7 +213,7 @@ class OwnerCampsiteListView : View() {
                     .padding(10.dp),
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
+                    onClick = onClickEdit,
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -218,7 +231,7 @@ class OwnerCampsiteListView : View() {
                 )
 
                 ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
+                    onClick = onClickDetails,
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -236,7 +249,7 @@ class OwnerCampsiteListView : View() {
     }
 
     @Composable
-    private fun Content() {
+    private fun Content(navController: NavController) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize(),
@@ -250,6 +263,8 @@ class OwnerCampsiteListView : View() {
                     requests = campsites[campsite].requests,
                     lotteryStatus = campsites[campsite].lotteryStatus,
                     rating = campsites[campsite].rating,
+                    onClickEdit = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
+                    onClickDetails = { navController.navigate(Routes.CAMPSITE_DETAILS) },
                 )
                 Spacer(
                     modifier = Modifier
@@ -259,7 +274,7 @@ class OwnerCampsiteListView : View() {
 
             item {
                 ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
+                    onClick = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
                     shape = CircleShape,
                     containerColor = primaryPurple,
                     contentColor = primaryTextColor,
@@ -275,8 +290,12 @@ class OwnerCampsiteListView : View() {
         }
     }
 
+    /**
+     *  ShowScreen: render the page
+     *
+     */
     @Composable
-    fun ShowScreen() {
+    fun ShowScreen(navController: NavController) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -302,11 +321,13 @@ class OwnerCampsiteListView : View() {
                         .fillMaxSize()
                         .padding(20.dp),
                 ) {
-                    Content()
+                    Content(navController)
                 }
             }
 
             Footer(
+
+                navController = navController,
                 backgroundColor = ownerFooterBackgroundColor,
                 textColor = ownerFooterTextColor,
                 buttonColor = ownerFooterButtonColor,
@@ -320,5 +341,5 @@ class OwnerCampsiteListView : View() {
 @Composable
 fun OwnerCampsiteListViewPreview() {
     val listView = OwnerCampsiteListView()
-    listView.ShowScreen()
+    listView.ShowScreen(rememberNavController())
 }
