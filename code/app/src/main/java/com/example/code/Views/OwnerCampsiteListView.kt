@@ -39,10 +39,35 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+class DummyCampsite(
+    val campsiteName: String,
+    val location: String,
+    val upcoming: Int,
+    val requests: Int,
+    val lotteryStatus: String,
+    val rating: Double,
+) {}
+
 class OwnerCampsiteListView : View() {
 
-    private val cardPrimary = Color(0xffcad9c8)
-    private val cardAccent = Color(0xfff3fff3)
+    val campsites = mutableListOf(
+        DummyCampsite(
+            campsiteName = "Lodge A",
+            location = "Tunnel Mountain",
+            upcoming = 5,
+            requests = 2,
+            lotteryStatus = "Open",
+            rating = 4.0,
+        ),
+        DummyCampsite(
+            campsiteName = "Lodge B",
+            location = "Tunnel Mountain",
+            upcoming = 5,
+            requests = 2,
+            lotteryStatus = "Closed",
+            rating = 4.6,
+        )
+    )
 
     @Composable
     private fun SiteInfoBox(info: String, data: String) {
@@ -70,7 +95,14 @@ class OwnerCampsiteListView : View() {
     }
 
     @Composable
-    private fun CampsiteCard() {
+    private fun CampsiteCard(
+        campsiteName: String,
+        location: String,
+        upcoming: Int,
+        requests: Int,
+        lotteryStatus: String,
+        rating: Double,
+    ) {
         Column(
             modifier = Modifier
                 .clip(shape = RoundedCornerShape(12.dp))
@@ -93,13 +125,13 @@ class OwnerCampsiteListView : View() {
                         modifier = Modifier,
                     ) {
                         Text(
-                            text = "Campsite Name",
+                            text = campsiteName,
                             fontSize = 20.sp,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             color = primaryGreenTextColor,
                         )
                         Text(
-                            text = "Location",
+                            text = location,
                             fontSize = 12.sp,
                             fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
                             color = primaryGreenTextColor,
@@ -116,7 +148,7 @@ class OwnerCampsiteListView : View() {
                             .height(35.dp)
                     ) {
                         ExtendedFloatingActionButton(
-                            onClick = { /* ... */ },
+                            onClick = { /* Not a button in practice */ },
                             shape = CircleShape,
                             containerColor = tertiaryPurple,
                             contentColor = secondaryPurple,
@@ -126,7 +158,7 @@ class OwnerCampsiteListView : View() {
                                     contentDescription = "Edit",
                                 )
                             },
-                            text = { Text("4.0") }  // fill with real rating
+                            text = { Text(rating.toString()) }
                         )
                     }
                 }
@@ -136,7 +168,7 @@ class OwnerCampsiteListView : View() {
                 ) {
                     SiteInfoBox(
                         info = "Upcoming",
-                        data = "0",     // TODO: update with real data
+                        data = upcoming.toString(),
                     )
 
                     Spacer(
@@ -145,7 +177,7 @@ class OwnerCampsiteListView : View() {
 
                     SiteInfoBox(
                         info = "Requests",
-                        data = "0",    // TODO: update with real data
+                        data = requests.toString(),
                     )
 
                     Spacer(
@@ -154,7 +186,7 @@ class OwnerCampsiteListView : View() {
 
                     SiteInfoBox(
                         info = "Lottery",
-                        data = "None",  // TODO: update with real data
+                        data = lotteryStatus,
                     )
                 }
             }
@@ -210,11 +242,15 @@ class OwnerCampsiteListView : View() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                CampsiteCard()
-            }
-
-            item {
+            items(count = campsites.size) { campsite ->
+                CampsiteCard(
+                    campsiteName = campsites[campsite].campsiteName,
+                    location = campsites[campsite].location,
+                    upcoming = campsites[campsite].upcoming,
+                    requests = campsites[campsite].requests,
+                    lotteryStatus = campsites[campsite].lotteryStatus,
+                    rating = campsites[campsite].rating,
+                )
                 Spacer(
                     modifier = Modifier
                         .height(20.dp)
