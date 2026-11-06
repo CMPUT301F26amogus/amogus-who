@@ -1,0 +1,19 @@
+package com.example.code.Model
+
+import Model
+import java.time.Instant
+
+/**
+ * one entrant on a lottery waitlist
+ *
+ * @property lotteryId which lottery they joined
+ * @property userId device id of the entrant
+ * @property joinedAt when they joined
+ * @property status if they are waiting won lost declined or reserved
+ */
+class WaitlistEntry(
+    val lotteryId: String,
+    val userId: String,
+    val joinedAt: Instant = Instant.now(),
+    var status: EntryStatus = EntryStatus.WAITING,
+) : Model()

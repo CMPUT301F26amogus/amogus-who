@@ -1,5 +1,7 @@
 package com.example.code.Model
 
+import Model
+
 /**
  * someone using the app
  *
@@ -25,7 +27,7 @@ class User(
     var notificationsEnabled: Boolean = true,
     roles: Set<Role> = setOf(Role.ENTRANT),
     var lotteries: ArrayList<Lottery>?=null,
-) {
+) : Model() {
     init {
         require(deviceId.isNotBlank()) { "Device ID must not be blank" }
     }

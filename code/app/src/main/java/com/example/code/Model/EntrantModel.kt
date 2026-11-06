@@ -17,16 +17,17 @@ class EntrantModel: Model() {
      * @param email user's email from the view
      */
     fun signUp(name: String, phoneNumber: String, email: String){
-        val newUser = User(deviceId, name, email=email,phone=phoneNumber)
-        dataRef.document(deviceId).set(User())
+        val newUser = User(currentDeviceId, name, email=email,phone=phoneNumber)
+        dataRef.document(currentDeviceId).set(User())
 
     }
 
 
 
 
+
     /**
-     * This function is for signing the user into the app, make sure to
+     * searches for deviceInformation across all entrants in database
      *
      * @return returns user if user is in database, else returns null.
      * the idea is that:
@@ -86,6 +87,10 @@ class EntrantModel: Model() {
      */
     fun declineReservation(){
         // entrants should be able to decline a lottery win, but we dont have any connections set up
+
+
+
+
 
 
     }
