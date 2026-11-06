@@ -64,7 +64,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
     var headerName = if (isEdit) {"Edit Campsite"} else { "Add Campsite" }
 
     override fun update(model: Model) {
-        val tempCampsite = model.getTempCampsite()
+        val tempCampsite = model.gettTempCampsite()
         oldCampsite = tempCampsite
         if (tempCampsite != null && isEdit){
             oldCampsite = tempCampsite
@@ -220,7 +220,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
                                 controller.onEditCampsite(
                                     navController,
                                     oldCampsite!!,
-                                    newName = campsiteNameState.toString(),
+                                    newName = campsiteNameState.text.toString(),
                                     newLocation = addressState.text.toString(),
                                     newDescription = campDescriptionState.text.toString(),
                                     newMaxOccupants = maxGuestsState.text.toString().toInt(),
