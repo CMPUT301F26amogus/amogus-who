@@ -1,23 +1,16 @@
-import android.annotation.SuppressLint
-import androidx.compose.runtime.mutableStateListOf
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.firestore
-import android.content.Context
-import android.provider.Settings
-import com.example.code.Model.AvailabilitySchedule
 import com.example.code.Model.Campsite
 import com.example.code.Model.DateRange
 import com.example.code.Model.EntryStatus
 import com.example.code.Model.Lottery
 import com.example.code.Model.LotteryStatus
 import com.example.code.Model.Notification
-import com.example.code.Model.Rating
 import com.example.code.Model.Reservation
 import com.example.code.Model.ReservationStatus
 import com.example.code.Model.User
 import com.example.code.Model.WaitlistEntry
-import com.google.firebase.firestore.FieldValue
 import kotlin.String
 
 interface ModelUpdater<V>{
@@ -145,11 +138,12 @@ open class Model: ModelUpdater<View>{
     private val waitlistRef by lazy { db.collection("waitlist") }
 
     public var campsiteList: ArrayList<Campsite> = arrayListOf()
-        set(newArray) {
-            field = newArray
+        fun setCampsiteList(newArray: ArrayList<Campsite>?) {
+            if (newArray != null) {
+                campsiteList = newArray
+            }
             notifyViews()
         }
-
     public var id: String = ""
         set(value) {
             field = value
@@ -165,14 +159,10 @@ open class Model: ModelUpdater<View>{
         return tempCampsite
     }
 
-    fun setTempCampsite(campsite: Campsite) {
+    fun setTempCampsite(campsite: Campsite?) {
         tempCampsite = campsite
         notifyViews()
     }
-
-
-
-
     fun createCampsite(campsite: Campsite) {
         campsiteRef.document(campsite.id).set(campsite)
     }
@@ -268,7 +258,7 @@ open class Model: ModelUpdater<View>{
 
     fun updateLottery(lottery: Lottery, onResult: (Result<Unit>) -> Unit) {
         val updates = mapOf(
-            "campsiteIds" to lottery.campsiteIds,
+            "campsites" to lottery.campsites,
             "registrationStart" to lottery.registrationStart,
             "registrationEnd" to lottery.registrationEnd,
             "bookingStart" to lottery.bookingStart,
