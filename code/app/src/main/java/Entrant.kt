@@ -1,6 +1,6 @@
 class Entrant(val user: User, var notificationPref: Boolean): Model() {
 
-    private val userRef = db.collection("User Data")
+    private val userRef = db.collection("Users")
 
     /**
      * Takes a user profile and edits the user properties
@@ -25,13 +25,19 @@ class Entrant(val user: User, var notificationPref: Boolean): Model() {
     }
 
 
+
+
     /**
      * Deletes the user's profile from the database
+     *
+     * This will work even if the user isnt in the database.
      *
      * @param user user's object
      */
     fun deleteProfile(user: User){
-        userRef.document()
+        userRef.document(user.userId).delete()
     }
+
+
 
 }
