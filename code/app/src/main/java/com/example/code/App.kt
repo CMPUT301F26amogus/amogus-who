@@ -106,12 +106,12 @@ fun App(id: String, model: Model) {
     val adminHomeView = remember { AdminHomeView() }
     val profileView = remember { ProfileSettingsView(model) }
     val notificationsView = remember { NotificationsView(id) }
-    val campsiteDetailsView = remember { CampsiteDetailsView() }
+    val campsiteDetailsView = remember { CampsiteDetailsView(model) }
     val mapView = remember { MapView() }
-    val reservationsView = remember { ReservationsView() }
-    val lotteriesView = remember { LotteriesView() }
-    val searchView = remember { SearchView() }
-    val searchResultsView = remember { SearchResultsView() }
+    val reservationsView = remember { ReservationsView(model) }
+    val lotteriesView = remember { LotteriesView(model) }
+    val searchView = remember { SearchView(model) }
+    val searchResultsView = remember { SearchResultsView(model) }
     val ownerCampsitesView = remember { OwnerCampsiteListView() }
     val ownerReservationsView = remember { OwnerReservationsView() }
     val ownerLotteriesView = remember { OwnerLotteriesView() }
