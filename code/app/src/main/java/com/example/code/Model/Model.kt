@@ -5,6 +5,7 @@ import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.firestore
 import android.content.Context
 import android.provider.Settings
+import com.example.code.Model.AvailabilitySchedule
 import com.example.code.Model.Campsite
 import com.example.code.Model.DateRange
 import com.example.code.Model.EntryStatus
@@ -17,6 +18,7 @@ import com.example.code.Model.ReservationStatus
 import com.example.code.Model.User
 import com.example.code.Model.WaitlistEntry
 import com.google.firebase.firestore.FieldValue
+import kotlin.String
 
 interface ModelUpdater<V>{
     fun addView(v:V)
@@ -141,6 +143,35 @@ open class Model: ModelUpdater<View>{
     private val reservationRef by lazy { db.collection("reservations") }
     private val lotteryRef by lazy { db.collection("lotteries") }
     private val waitlistRef by lazy { db.collection("waitlist") }
+
+    public var campsiteList: ArrayList<Campsite> = arrayListOf()
+        set(value) {
+            field = value
+            notifyViews()
+        }
+
+    public var id: String = ""
+        set(value) {
+            field = value
+            notifyViews()
+        }
+
+    /**
+     * Register that just holds a single campsite cause why not
+     */
+    var tempCampsite: Campsite? = null
+
+    fun getTempCampsite(): Campsite? {
+        return tempCampsite
+    }
+
+    fun setTempCampsite(campsite: Campsite) {
+        tempCampsite = campsite
+        notifyViews()
+    }
+
+
+
 
     fun createCampsite(campsite: Campsite) {
         campsiteRef.document(campsite.id).set(campsite)
@@ -614,12 +645,8 @@ open class Model: ModelUpdater<View>{
      *      if returns null, then the view is the sign-up page
      *      if returns user, then view is homepage
      */
-    fun signIn(): User? {
-        getUserObj { user ->
-            // When getUserObj finishes, forward the result to the caller of signIn
-            return@getUserObj
-        }
-        return null
+    fun signIn(onResult: (User?) -> Unit){
+        getUserObj(onResult)
     }
 
     /**
@@ -817,7 +844,7 @@ open class Model: ModelUpdater<View>{
     /**
      *
      */
-    fun getNotifications(): ArrayList<Notification>{
+    fun getNotifications(onResult: (List<Notification>) -> Unit){
         val notifications = ArrayList<Notification>()
 
         setNotifCount {notificationCount = it}
@@ -828,14 +855,22 @@ open class Model: ModelUpdater<View>{
                     notifications.add(it.toObject(Notification::class.java)!!)
                 }
             }
+            onResult(notifications)
         }
-        return notifications
     }
 
 
 
     // Add
 
+    /**
+     * get lottery associated with campsite
+     *
+     * @param campsiteId id of the campsite
+     */
+    fun getLottery(campsiteId: String, onResult: (Lottery?) -> Unit) {
+        dataRef.document(campsiteId).get()
+    }
 
 
 

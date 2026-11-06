@@ -27,6 +27,7 @@ class Campsite(
     val ownerId: String,
     name: String,
     var location: String,
+    var lottery: Lottery
     maxOccupancy: Int,
     pricePerNight: Double,
     var description: String = "",
@@ -135,6 +136,8 @@ class Campsite(
     override fun hashCode(): Int = id.hashCode()
 
     override fun toString(): String = "Campsite(id=$id, name=$name)"
+
+
 
     private companion object {
         fun validName(name: String): String {
