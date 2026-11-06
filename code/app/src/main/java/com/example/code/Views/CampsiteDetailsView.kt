@@ -1,3 +1,21 @@
+/*
+* CampsiteDetailsView.kt : the view for details of a campsite
+* Copyright (C) 2026 Cash Popik (cpopik@ualberta.ca)
+*
+* This program is free software: you can redistribute it and/or modify
+* it under the terms of the GNU Affero General Public License as published
+* by the Free Software Foundation, either version 3 of the License, or
+* (at your option) any later version.
+*
+* This program is distributed in the hope that it will be useful,
+* but WITHOUT ANY WARRANTY; without even the implied warranty of
+* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+* GNU Affero General Public License for more details.
+*
+* You should have received a copy of the GNU Affero General Public License
+* along with this program.  If not, see <https://www.gnu.org/licenses/>.
+* */
+
 package com.example.code.Views
 
 import View
@@ -23,7 +41,7 @@ import com.example.code.ui.theme.CodeTheme
 class CampsiteDetailsView(): View() {
     @Composable
     public fun ShowScreen(){
-        val bgColor = entrantBackgroundColor
+        val bgColor = secondaryGreenColor
         val headerbgColor = entrantHeaderBackgroundColor
         val headerTextColor = entrantHeaderTextColor
         val footerTextColor = entrantFooterTextColor
@@ -116,17 +134,17 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.width(200.dp).background(bgColor)) {
                             ElevatedButton(
                                 onClick = {},
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
+                                colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
-                                Text(text = "Edit Photos", color = Color(0xff40139a))
+                                Text(text = "Join Lottery", color = Color(0xff40139a))
                             }
                             ElevatedButton(
                                 onClick = {},
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xfffad2cc)),
+                                colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
-                                Text(text = "Delete", color = Color(0xff2a2828))
+                                Text(text = "Join Waitlist", color = Color(0xff2a2828))
                             }
                         }
                     }

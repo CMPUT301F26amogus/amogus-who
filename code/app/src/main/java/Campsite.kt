@@ -1,4 +1,4 @@
-class Campsite(val ownerId: Int, val campId: Int, var campName: String,
+class Campsite(val ownerId: String, val campId: String, var campName: String,
                var location: String, var desc: String, var maxOcc: Int,
-               var price: Double, var rating: Double): Model() {
+               var price: Double, var rating: Double) {
 }

@@ -29,7 +29,6 @@ import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
@@ -44,9 +43,9 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -72,7 +71,7 @@ abstract class HomeView : View() {
             onClick = {},
             modifier = modifier,
             colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = profilePurple,
+                containerColor = secondaryPurple,
                 contentColor = Color.White,
             )
         ) {
@@ -92,7 +91,7 @@ abstract class HomeView : View() {
             onClick = {},
             modifier = modifier,
             colors = IconButtonDefaults.filledIconButtonColors(
-                containerColor = Color.White,
+                containerColor = primaryPurple,
                 contentColor = Color.Black,
             )
         ) {
@@ -110,10 +109,11 @@ abstract class HomeView : View() {
                 .fillMaxWidth()
                 .padding(horizontal = 10.dp, vertical = 16.dp)
                 .clickable(enabled = true, onClick = { onClickOption(option) })
+                .testTag(option.name)
         ) {
             Row(
                 modifier = Modifier
-                    .background(entrantFooterBackgroundColor)
+                    .background(primaryGreenColor)
                     .height(60.dp)
             ) {
                 Column(modifier = Modifier.fillMaxWidth()) {
@@ -124,14 +124,14 @@ abstract class HomeView : View() {
                             text = option.name,
                             fontSize = 30.sp,
                             modifier = Modifier.weight(1f),
-                            color = ownerHeaderBackgroundColor,
+                            color = primaryGreenTextColor,
                             fontWeight = FontWeight.Bold,
                         )
                         Text(
                             text = ">",
                             fontSize = 30.sp,
                             modifier = Modifier.weight(0.1f),
-                            color = ownerHeaderBackgroundColor,
+                            color = primaryGreenTextColor,
                             fontWeight = FontWeight.Bold,
                             textAlign = TextAlign.End,
                         )
