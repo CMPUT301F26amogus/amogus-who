@@ -31,6 +31,7 @@ class OwnerModel(val ownerId: String) : Model() {
      * @param onResult gets true if it saved and false if it didnt
      * @throws IllegalArgumentException if any detail is invalid
      */
+    
     fun createCampsite(name: String, location: String, desc: String, maxOcc: Int, price: Double,
                        onResult: (Boolean) -> Unit = {}) {
         require(name.isNotBlank()) { "Name must not be blank" }
