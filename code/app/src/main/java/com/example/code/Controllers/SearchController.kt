@@ -1,6 +1,5 @@
 package com.example.code.Controllers
 
-import Campsite
 import Model
 
 class SearchController(
