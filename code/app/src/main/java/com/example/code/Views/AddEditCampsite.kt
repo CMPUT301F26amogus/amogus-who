@@ -11,6 +11,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
@@ -54,6 +55,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
 
     var bookingPeriodEnd : String = ""
 
+//    var tags : String = ""
 
     var headerName = if (isEdit) {"Edit Campsite"} else { "Add Campsite" }
 
@@ -101,9 +103,8 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
 
         Column() {
             Row() {
-
                 Header(
-                    "Edit Campsite",
+                    headerText = headerName,
                     backgroundColor = headerbgColor,
                     textColor = headerTextColor,
                 )
