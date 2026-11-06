@@ -130,7 +130,7 @@ class Lottery(
     private val _waitlist = waitlist.toMutableList()
 
     /** everyone who joined the waitlist */
-    val waitlist: List<WaitlistEntry>
+    var waitlist: List<WaitlistEntry> = _waitlist
         get() = _waitlist.toList()
 
     // blank or broken saved dates count as not set

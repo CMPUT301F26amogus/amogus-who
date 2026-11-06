@@ -24,8 +24,6 @@ class EntrantModel: Model() {
 
 
 
-
-
     /**
      * searches for deviceInformation across all entrants in database
      *
@@ -34,8 +32,11 @@ class EntrantModel: Model() {
      *      if returns null, then the view is the sign-up page
      *      if returns user, then view is homepage
      */
-    fun signIn(): User?{
-        return getUserObj()
+    fun signIn(onResult: (User?) -> Unit) {
+        getUserObj { user ->
+            // When getUserObj finishes, forward the result to the caller of signIn
+            onResult(user)
+        }
     }
 
     // needs further improvement
@@ -62,17 +63,17 @@ class EntrantModel: Model() {
      */
     fun updateProfile(user: User, name: String="", email: String="", phoneNumber: String=""){
         if (name != "") {
-            dataRef.document(user.deviceId).update(
+            dataRef.document(currentDeviceId).update(
                 "name", name
             )
         }
         if (email != ""){
-            dataRef.document(user.deviceId).update(
+            dataRef.document(currentDeviceId).update(
                 "email", email
             )
         }
         if(phoneNumber != ""){
-            dataRef.document(user.deviceId).update(
+            dataRef.document(currentDeviceId).update(
                 "phone", phoneNumber
             )
         }
@@ -81,18 +82,121 @@ class EntrantModel: Model() {
 
 
     /**
-     * removes user from list of lottery winners
+     * removes user from reservation, this allows user to decline reservation
      *
-     *
+     *@param reservation the Reservation object that the user is declining
      */
-    fun declineReservation(){
-        // entrants should be able to decline a lottery win, but we dont have any connections set up
+    fun declineReservation(reservation: Reservation){
+        // entrants should be able to decline a lottery win, that is we change the reservation status
+        // I'm assuming that view people will pass in the reservation, because the user needs to click
+        // on the reservation that they will cancel from a list of reservations.
 
-
-
-
-
-
+        dataRef.document(reservation.id).update(
+            "status", ReservationStatus.REJECTED
+        )
     }
+
+    // models need a way to cancel reservation, I guess a canceled reservation is
+    // one where the lottery winner's havent been decided yet?
+
+    /**
+     * Cancels the user's reservation
+     *
+     * @param reservation The reservation object
+     */
+    fun cancelReservation(reservation: Reservation){
+        dataRef.document(reservation.id).update(
+            "status", ReservationStatus.CANCELLED
+        )
+    }
+
+    // entrants need to be able to leave waitlist
+    /**
+     * leaves the waitlist of the lottery
+     *
+     * @param lottery Lottery that the entrant wants to leave waitlist from
+     */
+    fun leaveWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
+        dataRef.document(lottery.id).get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    val tempLottery = snapshot.toObject(Lottery::class.java)
+
+                    if (tempLottery != null) {
+                        // Update the user's status in the waitlist
+                        tempLottery.waitlist.forEach { entry ->
+                            if (entry.userId == currentDeviceId) {
+                                entry.status = EntryStatus.DECLINED
+                            }
+                        }
+
+                        // Save the updated lottery object back to Firestore
+                        dataRef.document(lottery.id).set(tempLottery)
+                            .addOnSuccessListener {
+                                onResult(true) // Successfully updated database
+                            }
+                    } else {
+                        onResult(false)
+                    }
+                } else {
+                    onResult(false) // Document does not exist
+                }
+            }
+    }
+
+
+    // entrants should be able to join the waiting list
+    /**
+     * Adds the current user to the waitlist of the specified lottery.
+     *
+     * @param lottery Target lottery to join
+     * @param onResult Callback returning true if joined successfully, false if full, already joined, or failed
+     */
+    fun joinWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
+        dataRef.document(lottery.id).get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    var currentLottery = snapshot.toObject(Lottery::class.java)
+
+                    if (currentLottery != null) {
+                        //Check if user is already in the waitlist
+                        if (currentLottery.waitlist.any { it.userId == currentDeviceId }) {
+                            onResult(false)
+                            return@addOnSuccessListener
+                        }
+
+                        //Check if waitlist has reached maximum capacity (if capacity is set)
+                        val capacity = currentLottery.waitlistCapacity
+                        if (capacity != null && currentLottery.waitlist.size >= capacity) {
+                            onResult(false) // Waitlist is full
+                            return@addOnSuccessListener
+                        }
+
+                        //Create the new entry and append it to a new list
+                        val newEntry = WaitlistEntry(
+                            lotteryId = lottery.id,
+                            userId = currentDeviceId,
+                            status = EntryStatus.WAITING
+                        )
+
+                        // Because `waitlist` is a List (immutable interface), create a updated copy
+                        val updatedWaitlist = currentLottery.waitlist + newEntry
+                        currentLottery.waitlist = updatedWaitlist
+
+                        // the updated lottery object back to Firestore
+                        dataRef.document(lottery.id).set(currentLottery)
+                            .addOnSuccessListener { onResult(true) }
+                            .addOnFailureListener { onResult(false) }
+                    } else {
+                        onResult(false)
+                    }
+                } else {
+                    onResult(false)
+                }
+            }
+    }
+
+
+
 
 }

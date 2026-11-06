@@ -12,8 +12,10 @@ import java.time.Instant
  * @property status if they are waiting won lost declined or reserved
  */
 class WaitlistEntry(
-    val lotteryId: String,
-    val userId: String,
+    val lotteryId: String="", // needed default value for the database to convert to obj
+    val userId: String="",
     val joinedAt: Instant = Instant.now(),
     var status: EntryStatus = EntryStatus.WAITING,
-) : Model()
+){
+
+}

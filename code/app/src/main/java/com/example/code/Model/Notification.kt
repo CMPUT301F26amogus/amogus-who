@@ -22,4 +22,6 @@ data class Notification(
     val message: String,
     val sentAt: Instant = Instant.now(),
     val lotteryId: String? = null,
-) : Model()
+){
+
+}

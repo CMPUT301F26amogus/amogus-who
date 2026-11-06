@@ -5,6 +5,7 @@ import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.firestore
 import android.content.Context
 import android.provider.Settings
+import com.example.code.Model.DateRange
 import com.example.code.Model.User
 
 interface ModelUpdater<V>{
@@ -17,6 +18,7 @@ open class Model: ModelUpdater<View>{
     // excluded so firestore doesnt try to save the database inside every object
     @get:Exclude
     val db by lazy { Firebase.firestore }
+    val dataRef = db.collection("EVERYTHING")
 
     // device id of whoever is using the app
     // named currentDeviceId so it doesnt clash with User.deviceId
@@ -32,15 +34,16 @@ open class Model: ModelUpdater<View>{
      * Always check for null, if this is null then user doesnt exist.
      * Otherwise this returns user as an object
      */
-    fun getUserObj(): User?{
-        var user: User? = null
-        dataRef.document(deviceId).get().addOnSuccessListener {
-                snapshot ->
-            if (snapshot.exists()){
-                user = snapshot.toObject(User::class.java)
+    fun getUserObj(onResult: (User?) -> Unit) {
+        dataRef.document(currentDeviceId).get()
+            .addOnSuccessListener { snapshot ->
+                if (snapshot.exists()) {
+                    val user = snapshot.toObject(User::class.java)
+                    onResult(user)
+                } else {
+                    onResult(null)
+                }
             }
-        }
-        return user
     }
 
     /**
@@ -50,7 +53,7 @@ open class Model: ModelUpdater<View>{
      * @param user replacement user
      */
     fun setUserObj(user:User){
-        dataRef.document(deviceId).set(user)
+        dataRef.document(currentDeviceId).set(user)
     }
 
 
@@ -74,7 +77,7 @@ open class Model: ModelUpdater<View>{
      *
      */
     fun deleteProfile(){
-        dataRef.document(deviceId).delete()
+        dataRef.document(currentDeviceId).delete()
     }
 
 
