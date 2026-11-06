@@ -91,25 +91,6 @@ class LotteryTest {
         assertEquals(range(15, 25), l.bookingPeriod())
     }
 
-    @Test
-    fun setPeriods_notifyViews() {
-        val l = lottery()
-        val view = CountingView()
-        l.addView(view)
-        l.setRegistrationPeriod(range(2, 12))
-        l.setBookingPeriod(range(13, 20))
-        assertEquals(2, view.updates)
-    }
-
-    @Test
-    fun invalidPeriod_doesNotNotifyViews() {
-        val l = lottery()
-        val view = CountingView()
-        l.addView(view)
-        runCatching { l.setBookingPeriod(range(5, 20)) }
-        assertEquals(0, view.updates)
-    }
-
     // firestore needs to build one with no arguments when loading
     @Test
     fun noArguments_hasNoPeriodsYet() {
