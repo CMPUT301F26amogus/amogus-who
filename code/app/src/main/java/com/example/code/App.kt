@@ -168,7 +168,7 @@ fun App(id: String, model: Model) {
 
         composable(Routes.OWNER_CAMPSITES) { ownerCampsitesView.ShowScreen(navController) }
         composable(Routes.OWNER_RESERVATIONS) { ownerReservationsView.ShowScreen(navController) }
-        composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
         composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen() }
+        composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
     }
 }
