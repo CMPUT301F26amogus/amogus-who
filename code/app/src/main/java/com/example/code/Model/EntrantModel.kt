@@ -8,86 +8,33 @@ class EntrantModel: Model() {
 
 
     /**
-     *
-     *
-     * deletes an entrant based on the username
-     * and returns true upon successful deletion
-     * returns false if username wasnt found
-     *
-     * @param entrant 'username of entrant'
-     * @return 'true if deleted, false if couldnt delete'
-     */
-    fun deleteProfile(){
-
-    }
-
-    /**
-     * 'updates the information of an entrant'
-     *
-     * 'detailed description and/or uses'
-     *
-     * '(if applicable) fail triggers and fail response'
-     *
-     * @param 'entrant' 'username of entrant'
-     */
-    fun updateEntrant(entrant: String){
-        // look for entrant in the database,
-
-    }
-
-
-    /**
-     * Signs up entrant into the database, this should always be called when new signup
+     * Signs up entrant into the database
      * Create the entrant profile, with all their information.
      *
      *
-     * @param deviceInformation entrants device identification number // REPLACE
      * @param name user's signUp name from view
      * @param phoneNumber user's phone number from the view
      * @param email user's email from the view
      */
-    fun signUp(deviceInformation: String, name: String, phoneNumber: String, email: String){
-        val newUser = User(deviceInformation, name, email=email,phone=phoneNumber)
-        userRef.document(deviceInformation).set(User())
+    fun signUp(name: String, phoneNumber: String, email: String){
+        val newUser = User(deviceId, name, email=email,phone=phoneNumber)
+        dataRef.document(deviceId).set(User())
 
     }
 
-    /**
-     * auto sign in, run this function to determine if the user is a new user -> register page
-     * or if user is in the database.
-     *
-     * @param deviceInformation user's device information, we use this to find the user
-     * @return true if
-     */
-    fun doesUserExist(deviceInformation: String): Boolean{
-        var exist = false
-        userRef.document(deviceInformation).get().addOnSuccessListener {
-            snapshot -> //snapshot represents the state of the document
-            exist = snapshot.exists(); // .exists() checks if the document exists
-        }
-        return exist // return if the document exists.
-    }
+
 
 
     /**
      * This function is for signing the user into the app, make sure to
-     * check if the user exists with "doesUserExist" function, before running signIn
+     *
+     * @return returns user if user is in database, else returns null.
+     * the idea is that:
+     *      if returns null, then the view is the sign-up page
+     *      if returns user, then view is homepage
      */
-    fun signIn()
-
-
-    /**
-     * searches for deviceInformation across all entrants in database
-     *
-     *
-     * '(if applicable) fail triggers and fail response'
-     *
-     * @param deviceInformation 'description of the inputted variable'
-     * @return Entrant, this should return the entrant found, or something else undecided if not found
-     */
-    fun login(deviceInformation: String): Boolean{
-
-        return true // havent implemented returning entrant
+    fun signIn(): User?{
+        return getUserObj()
     }
 
     // needs further improvement
@@ -102,8 +49,6 @@ class EntrantModel: Model() {
         return false
     }
 
-    private val userRef = db.collection("Users")
-
     /**
      * Takes a user profile and edits the user properties
      *
@@ -116,17 +61,17 @@ class EntrantModel: Model() {
      */
     fun updateProfile(user: User, name: String="", email: String="", phoneNumber: String=""){
         if (name != "") {
-            userRef.document(user.deviceId).update(
+            dataRef.document(user.deviceId).update(
                 "name", name
             )
         }
         if (email != ""){
-            userRef.document(user.deviceId).update(
+            dataRef.document(user.deviceId).update(
                 "email", email
             )
         }
         if(phoneNumber != ""){
-            userRef.document(user.deviceId).update(
+            dataRef.document(user.deviceId).update(
                 "phone", phoneNumber
             )
         }
@@ -134,31 +79,13 @@ class EntrantModel: Model() {
 
 
 
-
     /**
-     * Deletes the user's profile from the database
+     * removes user from list of lottery winners
      *
-     * This will work even if the user isnt in the database.
-     *
-     * @param user user's object
-     */
-    fun deleteProfile(user: User){
-        userRef.document(user.deviceId).delete()
-    }
-
-    /**
-     * Lets user decline a lottery win
-     *
-     * @param user the user that won the lottery
      *
      */
-
-    fun declineWin(){
+    fun declineReservation(){
         // entrants should be able to decline a lottery win, but we dont have any connections set up
-
-
-
-
 
 
     }

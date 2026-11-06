@@ -4,6 +4,7 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import android.content.Context
 import android.provider.Settings
+import com.example.code.Model.User
 
 interface ModelUpdater<V>{
     fun addView(v:V)
@@ -11,9 +12,50 @@ interface ModelUpdater<V>{
 }
 
 open class Model: ModelUpdater<View>{
+    // DATA BASE SET UP STUFF
     val db = Firebase.firestore
+    val dataRef = db.collection("EVERYTHING") // put all data in here for now.
+
+
+
+    // Use this for the deviceId, this is how we identify the current user.
     var deviceId: String = ""
 
+
+
+    // HELPER FUNCTIONS FOR US MODEL PEOPLES, use at your own caution
+
+    /**
+     * Always check for null, if this is null then user doesnt exist.
+     * Otherwise this returns user as an object
+     */
+    fun getUserObj(): User?{
+        var user: User? = null
+        dataRef.document(deviceId).get().addOnSuccessListener {
+                snapshot ->
+            if (snapshot.exists()){
+                user = snapshot.toObject(User::class.java)
+            }
+        }
+        return user
+    }
+
+    /**
+     * Sets the user's object, useful after getUserObj()
+     * WARNING: This will completely remake the ENTIRE document with this User object
+     *
+     * @param user replacement user
+     */
+    fun setUserObj(user:User){
+        dataRef.document(deviceId).set(user)
+    }
+
+
+
+
+
+
+    // Everything under this line should be functions that are used by the view
     /**
      * function that sets the device id of the user, this is needed by all models,
      * reference the deviceId attribute.
@@ -24,15 +66,13 @@ open class Model: ModelUpdater<View>{
         this.deviceId = deviceId
     }
 
-
-
-    /*
-    private val userRef = db.collection("User Data")
-    private val CampsiteRef = db.collection("Campsite Data")
-    private val adminRef = db.collection("Admin Data")
-
-    boiler plate code, for each collection in the database, idk yet
-    */
+    /**
+     * delete a profile (any role)
+     *
+     */
+    fun deleteProfile(){
+        dataRef.document(deviceId).delete()
+    }
 
 
 
