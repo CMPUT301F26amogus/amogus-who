@@ -4,7 +4,7 @@ import java.time.LocalDate
 import java.time.temporal.ChronoUnit
 
 /**
- * a span of dates where start counts and end doesnt
+ * a span of dates where start counts and end doesn't
  *
  * for a stay start is check in and end is check out so may 1 to may 3 is 2 nights
  * since end is exclusive back to back stays dont overlap

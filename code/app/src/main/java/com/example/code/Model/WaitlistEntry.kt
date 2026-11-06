@@ -14,7 +14,7 @@ import java.time.Instant
 class WaitlistEntry(
     val lotteryId: String="", // needed default value for the database to convert to obj
     val userId: String="",
-    val joinedAt: Instant = Instant.now(),
+    val joinedAt: Long = 0L,
     var status: EntryStatus = EntryStatus.WAITING,
 ){
 

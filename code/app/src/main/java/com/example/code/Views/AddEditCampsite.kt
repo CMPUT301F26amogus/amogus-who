@@ -54,7 +54,6 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
 
     var bookingPeriodEnd : String = ""
 
-//    var tags : String = ""
 
     var headerName = if (isEdit) {"Edit Campsite"} else { "Add Campsite" }
 
@@ -64,7 +63,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
             "",
             "",
             "John Park",
-            Location(0.0, 0.0, "Banff"),
+            location = "Banff",
             8,
             10.0,
             "Toilets etc",
@@ -74,7 +73,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
             oldCampsite = tempCampsite
             campsiteName = tempCampsite.name
             campDescription = tempCampsite.description
-            parkName = tempCampsite.location.displayName
+            parkName = tempCampsite.location
             maxGuests = tempCampsite.maxOccupancy.toString()
             pricePerNight = tempCampsite.pricePerNight.toString()
 //            bookingPeriodStart = tempCampsite.
@@ -102,8 +101,9 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
 
         Column() {
             Row() {
+
                 Header(
-                    headerText = headerName,
+                    "Edit Campsite",
                     backgroundColor = headerbgColor,
                     textColor = headerTextColor,
                 )
