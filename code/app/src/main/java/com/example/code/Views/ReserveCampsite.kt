@@ -25,6 +25,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 import com.example.code.Model.Campsite
 import java.util.Date
 
@@ -60,7 +61,7 @@ class ReserveCampsite : View(), InputFieldFunctions {
     }
 
     @Composable
-    public fun ShowScreen() {
+    public fun ShowScreen(navController: NavController) {
 
         val arrivalDateState = TextFieldState("")
         val departureDateState = TextFieldState("")
@@ -236,6 +237,7 @@ class ReserveCampsite : View(), InputFieldFunctions {
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
+                    navController = navController
                 )
             }
         }

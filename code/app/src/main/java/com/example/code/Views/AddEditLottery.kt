@@ -1,8 +1,9 @@
 package com.example.code.Views
 
-import Lottery
 import View
 import Model
+import com.example.code.Model.Lottery
+import com.example.code.Model.Campsite
 import android.icu.util.Output
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -29,10 +30,13 @@ import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.code.ui.theme.CodeTheme
 import java.util.Date
 import kotlin.text.toInt
 
-class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
+class AddEditLottery(model: Model, val isEdit : Boolean) : View(), InputFieldFunctions{
 
     val bgColor = secondaryGreenColor
     val headerBackgroundColor = ownerHeaderBackgroundColor
@@ -54,21 +58,23 @@ class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
     var numberOfWinners = 0  // number of winners a lottery can have
 //    var registrationDuration = 0  // the period after winning entrants get to register their bookings?
     // US 02.04.03 As a campsite owner, I want to set a registration period.
+    var registrationStart = ""
+    var registrationEnd = ""
 
     override fun update(model: Model){
         if (isEdit){
 //            oldLottery = model.getLotteryToDisplay()
             //  extract oldLottery variables
             if (oldLottery != null) {
-                val date: Date = this.oldLottery!!.bookStart
-                drawDate = dateToString(date)
+                registrationStart = oldLottery!!.registrationStart
+                registrationEnd = oldLottery!!.registrationEnd
             }
         }
         else { clear() }
     }
 
     @Composable
-    public fun ShowScreen() {
+    public fun ShowScreen(navController: NavController) {
         val lotteryCampsiteIDState = rememberTextFieldState(lotteryCampsiteID.toString())
         val waitListCapacityState = rememberTextFieldState(waitListCapacity.toString())
         val drawDateState = rememberTextFieldState(drawDate)
@@ -169,6 +175,7 @@ class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
                     textColor = footerTextColor,
                     backgroundColor = footerBackgroundColor,
                     buttonColor = footerButtonColor,
+                    navController = navController
                 )
             }
         }
@@ -190,17 +197,17 @@ class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
         }
     }
 
+}
 
 
-    @Composable
-    public fun EditLotteryPreview() {
-        val aView = AddEditLottery(true)
-        aView.ShowScreen()
+@Preview(showBackground = true)
+@Composable
+fun AddLotteryViewPreview() {
+    val m = Model()
+    val mp = AddEditLottery(m, false)
+    CodeTheme {
+        (
+                mp.ShowScreen(rememberNavController())
+                )
     }
-    @Composable
-    public fun AddLotteryPreview() {
-        val aView = AddEditLottery(false)
-        aView.ShowScreen()
-    }
-
 }
