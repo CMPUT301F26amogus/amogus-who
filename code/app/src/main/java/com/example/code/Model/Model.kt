@@ -142,7 +142,25 @@ open class Model: ModelUpdater<View>{
             campsiteList = newArray
             notifyViews()
         }
+    public var id: String = ""
+        set(value) {
+            field = value
+            notifyViews()
+        }
 
+    /**
+     * Register that just holds a single campsite cause why not
+     */
+    var tempCampsite: Campsite? = null
+
+    fun getTempCampsite(): Campsite? {
+        return tempCampsite
+    }
+
+    fun setTempCampsite(campsite: Campsite?) {
+        tempCampsite = campsite
+        notifyViews()
+    }
     fun createCampsite(campsite: Campsite) {
         campsiteRef.document(campsite.id).set(campsite)
     }

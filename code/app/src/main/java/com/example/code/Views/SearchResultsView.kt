@@ -34,6 +34,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -49,7 +50,7 @@ import com.example.code.ui.theme.CodeTheme
 class SearchResultsView(M:Model): View() {
     var CampsiteList: List<Campsite> = emptyList()
     override fun update(model: Model) {
-
+        CampsiteList = model.campsiteList
     }
     val controller = SearchResultsController(M)
     @Composable
@@ -66,7 +67,12 @@ class SearchResultsView(M:Model): View() {
                 LazyColumn(
                     modifier = Modifier.fillMaxSize()
                 ) {
-
+                    itemsIndexed(CampsiteList) { index, campsite ->
+                        CampsiteRow(
+                            campsite = campsite,
+                            navController = navController
+                        )
+                    }
                 }
             }
             Row() {
