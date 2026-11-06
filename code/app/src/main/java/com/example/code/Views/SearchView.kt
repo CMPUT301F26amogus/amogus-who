@@ -23,6 +23,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -48,8 +49,11 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
+import Model
+import com.example.code.Controllers.SearchController
 
-class SearchView: View() {
+class SearchView(M: Model): View() {
+    var controller = SearchController(M)
     @Composable
     public fun ShowScreen(navController: NavController) {
         var search by remember {mutableStateOf("")}
@@ -228,7 +232,13 @@ class SearchView: View() {
                     colors = ButtonDefaults.buttonColors(containerColor = light),
                     modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
                 ) {
-                    Text(text = "< Return", color = Color(0xff5530a4), fontSize = 13.sp)
+                    Text(text = "< Return", color = Color(0xff5530a4), fontSize = 13.sp,
+                        modifier = Modifier.clickable(enabled = true, onClick = {
+                            // only go back if there is a screen to go back to
+                            if (navController.previousBackStackEntry != null) {
+                                navController.popBackStack()
+                            }
+                        }))
                 }
                 ElevatedButton(
                     onClick = {
@@ -250,7 +260,10 @@ class SearchView: View() {
                     colors = ButtonDefaults.buttonColors(containerColor = light),
                     modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
                 ) {
-                    Text(text = "Search", color = Color(0xff5530a4), fontSize = 13.sp)
+                    Text(text = "Search", color = Color(0xff5530a4), fontSize = 13.sp,
+                        modifier = Modifier.clickable(enabled = true, onClick = {
+                            controller.search(name = campsite, navController = navController)
+                        }))
                 }
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
@@ -269,7 +282,7 @@ class SearchView: View() {
 @Preview(showBackground = true)
 @Composable
 fun SearchViewPreview() {
-    val mp = SearchView()
+    val mp = SearchView(Model())
     CodeTheme {
         (
             mp.ShowScreen(rememberNavController())

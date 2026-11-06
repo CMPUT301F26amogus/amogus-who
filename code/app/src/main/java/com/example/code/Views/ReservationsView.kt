@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import Model
 import com.example.code.Routes
 import androidx.compose.foundation.clickable
 import androidx.navigation.NavController
@@ -35,6 +36,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
@@ -48,9 +50,23 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.EntrantReservationsController
+import com.example.code.Model.Lottery
+import com.example.code.Model.Reservation
 import com.example.code.ui.theme.CodeTheme
 
-class ReservationsView: View() {
+class ReservationsView(model: Model): View() {
+    var currentReservations = emptyList<Reservation>()
+    var previousReservations = emptyList<Reservation>()
+    var controller = EntrantReservationsController(model)
+    override fun update(model: Model) {
+        model.getCancelledReservations(entrantId = model.currentDeviceId){
+                result -> previousReservations = result
+        }
+        model.getActiveReservations(entrantId = model.currentDeviceId){
+                result -> currentReservations = result
+        }
+    }
     val bgColor = secondaryGreenColor
     val headerbgColor = entrantHeaderBackgroundColor
     val headerTextColor = entrantHeaderTextColor
@@ -80,7 +96,12 @@ class ReservationsView: View() {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-
+                        itemsIndexed(currentReservations) { index, reservation ->
+                            CurrentReservationRow(
+                                reservation = reservation,
+                                navController = navController
+                            )
+                        }
                     }
                 }
             }else{
@@ -88,14 +109,19 @@ class ReservationsView: View() {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
-
+                        itemsIndexed(previousReservations) { index, reservation ->
+                            PreviousReservationRow(
+                                reservation = reservation,
+                                navController = navController
+                            )
+                        }
                     }
                 }
             }
         }
     }
     @Composable
-    private fun CurrentReservationRow(navController: NavController) {
+    private fun CurrentReservationRow(reservation: Reservation, navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -104,10 +130,10 @@ class ReservationsView: View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text("Campsite Name", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            Text(reservation.campsite!!.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                         Row() {
-                            Text("Park/Location")
+                            Text(reservation.campsite!!.location)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth()) {
@@ -117,11 +143,11 @@ class ReservationsView: View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text("Rating", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(reservation.campsite!!.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
-                            Text("^: XX", fontWeight = FontWeight.Bold)
+                            Text("^: ${reservation.guests}", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -131,6 +157,7 @@ class ReservationsView: View() {
                         "X Cancel", color = Color(0xff5530a4),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { controller.cancelReservation(reservation) },
 
                     )
                     Spacer(modifier = Modifier.width(105.dp))
@@ -138,14 +165,14 @@ class ReservationsView: View() {
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
+                        modifier = Modifier.clickable { controller.viewCampsite(reservation.campsite!!.id, navController = navController) },
                     )
                 }
             }
         }
     }
     @Composable
-    private fun PreviousReservationRow(navController: NavController) {
+    private fun PreviousReservationRow(reservation: Reservation, navController: NavController) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 Row(
@@ -154,10 +181,10 @@ class ReservationsView: View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text("Campsite Name", fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            Text(reservation.campsite!!.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                         Row() {
-                            Text("Park/Location")
+                            Text(reservation.campsite!!.location)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth()) {
@@ -167,11 +194,11 @@ class ReservationsView: View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text("Rating", fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            Text(reservation.campsite!!.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
-                            Text("^: XX", fontWeight = FontWeight.Bold)
+                            Text("^: ${reservation.guests}", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -181,7 +208,7 @@ class ReservationsView: View() {
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
                         fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { navController.navigate(Routes.CAMPSITE_DETAILS) },
+                        modifier = Modifier.clickable { controller.viewCampsite(reservation.campsite!!.id, navController = navController) },
                     )
                 }
             }
@@ -192,7 +219,7 @@ class ReservationsView: View() {
 @Preview(showBackground = true)
 @Composable
 fun ReservationsViewPreview() {
-    val mp = ReservationsView()
+    val mp = ReservationsView(Model())
     CodeTheme {
         (
             mp.ShowScreen(rememberNavController())
