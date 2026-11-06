@@ -20,10 +20,9 @@ import java.time.LocalDate
  * @property rulesAccepted true once the entrant agreed to the campsite rules
  */
 class Reservation(
-    val id: String = "",
-    val campsiteId: String = "",
-    val lotteryId: String = "",
-    val entrantId: String = "",
+    var id: String = "",
+    val campsite: Campsite? = null,
+    var entrant: User? = null,
     var checkIn: String = "",
     var checkOut: String = "",
     var guests: Int = 0,

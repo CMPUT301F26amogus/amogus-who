@@ -18,7 +18,7 @@
 
 package com.example.code.Views
 
-import androidx.navigation.NavController
+import Model
 import Option
 import View
 import androidx.compose.foundation.background
@@ -49,6 +49,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import androidx.navigation.NavController
 
 abstract class HomeView : View() {
 
@@ -59,6 +60,7 @@ abstract class HomeView : View() {
     abstract val footerTextColor: Color
     abstract val footerButtonColor: Color
     abstract val options: MutableList<Option>
+    override fun update(model: Model) {}
 
     @Composable
     protected open fun CustomHeader(navController: NavController) {}
