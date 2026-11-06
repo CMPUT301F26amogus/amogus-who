@@ -5,10 +5,14 @@ import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.firestore
 import android.content.Context
 import android.provider.Settings
+import com.example.code.Model.Campsite
 import com.example.code.Model.DateRange
 import com.example.code.Model.EntryStatus
 import com.example.code.Model.Lottery
+import com.example.code.Model.LotteryStatus
 import com.example.code.Model.Notification
+import com.example.code.Model.Rating
+import com.example.code.Model.Reservation
 import com.example.code.Model.ReservationStatus
 import com.example.code.Model.User
 import com.example.code.Model.WaitlistEntry
@@ -32,6 +36,7 @@ open class Model: ModelUpdater<View>{
     @get:Exclude
     var currentDeviceId: String = ""
     var campId: String = ""
+    var notificationCount: Int = 0
 
 
 
@@ -53,6 +58,19 @@ open class Model: ModelUpdater<View>{
                 }
             }
     }
+
+    fun setNotifCount(onResult: (Int) -> Unit){
+        dataRef.document(currentDeviceId).get().addOnSuccessListener { snapshot ->
+            if (snapshot.exists()) {
+                val user = snapshot.toObject(User::class.java)
+                notificationCount = user!!.notificationCount
+                onResult(notificationCount)
+            } else {
+                onResult(0)
+            }
+        }
+    }
+
 
     /**
      * Sets the user's object, useful after getUserObj()
@@ -122,21 +140,24 @@ open class Model: ModelUpdater<View>{
     private val campsiteRef by lazy { db.collection("campsite") }
     private val reservationRef by lazy { db.collection("reservations") }
     private val lotteryRef by lazy { db.collection("lotteries") }
+    private val waitlistRef by lazy { db.collection("waitlist") }
 
-    fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double,
-                       rating: Double) {
-        campsite.campName = campName
+    fun createCampsite(campsite: Campsite) {
+        campsiteRef.document(campsite.id).set(campsite)
+    }
+
+    fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double) {
+        campsite.name = campName
         campsite.location = location
-        campsite.desc = desc
-        campsite.maxOcc = maxOcc
-        campsite.price = price
-        campsite.rating = rating
-        campsiteRef.document(campsite.campId).set(campsite)
+        campsite.description = desc
+        campsite.maxOccupancy = maxOcc
+        campsite.pricePerNight = price
+        campsiteRef.document(campsite.id).set(campsite)
         notifyViews()
     }
 
     fun deleteCampsite(campsite: Campsite) {
-        campsiteRef.document(campsite.campId).delete()
+        campsiteRef.document(campsite.id).delete()
         notifyViews()
     }
 
@@ -157,6 +178,28 @@ open class Model: ModelUpdater<View>{
             }
     }
 
+    fun getCampsiteByOwner(ownerId: String, onResult: (List<Campsite>) -> Unit) {
+        campsiteRef.whereEqualTo("ownerId", ownerId).get()
+            .addOnSuccessListener { documents ->
+                val campsites = documents.toObjects(Campsite::class.java)
+                onResult(campsites)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    fun getAllCampsites(onResult: (List<Campsite>) -> Unit) {
+        campsiteRef.get()
+            .addOnSuccessListener { documents ->
+                val campsites = documents.toObjects(Campsite::class.java)
+                onResult(campsites)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
     fun searchCampsite(campName: String, onResult: (List<Campsite>) -> Unit) {
         campsiteRef.whereEqualTo("campName", campName).get()
             .addOnSuccessListener { documents ->
@@ -168,11 +211,262 @@ open class Model: ModelUpdater<View>{
             }
     }
 
+    fun getUserByDevice(deviceId: String, onResult: (User?) -> Unit) {
+        usersRef.whereEqualTo("deviceId", deviceId)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val user = documents.documents[0].toObject(User::class.java)
+                    onResult(user)
+                } else {
+                    onResult(null)
+                }
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+    }
+
+    fun createLottery(lottery: Lottery) {
+        lotteryRef.document(lottery.id).set(lottery)
+    }
+
+    fun deleteLottery(lottery: Lottery) {
+        lotteryRef.document(lottery.id).delete()
+    }
+
+    fun updateLottery(lottery: Lottery, regStart: String, regEnd: String, bookStart: Date,
+                      bookEnd: Date, winnerCount: Int, waitlistCap: Int, lotteryStatus: LotteryStatus
+    ) {
+        lottery.registrationPeriod(regStart, regEnd)
+        lottery.bookingPeriod(bookStart, bookEnd)
+        lottery.numWinners = winnerCount
+        lottery.waitlistCapacity = waitlistCap
+        lottery.status = lotteryStatus
+
+        lotteryRef.document(lottery.id).set(lottery)
+    }
+
+    fun joinWaitlist(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
+        val entryId = "${lotId}_${entrantId}"
+        val entryRef = waitlistRef.document(entryId)
+
+        entryRef.get()
+            .addOnSuccessListener { document ->
+                if (document.exists() && document.getString("waitlistStatus") == "WAITING") {
+                    onResult(Result.failure(
+                        Exception("You have already joined this waitlist")
+                    ))
+                } else {
+                    val entry = WaitlistEntry(
+                        lotteryId = lotId, userId = entrantId, joinedAt = System.currentTimeMillis(),
+                        status = EntryStatus.WAITING)
+
+                    entryRef.set(
+                        mapOf(
+                            "lotId" to entry.lotteryId,
+                            "entrantId" to entry.userId,
+                            "waitlistStatus" to entry.status.name,
+                            "joinedAt" to entry.joinedAt
+                        )
+                    ).addOnSuccessListener { onResult(Result.success(Unit)) }
+                        .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
+                }
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
+    }
+
+    fun leaveWaitlist(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
+        val entryId = "${lotId}_${entrantId}"
+
+        waitlistRef.document(entryId)
+            .update("waitlistStatus", "LEFT")
+            .addOnSuccessListener {
+                onResult(Result.success(Unit))
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
+    }
+
+    fun getWaitlist(lotId: String, onResult: (Result<List<WaitlistEntry>>) -> Unit) {
+        waitlistRef.whereEqualTo("lotId", lotId)
+            .whereEqualTo("waitlistStatus", EntryStatus.WAITING.name)
+            .get()
+            .addOnSuccessListener { documents ->
+                val entries = documents.toObjects(WaitlistEntry::class.java)
+
+                onResult(Result.success(entries))
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
+    }
+
+    fun drawLotteryWinner(
+        lotId: String,
+        onResult: (Result<List<String>>) -> Unit
+    ) {
+        val lotteryDocument = lotteryRef.document(lotId)
+
+        // First, retrieve the lottery.
+        lotteryDocument.get()
+            .addOnSuccessListener { lotteryDoc ->
+
+                if (!lotteryDoc.exists()) {
+                    onResult(Result.failure(Exception("Lottery not found")))
+                    return@addOnSuccessListener
+                }
+
+                // Check whether registration has ended.
+                val regEnd = lotteryDoc.getLong("regEnd") ?: 0L
+
+                if (System.currentTimeMillis() < regEnd) {
+                    onResult(Result.failure(Exception("Registration has not ended")))
+                    return@addOnSuccessListener
+                }
+
+                // Check whether the lottery has already been drawn.
+                val status = lotteryDoc.getString("lotteryStatus")
+
+                if (status == LotteryStatus.DRAWN.name) {
+                    onResult(Result.failure(Exception("Lottery has already been drawn")))
+                    return@addOnSuccessListener
+                }
+
+                val winnerCount = lotteryDoc.getLong("winnerCount")?.toInt() ?: 0
+
+                if (winnerCount <= 0) {
+                    onResult(Result.failure(Exception("Invalid winner count")))
+                    return@addOnSuccessListener
+                }
+
+                // Retrieve all entrants who are still waiting.
+                waitlistRef
+                    .whereEqualTo("lotId", lotId)
+                    .whereEqualTo("waitlistStatus", EntryStatus.WAITING.name)
+                    .get()
+                    .addOnSuccessListener { documents ->
+
+                        val entries = documents.documents
+
+                        if (entries.size < winnerCount) {
+                            onResult(
+                                Result.failure(Exception("Not enough eligible entrants"))
+                            )
+                            return@addOnSuccessListener
+                        }
+
+                        // Randomly select winners.
+                        val winners = entries.shuffled().take(winnerCount)
+                        val winnerIds = winners.mapNotNull {
+                            it.getString("entrantId")
+                        }
+
+                        val winnerEntryIds = winners.map { it.id }.toSet()
+
+                        // Update all waitlist entries and the lottery.
+                        val batch = db.batch()
+
+                        for (entry in entries) {
+                            val newStatus =
+                                if (entry.id in winnerEntryIds) {
+                                    EntryStatus.SELECTED
+                                } else {
+                                    EntryStatus.NOT_SELECTED
+                                }
+
+                            batch.update(
+                                entry.reference,
+                                "waitlistStatus",
+                                newStatus.name
+                            )
+                        }
+
+                        batch.update(
+                            lotteryDocument,
+                            "lotteryStatus",
+                            LotteryStatus.DRAWN.name
+                        )
+
+                        batch.update(
+                            lotteryDocument,
+                            "winnerIds",
+                            winnerIds
+                        )
+
+                        batch.commit()
+                            .addOnSuccessListener {
+                                onResult(Result.success(winnerIds))
+                            }
+                            .addOnFailureListener { exception ->
+                                onResult(Result.failure(exception))
+                            }
+                    }
+                    .addOnFailureListener { exception ->
+                        onResult(Result.failure(exception))
+                    }
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
+    }
+
+    fun rejectReservation(reservationId: String, onResult: (Result<Unit>) -> Unit) {
+        val reservationDoc = reservationRef.document(reservationId)
+
+        reservationDoc.get()
+            .addOnSuccessListener { document ->
+                if(!document.exists()) {
+                    onResult(Result.failure(Exception("Reservation not found")))
+                    return@addOnSuccessListener
+                }
+
+                val status = document.getString("reservationStatus")
+
+                if (status != ReservationStatus.ACTIVE.name) {
+                    onResult(Result.failure(Exception("Reservation is not pending")))
+                    return@addOnSuccessListener
+                }
+
+                reservationDoc.update(
+                    "reservationStatus", ReservationStatus.REJECTED.name
+                )
+                    .addOnSuccessListener { onResult(Result.success(Unit)) }
+                    .addOnFailureListener { exception ->
+                        onResult(Result.failure(exception))
+                    }
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
+    }
+
+    fun getReservationByUID(entrantId: String, onResult: (Result<List<ReservationStatus>>) -> Unit) {
+        reservationRef.whereEqualTo("entrantId", entrantId).get()
+            .addOnSuccessListener { documents ->
+                val statuses = documents.documents.mapNotNull {
+                    val status = it.getString("reservationStatus")
+
+                    status?.let {
+                        ReservationStatus.valueOf(it)
+                    }
+                }
+
+                onResult(Result.success(statuses))
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
+    }
+
     fun getCampId(campName: String, onResult: (String) -> Unit){
         campsiteRef.whereEqualTo("campName", campName).get()
             .addOnSuccessListener { documents ->
                 val campsite = documents.toObjects(Campsite::class.java)
-                onResult(campsite[0].campId)
+                onResult(campsite[0].id)
             }
     }
 
@@ -211,6 +505,27 @@ open class Model: ModelUpdater<View>{
             }
     }
 
+
+    /**
+     * Create a reservation for a campsite
+     *
+     * @param checkIn check in date
+     * @param checkOut check out date
+     * @param guests number of guests
+     * @param campsite the campsite to book
+     */
+    fun makeReservation(checkIn: String, checkOut: String, guests: Int, campsite: Campsite){
+        val newReservation = Reservation(checkIn = checkIn, checkOut = checkOut, guests = guests, campsite = campsite)
+        dataRef.add(newReservation).addOnSuccessListener {
+            documentReference ->
+            newReservation.id = documentReference.id
+            newReservation.status = ReservationStatus.ACTIVE
+            getUserObj(){ user -> newReservation.entrant = user }
+            dataRef.document(documentReference.id).set(newReservation)
+        }
+    }
+
+
     /**
      * gets the booked dates of a campsite for its owner
      *
@@ -238,7 +553,7 @@ open class Model: ModelUpdater<View>{
      *
      * @param lottery the lottery to save
      */
-    fun saveLottery(lottery: Lottery) {
+    fun setLottery(lottery: Lottery) {
         lotteryRef.document(lottery.id).set(lottery)
     }
 
@@ -256,6 +571,23 @@ open class Model: ModelUpdater<View>{
         )
         notifyViews()
     }
+
+    /**
+     * Gets a list of lotteries that the user is in
+     *
+     *@param onResult gets the lotteries or an empty list if it failed
+     */
+    fun getLotteries(onResult: (List<Lottery>) -> Unit) {
+        getUserObj { user -> onResult(user!!.lotteries!!)}
+    }
+
+
+
+
+
+    /**
+     *
+     */
 
     /**
      * Signs up entrant into the database
@@ -290,20 +622,6 @@ open class Model: ModelUpdater<View>{
         return null
     }
 
-    // needs further improvement
-    /**
-     * Signs entrant up for lottery
-     *
-     *
-     * @param lottery the lottery the entrant wants to join
-     * @return The lottery that the entrant joined, if zero then lottery failed to join
-     */
-    fun joinLottery(lottery: Lottery){
-        dataRef.document(lottery.id).update(
-            "entrants", FieldValue.arrayUnion(currentDeviceId)
-        )
-    }
-
     /**
      * Takes a user profile and edits the user properties
      *
@@ -334,18 +652,19 @@ open class Model: ModelUpdater<View>{
 
 
 
+
     /**
      * removes user from reservation, this allows user to decline reservation
      *
      *@param reservation the Reservation object that the user is declining
      */
-    fun declineReservation(reservation: com.example.code.Model.Reservation){
+    fun declineReservation(reservation: Reservation){
         // entrants should be able to decline a lottery win, that is we change the reservation status
         // I'm assuming that view people will pass in the reservation, because the user needs to click
         // on the reservation that they will cancel from a list of reservations.
 
         dataRef.document(reservation.id).update(
-            "status", com.example.code.Model.ReservationStatus.REJECTED
+            "status", ReservationStatus.REJECTED
         )
     }
 
@@ -406,10 +725,14 @@ open class Model: ModelUpdater<View>{
      * @param onResult Callback returning true if joined successfully, false if full, already joined, or failed
      */
     fun joinWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
+        //if you join a waitlist it should also update the lottery list in the user
+        // that is the user has a list of lotteries that they are in
+        var tempuser: User? = null
+        getUserObj { user -> tempuser = user }
         dataRef.document(lottery.id).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
-                    var currentLottery = snapshot.toObject(Lottery::class.java)
+                    val currentLottery = snapshot.toObject(Lottery::class.java)
 
                     if (currentLottery != null) {
                         //Check if user is already in the waitlist
@@ -436,9 +759,14 @@ open class Model: ModelUpdater<View>{
                         val updatedWaitlist = currentLottery.waitlist + newEntry
                         currentLottery.waitlist = updatedWaitlist
 
-                        // the updated lottery object back to Firestore
+                        // adds the user to the waitlist in the lottery
                         dataRef.document(lottery.id).set(currentLottery)
-                            .addOnSuccessListener { onResult(true) }
+                            .addOnSuccessListener {
+                                // sneakily adds the lottery to the user's waitlist as well :)
+                                tempuser!!.lotteries!!.add(lottery)
+                                setUserObj(tempuser!!)
+                                onResult(true)
+                            }
                             .addOnFailureListener { onResult(false) }
                     } else {
                         onResult(false)
@@ -451,20 +779,62 @@ open class Model: ModelUpdater<View>{
 
 
     /**
-     * Produces a notification object that is associated with the user
+     * gets the entire waitlist that the user is in, these are a list of lotteries
+     *
+     * @return Returns a list of lotteries that the user is in
+     */
+    fun getWaitlist(): ArrayList<Lottery>{
+        val lotteries = ArrayList<Lottery>()
+        dataRef.document(currentDeviceId).get().addOnSuccessListener {
+            snapshot ->
+            if (snapshot.exists()){
+                val user = snapshot.toObject(User::class.java)
+                lotteries.addAll(user!!.lotteries!!)
+            }
+        }
+        return lotteries
+    }
+
+
+
+
+    /**
+     * Sends a notification to the user
      *
      * @param notification The notification message
-     * @return The notification object
      */
-    fun notifyUser(notification: String): Notification {
+    fun notifyUser(notification: String) {
         var tempuser: User? = null
         getUserObj({ user -> tempuser = user })
 
         if (tempuser!!.notificationsEnabled) {
-            return Notification("",  listOf(tempuser!!.deviceId), notification)
+            dataRef.document("Notifications/$currentDeviceId/$notificationCount").set(Notification("", currentDeviceId, notification))
         }
-        return Notification("", emptyList(), "") // Return an empty notification if the user doesnt have notifs enabled
-
+        tempuser!!.notificationCount++
+        setUserObj(tempuser!!)
     }
+
+    fun getNotifications(): ArrayList<Notification>{
+        val notifications = ArrayList<Notification>()
+
+        setNotifCount {notificationCount = it}
+
+        for (i in 0..notificationCount){
+            dataRef.document("Notifications/$currentDeviceId/$i").get().addOnSuccessListener {
+                if (it.exists()){
+                    notifications.add(it.toObject(Notification::class.java)!!)
+                }
+            }
+        }
+        return notifications
+    }
+
+
+
+    // Add
+
+
+
+
 
 }

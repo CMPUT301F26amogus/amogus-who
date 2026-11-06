@@ -10,7 +10,7 @@ enum class LotteryStatus {
     OPEN,
 
     /** registration is over and winners are being drawn */
-    DRAWING,
+    DRAWN,
 
     /** winners pick their dates first come first served */
     BOOKING,

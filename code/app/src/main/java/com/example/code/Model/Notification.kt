@@ -17,7 +17,7 @@ import java.time.Instant
  */
 data class Notification(
     val id: String,
-    val recipientIds: List<String>,
+    val recipientId: String,
     val message: String,
     val sentAt: Instant = Instant.now(),
     val lotteryId: String? = null,
