@@ -37,6 +37,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.OwnerReservationsController
 
 class DummyReservation(
     val name: String,
@@ -50,6 +51,8 @@ class DummyReservation(
 
 class OwnerReservationsView : View() {
 
+
+//    val controller by lazy { OwnerReservationsController(model = M) }
     val reservations = mutableStateListOf(
         DummyReservation(
             name = "John Doe",
@@ -136,6 +139,7 @@ class OwnerReservationsView : View() {
         endDate: String,
         guests: Int,
         nights: Int,
+        state: String,
     ) {
         Column(
             modifier = Modifier
@@ -209,44 +213,46 @@ class OwnerReservationsView : View() {
                     .background(color = cardAccent)
                     .padding(10.dp),
             ) {
-                ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
-                    shape = CircleShape,
-                    containerColor = cardAccent,
-                    contentColor = primaryTextColor,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Clear,
-                            contentDescription = "Reject",
-                        )
-                    },
-                    text = { Text("Reject") }
-                )
+                if (state == "Pending") {
+                    ExtendedFloatingActionButton(
+                        onClick = { /* controller.onReservationReject() */ },
+                        shape = CircleShape,
+                        containerColor = cardAccent,
+                        contentColor = primaryTextColor,
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Clear,
+                                contentDescription = "Reject",
+                            )
+                        },
+                        text = { Text("Reject") }
+                    )
+                    Spacer(
+                        modifier = Modifier.weight(1f)
+                    )
+                    ExtendedFloatingActionButton(
+                        onClick = { /* controller.onReservationAccept() */ },
+                        shape = CircleShape,
+                        containerColor = cardAccent,
+                        contentColor = primaryTextColor,
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Check,
+                                contentDescription = "Accept",
+                            )
+                        },
+                        text = { Text("Accept") }
+                    )
 
-                Spacer(
-                    modifier = Modifier.weight(1f)
-                )
+                }
 
-                ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
-                    shape = CircleShape,
-                    containerColor = cardAccent,
-                    contentColor = primaryTextColor,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Check,
-                            contentDescription = "Accept",
-                        )
-                    },
-                    text = { Text("Accept") }
-                )
             }
         }
 
     }
 
     @Composable
-    private fun Content() {
+    private fun Content(state: String) {
 
         LazyColumn(
             modifier = Modifier
@@ -262,6 +268,7 @@ class OwnerReservationsView : View() {
                     endDate = reservations[reservation].endDate,
                     guests = reservations[reservation].guests,
                     nights = reservations[reservation].nights,
+                    state = state,
                 )
                 if (reservation != reservations.size - 1) {
                     Spacer(
@@ -281,9 +288,9 @@ class OwnerReservationsView : View() {
         val pastColor by remember { mutableStateOf(secondaryGreenColor) }
         val tabs = remember {
             mutableStateListOf(
-                Tab(name = "Pending", color = pendingColor, option = {}),
-                Tab(name = "Upcoming", color = upcomingColor, option = {}),
-                Tab(name = "Past", color = pastColor, option = {}),
+                Tab(name = "Pending", color = pendingColor, option = {state = "Pending"}),
+                Tab(name = "Upcoming", color = upcomingColor, option = {state = "Upcoming"}),
+                Tab(name = "Past", color = pastColor, option = {state = "Past"}),
             )
         }
         Column(
@@ -314,7 +321,7 @@ class OwnerReservationsView : View() {
                         .background(primaryGreenColor)
                         .padding(20.dp),
                 ) {
-                    Content()
+                    Content(state = state)
                 }
             }
 
