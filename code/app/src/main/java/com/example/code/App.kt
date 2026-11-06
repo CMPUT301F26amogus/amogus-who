@@ -113,8 +113,8 @@ fun App(id: String, model: Model) {
     val searchView = remember { SearchView(model) }
     val searchResultsView = remember { SearchResultsView(model) }
     val ownerCampsitesView = remember { OwnerCampsiteListView() }
-    val ownerReservationsView = remember { OwnerReservationsView() }
-    val ownerLotteriesView = remember { OwnerLotteriesView() }
+    val ownerReservationsView = remember { OwnerReservationsView(model) }
+    val ownerLotteriesView = remember { OwnerLotteriesView(model) }
     val addEditCampsiteView = remember { AddEditCampsite() }
 
     LaunchedEffect(Unit) {
