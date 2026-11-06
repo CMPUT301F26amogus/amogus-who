@@ -614,12 +614,8 @@ open class Model: ModelUpdater<View>{
      *      if returns null, then the view is the sign-up page
      *      if returns user, then view is homepage
      */
-    fun signIn(): User? {
-        getUserObj { user ->
-            // When getUserObj finishes, forward the result to the caller of signIn
-            return@getUserObj
-        }
-        return null
+    fun signIn(onResult: (User?) -> Unit){
+        getUserObj(onResult)
     }
 
     /**
@@ -817,7 +813,7 @@ open class Model: ModelUpdater<View>{
     /**
      *
      */
-    fun getNotifications(): ArrayList<Notification>{
+    fun getNotifications(onResult: (List<Notification>) -> Unit){
         val notifications = ArrayList<Notification>()
 
         setNotifCount {notificationCount = it}
@@ -828,8 +824,8 @@ open class Model: ModelUpdater<View>{
                     notifications.add(it.toObject(Notification::class.java)!!)
                 }
             }
+            onResult(notifications)
         }
-        return notifications
     }
 
 
