@@ -629,10 +629,24 @@ open class Model: ModelUpdater<View>{
      * @param phoneNumber user's phone number from the view
      * @param email user's email from the view
      */
-    fun signUp(name: String, phoneNumber: String, email: String){
-        val newUser = User(currentDeviceId, name=name, email=email,phone=phoneNumber)
-        dataRef.document(currentDeviceId).set(newUser)
+    fun signUp(
+        deviceId: String,
+        name: String,
+        phoneNumber: String,
+        email: String,
+        onSuccess: () -> Unit,
+    ) {
+        val newUser = User(
+            name = name,
+            email = email,
+            phone = phoneNumber
+        )
 
+        dataRef.document(deviceId)
+            .set(newUser)
+            .addOnSuccessListener {
+                onSuccess()
+            }
     }
 
 
