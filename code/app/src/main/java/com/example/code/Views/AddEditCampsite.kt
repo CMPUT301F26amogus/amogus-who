@@ -61,16 +61,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
 
     override fun update(model: Model) {
 //        val tempCampsite : Campsite? = model.getCampsiteToDisplay()
-        val tempCampsite : Campsite? = Campsite(
-            "",
-            "",
-            "John Park",
-            location = "Banff",
-            8,
-            10.0,
-            "Toilets etc",
-            "dont feed animals"
-            )
+        val tempCampsite = model.getTempCampsite()
         if (tempCampsite != null && isEdit){
             oldCampsite = tempCampsite
             campsiteName = tempCampsite.name
@@ -78,7 +69,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
             parkName = tempCampsite.location
             maxGuests = tempCampsite.maxOccupancy.toString()
             pricePerNight = tempCampsite.pricePerNight.toString()
-//            bookingPeriodStart = tempCampsite.
+//            bookingPeriodStart = tempCampsite.a
 //            bookingPeriodEnd =
         }
         else {
