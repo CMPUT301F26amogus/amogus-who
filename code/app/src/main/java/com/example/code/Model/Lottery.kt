@@ -27,7 +27,7 @@ import java.time.LocalDate
 class Lottery(
     val id: String = "",
     val ownerId: String = "",
-    var campsiteIds: List<String> = emptyList(),
+    var campsites: List<Campsite> = emptyList(),
     registrationStart: String = "",
     registrationEnd: String = "",
     bookingStart: String = "",
