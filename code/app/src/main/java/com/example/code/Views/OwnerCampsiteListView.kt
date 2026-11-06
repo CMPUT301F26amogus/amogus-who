@@ -1,5 +1,6 @@
 package com.example.code.Views
 
+import Model
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
@@ -49,7 +50,9 @@ class DummyCampsite(
 ) {}
 
 class OwnerCampsiteListView : View() {
+    override fun update(model: Model) {
 
+    }
     val campsites = mutableListOf(
         DummyCampsite(
             campsiteName = "Lodge A",

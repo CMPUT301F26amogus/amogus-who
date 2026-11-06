@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import Model
 import Option
 import View
 import androidx.compose.foundation.background
@@ -58,7 +59,9 @@ abstract class HomeView : View() {
     abstract val footerTextColor: Color
     abstract val footerButtonColor: Color
     abstract val options: MutableList<Option>
+    override fun update(model: Model) {
 
+    }
     @Composable
     protected open fun CustomHeader() {}
 

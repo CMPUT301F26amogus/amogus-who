@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import Model
 import Tab
 import View
 import androidx.compose.foundation.background
@@ -47,6 +48,9 @@ import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
 
 class LotteriesView: View() {
+    override fun update(model: Model) {
+
+    }
     val bgColor = secondaryGreenColor
     val headerbgColor = entrantHeaderBackgroundColor
     val headerTextColor = entrantHeaderTextColor

@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import Model
 import View
 import android.graphics.Paint.Align
 import androidx.compose.foundation.background
@@ -41,6 +42,9 @@ import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
 
 class MapView: View() {
+    override fun update(model: Model) {
+
+    }
     @Composable
     public fun ShowScreen(){
         Column() {

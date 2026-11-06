@@ -18,6 +18,7 @@
 
 package com.example.code.Views
 
+import Model
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -39,6 +40,10 @@ import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
 
 class CampsiteDetailsView(): View() {
+    override fun update(model: Model) {
+
+    }
+
     @Composable
     public fun ShowScreen(){
         val bgColor = secondaryGreenColor
