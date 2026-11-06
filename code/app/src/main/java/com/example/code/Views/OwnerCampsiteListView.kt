@@ -38,6 +38,7 @@ import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.Controllers.OwnerCampsiteListController
 
 class DummyCampsite(
     val campsiteName: String,
@@ -48,8 +49,15 @@ class DummyCampsite(
     val rating: Double,
 ) {}
 
+/**
+ *  OwnerCampsiteListView: the view for the owner to see their campsites
+ *
+ */
 class OwnerCampsiteListView : View() {
 
+//    val controller by lazy { OwnerCampsiteListController(model = M) }
+
+    // modify to pull real list from model
     val campsites = mutableListOf(
         DummyCampsite(
             campsiteName = "Lodge A",
@@ -200,7 +208,7 @@ class OwnerCampsiteListView : View() {
                     .padding(10.dp),
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
+                    onClick = { /* controller.onEditCampsite() */ },
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -218,7 +226,7 @@ class OwnerCampsiteListView : View() {
                 )
 
                 ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
+                    onClick = { /* controller.onCampsiteDetails() */ },
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -259,7 +267,7 @@ class OwnerCampsiteListView : View() {
 
             item {
                 ExtendedFloatingActionButton(
-                    onClick = { /* ... */ },
+                    onClick = { /* controller.onRegisterCampsite() */ },
                     shape = CircleShape,
                     containerColor = primaryPurple,
                     contentColor = primaryTextColor,
@@ -275,6 +283,10 @@ class OwnerCampsiteListView : View() {
         }
     }
 
+    /**
+     *  ShowScreen: render the page
+     *
+     */
     @Composable
     fun ShowScreen() {
         Column(

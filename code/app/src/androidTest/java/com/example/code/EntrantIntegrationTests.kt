@@ -21,7 +21,7 @@ class EntrantIntegrationTests {
             .performClick()
         // verify messages
         composeTestRule
-            .onNodeWithText("Messages")
+            .onNodeWithTag("Header: Messages")
             .assertExists()
     }
     @Test
@@ -32,7 +32,7 @@ class EntrantIntegrationTests {
             .performClick()
         // verify search
         composeTestRule
-            .onNodeWithText("Search")
+            .onNodeWithTag("Header: Search")
             .assertExists()
         // execute a search
         composeTestRule
@@ -40,7 +40,7 @@ class EntrantIntegrationTests {
             .performClick()
         // verify results page
         composeTestRule
-            .onNodeWithText("Search Results")
+            .onNodeWithTag("Header: Search Results")
             .assertExists()
     }
     @Test
@@ -51,7 +51,7 @@ class EntrantIntegrationTests {
             .performClick()
         // verify lotteries
         composeTestRule
-            .onNodeWithText("Lotteries")
+            .onNodeWithTag("Header: Lotteries")
             .assertExists()
     }
     @Test
@@ -62,7 +62,7 @@ class EntrantIntegrationTests {
             .performClick()
         // verify reservations
         composeTestRule
-            .onNodeWithText("Reservations")
+            .onNodeWithTag("Header: Reservations")
             .assertExists()
     }
     @Test
@@ -73,7 +73,7 @@ class EntrantIntegrationTests {
             .performClick()
         // verify scan
         composeTestRule
-            .onNodeWithText("Scan Codes")
+            .onNodeWithTag("Header: Scan Codes")
             .assertExists()
     }
     @Test
@@ -84,7 +84,7 @@ class EntrantIntegrationTests {
             .performClick()
         // verify profile
         composeTestRule
-            .onNodeWithText("Profile Settings")
+            .onNodeWithTag("Header: Profile Settings")
             .assertExists()
     }
     @Test
@@ -95,7 +95,7 @@ class EntrantIntegrationTests {
             .performClick()
         // verify campsites
         composeTestRule
-            .onNodeWithText("Notifications")
+            .onNodeWithTag("Header: Notifications")
             .assertExists()
     }
 }
