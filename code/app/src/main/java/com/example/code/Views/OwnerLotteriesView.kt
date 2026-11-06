@@ -1,5 +1,7 @@
 package com.example.code.Views
 
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import Model
 import View
 import androidx.compose.foundation.background
@@ -280,7 +282,7 @@ class OwnerLotteriesView : View() {
      *
      */
     @Composable
-    fun ShowScreen() {
+    fun ShowScreen(navController: NavController) {
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -311,6 +313,8 @@ class OwnerLotteriesView : View() {
             }
 
             Footer(
+
+                navController = navController,
                 backgroundColor = ownerFooterBackgroundColor,
                 textColor = ownerFooterTextColor,
                 buttonColor = ownerFooterButtonColor,
@@ -324,5 +328,5 @@ class OwnerLotteriesView : View() {
 @Composable
 fun OwnerLotteriesViewPreview() {
     val view = OwnerLotteriesView()
-    view.ShowScreen()
+    view.ShowScreen(rememberNavController())
 }

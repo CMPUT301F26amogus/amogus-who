@@ -18,6 +18,8 @@
 
 package com.example.code.Views
 
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import Model
 import View
 import android.graphics.Paint.Align
@@ -46,7 +48,7 @@ class MapView: View() {
 
     }
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         Column() {
             Row() {
                 Header(
@@ -58,6 +60,7 @@ class MapView: View() {
             Spacer(modifier = Modifier.weight(1f))
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
@@ -73,7 +76,7 @@ fun MapViewPreview() {
     val mp = MapView()
     CodeTheme {
         (
-            mp.ShowScreen()
+            mp.ShowScreen(rememberNavController())
         )
     }
 }

@@ -18,6 +18,9 @@
 
 package com.example.code.Views
 
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
+import com.example.code.Routes
 import View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -48,7 +51,7 @@ import Model
 class RegistrationView(M:Model): View() {
     var controller = RegistrationController(M)
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         var name by remember {
             mutableStateOf("")
         }
@@ -117,7 +120,10 @@ class RegistrationView(M:Model): View() {
                     Spacer(modifier = Modifier.height(20.dp))
                     Row() {
                         ElevatedButton(
-                            onClick = {controller.register(name = name, email = email, phoneNumber = number)},
+                            onClick = {
+                                controller.register(name = name, email = email, phoneNumber = number)
+                                goToHome(navController, Routes.ENTRANT_HOME)
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
                             modifier = Modifier.width(160.dp).height(60.dp)
                                 .padding(horizontal = 20.dp),
@@ -125,7 +131,10 @@ class RegistrationView(M:Model): View() {
                             Text(text = "Register As Entrant", color = Color(0xff40139a))
                         }
                         ElevatedButton(
-                            onClick = {controller.register(name = name, email = email, phoneNumber = number)},
+                            onClick = {
+                                controller.register(name = name, email = email, phoneNumber = number)
+                                goToHome(navController, Routes.OWNER_HOME)
+                            },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
                             modifier = Modifier.width(160.dp).height(60.dp).padding(horizontal = 20.dp),
                         ) {
@@ -137,12 +146,22 @@ class RegistrationView(M:Model): View() {
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
                     excludeButtons = true
                 )
             }
+        }
+    }
+
+    /**
+     * Opens [homeRoute] and removes registration from the back stack, so Back can't return to it.
+     */
+    private fun goToHome(navController: NavController, homeRoute: String) {
+        navController.navigate(homeRoute) {
+            popUpTo(Routes.REGISTRATION) { inclusive = true }
         }
     }
 }
@@ -154,7 +173,7 @@ fun RegistrationViewPreview() {
     val mp = RegistrationView(M)
     CodeTheme {
         (
-        mp.ShowScreen()
+        mp.ShowScreen(rememberNavController())
         )
     }
 }

@@ -18,7 +18,6 @@
 
 package com.example.code.Views
 
-import Model
 import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
@@ -45,7 +44,7 @@ class CampsiteDetailsView(): View() {
     }
 
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         val bgColor = secondaryGreenColor
         val headerbgColor = entrantHeaderBackgroundColor
         val headerTextColor = entrantHeaderTextColor
@@ -157,6 +156,7 @@ class CampsiteDetailsView(): View() {
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = footerTextColor,
                     backgroundColor = footerbgColor,
                     buttonColor = footerButtonColor,
@@ -172,7 +172,7 @@ fun CampsiteDetailsPreview() {
     val v = CampsiteDetailsView()
     CodeTheme {
         (
-            v.ShowScreen()
+            v.ShowScreen(rememberNavController())
         )
     }
 }
