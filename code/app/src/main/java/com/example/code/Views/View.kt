@@ -16,6 +16,9 @@
 * along with this program.  If not, see <https://www.gnu.org/licenses/>.
 * */
 
+import androidx.navigation.NavController
+import com.example.code.Routes
+import com.example.code.goHome
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
@@ -145,6 +148,7 @@ abstract class View: ViewObserver<Model>{
     }
     @Composable
     protected fun Footer(
+        navController: NavController,
         backgroundColor: Color,
         textColor: Color,
         buttonColor: Color,
@@ -166,7 +170,12 @@ abstract class View: ViewObserver<Model>{
                 if (!excludeButtons) {
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
-                        onClick = {},
+                        onClick = {
+                            // only go back if there is a screen to go back to
+                            if (navController.previousBackStackEntry != null) {
+                                navController.popBackStack()
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                     ) {
                         Text(
@@ -176,7 +185,7 @@ abstract class View: ViewObserver<Model>{
                     }
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
-                        onClick = {},
+                        onClick = { navController.goHome() },
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                         modifier = Modifier.testTag("Home"),
                     ) {
@@ -187,7 +196,7 @@ abstract class View: ViewObserver<Model>{
                     }
                     Spacer(Modifier.size(40.dp))
                     ElevatedButton(
-                        onClick = {},
+                        onClick = { navController.navigate(Routes.PROFILE) },
                         colors = ButtonDefaults.buttonColors(containerColor = buttonColor),
                         modifier = Modifier.testTag("Profile"),
                     ) {

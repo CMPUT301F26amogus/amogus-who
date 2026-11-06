@@ -1,5 +1,7 @@
 package com.example.code.Views
 
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import Tab
 import View
 import androidx.compose.foundation.background
@@ -274,7 +276,7 @@ class OwnerReservationsView : View() {
     }
 
     @Composable
-    fun ShowScreen() {
+    fun ShowScreen(navController: NavController) {
         var state by remember { mutableStateOf("Pending") }
         val pendingColor by remember { mutableStateOf(primaryGreenColor) }
         val upcomingColor by remember { mutableStateOf(secondaryGreenColor) }
@@ -319,6 +321,8 @@ class OwnerReservationsView : View() {
             }
 
             Footer(
+
+                navController = navController,
                 backgroundColor = ownerFooterBackgroundColor,
                 textColor = ownerFooterTextColor,
                 buttonColor = ownerFooterButtonColor,
@@ -332,5 +336,5 @@ class OwnerReservationsView : View() {
 @Composable
 fun OwnerReservationsViewPreview() {
     val view = OwnerReservationsView()
-    view.ShowScreen()
+    view.ShowScreen(rememberNavController())
 }

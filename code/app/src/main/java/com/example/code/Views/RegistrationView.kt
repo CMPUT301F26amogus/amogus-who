@@ -18,6 +18,9 @@
 
 package com.example.code.Views
 
+import com.example.code.Routes
+import androidx.navigation.NavController
+import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -45,7 +48,7 @@ import com.example.code.ui.theme.CodeTheme
 
 class RegistrationView: View() {
     @Composable
-    public fun ShowScreen(){
+    public fun ShowScreen(navController: NavController) {
         var username by remember {
             mutableStateOf("")
         }
@@ -130,7 +133,12 @@ class RegistrationView: View() {
                     )
                     Spacer(modifier = Modifier.height(20.dp))
                     ElevatedButton(
-                        onClick = {},
+                        onClick = {
+                            // new users are entrants; remove registration so Back can't return to it
+                            navController.navigate(Routes.ENTRANT_HOME) {
+                                popUpTo(Routes.REGISTRATION) { inclusive = true }
+                            }
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
                         modifier = Modifier.width(160.dp).height(60.dp).padding(horizontal = 20.dp),
                     ) {
@@ -141,6 +149,7 @@ class RegistrationView: View() {
             }
             Row() {
                 Footer(
+                    navController = navController,
                     textColor = entrantFooterTextColor,
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
@@ -157,7 +166,7 @@ fun RegistrationViewPreview() {
     val mp = RegistrationView()
     CodeTheme {
         (
-                mp.ShowScreen()
+                mp.ShowScreen(rememberNavController())
                 )
     }
 }
