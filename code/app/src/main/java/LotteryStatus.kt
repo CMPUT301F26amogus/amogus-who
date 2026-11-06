@@ -1,7 +1,6 @@
- enum class LotteryStatus {
+enum class LotteryStatus {
     UPCOMING,
     OPEN,
     CLOSED,
-     DRAWN,
     COMPLETED
 }
