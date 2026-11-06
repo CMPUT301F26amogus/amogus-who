@@ -134,17 +134,17 @@ class CampsiteDetailsView(): View() {
                         Column(Modifier.width(200.dp).background(bgColor)) {
                             ElevatedButton(
                                 onClick = {},
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
+                                colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
-                                Text(text = "Edit Photos", color = Color(0xff40139a))
+                                Text(text = "Join Lottery", color = Color(0xff40139a))
                             }
                             ElevatedButton(
                                 onClick = {},
-                                colors = ButtonDefaults.buttonColors(containerColor = Color(0xfffad2cc)),
+                                colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp),
                             ) {
-                                Text(text = "Delete", color = Color(0xff2a2828))
+                                Text(text = "Join Waitlist", color = Color(0xff2a2828))
                             }
                         }
                     }

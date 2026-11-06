@@ -18,6 +18,7 @@
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -33,6 +34,10 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -193,21 +198,21 @@ abstract class View: ViewObserver<Model>{
         }
     }
     @Composable
-    protected fun TabManager(tabs:List<Tab>){
+    protected fun TabManager(tabs:List<Tab>, state:String){
         Column(modifier = Modifier.height(50.dp)) {
             LazyRow(modifier = Modifier.height(50.dp)) {
                 itemsIndexed(tabs) { index,tab: Tab ->
-                    TabCol(tab = tab)
+                    TabCol(tab = tab, state)
                 }
             }
         }
     }
     @Composable
-    private fun TabCol(tab: Tab) {
+    private fun TabCol(tab: Tab, state: String) {
         Column(
             modifier = Modifier
                 .height(60.dp)
-                .clickable(enabled = true, onClick = { tab.option })
+                .clickable(enabled = true, onClick = { tab.option(state) })
         ) {
             Row(
                 modifier = Modifier
@@ -231,6 +236,5 @@ abstract class View: ViewObserver<Model>{
         }
     }
 }
-class Tab(var name: String, var color: Color, var option: (Unit) -> Unit) {}
-
+class Tab(var name: String, var color: Color, var option: (String) -> Unit) {}
 class Option(var name: String, var route: String) {}

@@ -34,6 +34,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -48,6 +49,12 @@ class SearchView: View() {
     @Composable
     public fun ShowScreen(){
         var search by remember {mutableStateOf("")}
+        var arrival by remember {mutableStateOf("")}
+        var departure by remember {mutableStateOf("")}
+        var park by remember {mutableStateOf("")}
+        var campsite by remember {mutableStateOf("")}
+        var guests by remember { mutableStateOf("") }
+        var tags by remember {mutableStateOf("")}
         Column() {
             Row() {
                 Header(
@@ -83,9 +90,9 @@ class SearchView: View() {
                     ) {
                         Text("Arrival Date", fontSize = 15.sp, color = textColor)
                         TextField(
-                            value = search,
+                            value = arrival,
                             onValueChange = {
-                                search = it
+                                arrival = it
                             },
                             label = {
                                 Text("mm/dd/yy", fontSize = 15.sp)
@@ -98,9 +105,9 @@ class SearchView: View() {
                     ) {
                         Text("Departure Date", fontSize = 15.sp, color = textColor)
                         TextField(
-                            value = search,
+                            value = departure,
                             onValueChange = {
-                                search = it
+                                departure = it
                             },
                             label = {
                                 Text("mm/dd/yy", fontSize = 15.sp)
@@ -110,7 +117,11 @@ class SearchView: View() {
                         )
                     }
                     ElevatedButton(
-                        onClick = {},
+                        onClick =
+                            {
+                            departure = ""
+                            arrival = ""
+                            },
                         colors = ButtonDefaults.buttonColors(containerColor = light),
                         modifier = Modifier.width(90.dp).height(90.dp).padding(horizontal = 15.dp),
                     ) {
@@ -126,9 +137,9 @@ class SearchView: View() {
                     ) {
                         Text("Park", fontSize = 15.sp, color = textColor)
                         TextField(
-                            value = search,
+                            value = park,
                             onValueChange = {
-                                search = it
+                                park = it
                             },
                             label = {
                                 Text("name", fontSize = 15.sp)
@@ -141,9 +152,9 @@ class SearchView: View() {
                     ) {
                         Text("Campsite", fontSize = 15.sp, color = textColor)
                         TextField(
-                            value = search,
+                            value = campsite,
                             onValueChange = {
-                                search = it
+                                campsite = it
                             },
                             label = {
                                 Text("name", fontSize = 15.sp)
@@ -153,7 +164,10 @@ class SearchView: View() {
                         )
                     }
                     ElevatedButton(
-                        onClick = {},
+                        onClick = {
+                            park = ""
+                            campsite = ""
+                        },
                         colors = ButtonDefaults.buttonColors(containerColor = light),
                         modifier = Modifier.width(90.dp).height(90.dp).padding(horizontal = 15.dp),
                     ) {
@@ -169,9 +183,9 @@ class SearchView: View() {
                     ) {
                         Text("Number of Guests:", fontSize = 15.sp, color = textColor)
                         TextField(
-                            value = search,
+                            value = guests,
                             onValueChange = {
-                                search = it
+                                guests = it
                             },
                             label = {
                                 Text("Number", fontSize = 15.sp)
@@ -190,9 +204,9 @@ class SearchView: View() {
                     ) {
                         Text("Tags:", fontSize = 15.sp, color = textColor)
                         TextField(
-                            value = search,
+                            value = tags,
                             onValueChange = {
-                                search = it
+                                tags = it
                             },
                             label = {
                                 Text("tags", fontSize = 15.sp)
@@ -206,21 +220,33 @@ class SearchView: View() {
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
             Row(modifier = Modifier.background(entrantFooterBackgroundColor).padding(5.dp).height(50.dp).fillMaxWidth()){
                 ElevatedButton(
-                    onClick = {},
+                    onClick = {
+
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = light),
                     modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
                 ) {
                     Text(text = "< Return", color = Color(0xff5530a4), fontSize = 13.sp)
                 }
                 ElevatedButton(
-                    onClick = {},
+                    onClick = {
+                        search = ""
+                        arrival = ""
+                        departure = ""
+                        park = ""
+                        campsite = ""
+                        guests = ""
+                        tags = ""
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = light),
                     modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
                 ) {
                     Text(text = "X CLEAR", color = Color(0xff5530a4), fontSize = 13.sp)
                 }
                 ElevatedButton(
-                    onClick = {},
+                    onClick = {
+
+                    },
                     colors = ButtonDefaults.buttonColors(containerColor = light),
                     modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
                 ) {

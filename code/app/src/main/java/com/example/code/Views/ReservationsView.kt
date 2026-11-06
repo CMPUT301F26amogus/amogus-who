@@ -32,7 +32,11 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
@@ -48,12 +52,13 @@ class ReservationsView: View() {
     val footerTextColor = entrantFooterTextColor
     val footerbgColor = entrantFooterBackgroundColor
     val footerButtonColor = entrantFooterButtonColor
-    val tabs = mutableStateListOf(
-        Tab(name = "Current", color = entrantFooterBackgroundColor, option = {}),
-        Tab(name = "Previous", color = secondaryGreenColor, option = {}),
-    )
     @Composable
     public fun ShowScreen() {
+        var state by remember { mutableStateOf("Current") }
+        val tabs = mutableListOf<Tab>(
+            Tab(name = "Current", color = entrantFooterBackgroundColor, option = {state = "Current"}),
+            Tab(name = "Previous", color = secondaryGreenColor, option = {state = "Previous"})
+        )
         Column() {
             Row() {
                 Header(
@@ -63,21 +68,24 @@ class ReservationsView: View() {
                 )
             }
             Row(modifier = Modifier.height(50.dp)){
-                TabManager(tabs)
+                TabManager(tabs,state)
             }
-            Row(modifier = Modifier.fillMaxWidth().weight(1f).background(bgColor)){
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize()
-                ) {
+            if (state=="Current") {
+                Row(modifier = Modifier.weight(1f).background(entrantFooterBackgroundColor)) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
 
+                    }
                 }
-            }
-            Row() {
-                Footer(
-                    textColor = footerTextColor,
-                    backgroundColor = footerbgColor,
-                    buttonColor = footerButtonColor,
-                )
+            }else{
+                Row(modifier = Modifier.weight(1f).background(secondaryGreenColor)) {
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize()
+                    ) {
+
+                    }
+                }
             }
         }
     }
