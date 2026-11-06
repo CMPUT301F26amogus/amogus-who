@@ -19,7 +19,7 @@ class SearchController(
                 tempResult = result as ArrayList<Campsite>?
             }
         }
-        model.setCampsite(tempResult)
+        model.setCampsiteList(tempResult)
         navController.navigate(Routes.SEARCH_RESULTS)
     }
 }
