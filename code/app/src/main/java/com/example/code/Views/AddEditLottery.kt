@@ -69,10 +69,10 @@ class AddEditLottery(val isEdit : Boolean) : View(), InputFieldFunctions{
 
     @Composable
     public fun ShowScreen() {
-        val lotteryCampsiteIDState = rememberTextFieldState("")
-        val waitListCapacityState = rememberTextFieldState("")
-        val drawDateState = rememberTextFieldState("")
-        val numberOfWinnersState = rememberTextFieldState("")
+        val lotteryCampsiteIDState = rememberTextFieldState(lotteryCampsiteID.toString())
+        val waitListCapacityState = rememberTextFieldState(waitListCapacity.toString())
+        val drawDateState = rememberTextFieldState(drawDate)
+        val numberOfWinnersState = rememberTextFieldState(numberOfWinners.toString())
 
 
         Column() {

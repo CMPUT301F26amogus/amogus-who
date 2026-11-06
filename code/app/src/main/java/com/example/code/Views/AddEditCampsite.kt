@@ -42,7 +42,7 @@ import androidx.compose.ui.unit.dp
 import androidx.core.text.isDigitsOnly
 import java.sql.Date
 
-class AddEditCampsite (isEdit: Boolean): View(), InputFieldFunctions {
+class AddEditCampsite (val isEdit: Boolean): View(), InputFieldFunctions {
     val bgColor = secondaryGreenColor
     val headerbgColor = ownerHeaderBackgroundColor
     val headerTextColor = ownerHeaderTextColor
@@ -78,40 +78,44 @@ class AddEditCampsite (isEdit: Boolean): View(), InputFieldFunctions {
     var headerName = if (isEdit) {"Edit Campsite"} else { "Add Campsite" }
 
     override fun update(model: Model) {
-//        val tempCampsite = model.getCampsiteToDisplay()
-//        if (tempCampsite != null){
-//            oldCampsite = tempCampsite
-//            campsiteName = tempCampsite.campName
-//            parkName = tempCampsite.location
-//            campDescription = tempCampsite.desc
-//            address = tempCampsite.location
-//            maxGuests = tempCampsite.maxOcc.toString()
-//            pricePerNight = tempCampsite.price.toString()
-//            bookingPeriodStart = //  can a campsite be listed without a lottery / booking period?
+//        val tempCampsite : Campsite? = model.getCampsiteToDisplay()
+        val tempCampsite : Campsite? = Campsite(
+            0,
+            0,
+            "John Park",
+            "Banff",
+            "back country",
+            10,
+            11.0,
+            4.9
+            )
+        if (tempCampsite != null && isEdit){
+            oldCampsite = tempCampsite
+            campsiteName = tempCampsite.campName
+            campDescription = tempCampsite.desc
+            parkName = tempCampsite.location
+            campDescription = tempCampsite.desc
+            address = tempCampsite.location
+            maxGuests = tempCampsite.maxOcc.toString()
+            pricePerNight = tempCampsite.price.toString()
+//            bookingPeriodStart = tempCampsite.
 //            bookingPeriodEnd =
-//            headerName = "Edit Campsite"
-//        }
-//        else {
-//            campsiteName = ""
-//             parkName = ""
-//            campDescription = ""
-//            address = ""
-//            maxGuests = ""
-//            pricePerNight = ""
+        }
+        else {
+            clear()
 //            bookingPeriodStart = ""
 //            bookingPeriodEnd = ""
 //            tags = ""
-//            headerName = "Register Campsite"
-//        }
+        }
     }
 
     @Composable
     public fun ShowScreen() {
 
-        val campsiteNameState = TextFieldState("")
-        val parkNameState = TextFieldState("")
-        val campDescriptionState = TextFieldState("")
-        val addressState = TextFieldState("")
+        val campsiteNameState = TextFieldState(campsiteName)
+        val parkNameState = TextFieldState(parkName)
+        val campDescriptionState = TextFieldState(campDescription)
+        val addressState = TextFieldState(address)
         val maxGuestsState = TextFieldState("")
         val pricePerNightState = TextFieldState("")
         val bookingPeriodStartState = TextFieldState("")
@@ -230,7 +234,7 @@ class AddEditCampsite (isEdit: Boolean): View(), InputFieldFunctions {
                 Row() {
                     Button(
                         onClick = {
-                            // call Controller to navController to pop
+                            clear()
                         },
                         modifier = Modifier
                             .padding(horizontal = 20.dp)
@@ -268,6 +272,15 @@ class AddEditCampsite (isEdit: Boolean): View(), InputFieldFunctions {
                 )
             }
         }
+    }
+
+    fun clear() {
+        campsiteName = ""
+        parkName = ""
+        campDescription = ""
+        address = ""
+        maxGuests = ""
+        pricePerNight = ""
     }
 
     @Composable
