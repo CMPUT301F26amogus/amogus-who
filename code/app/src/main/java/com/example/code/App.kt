@@ -98,7 +98,7 @@ fun App(id: String, model: Model) {
     val navController = rememberNavController()
     var startDestination by remember { mutableStateOf<String?>(null) }
 
-    // make each view once so the nav graph and the model use the same object
+    // make each view once so the model and the nav graph share the same object
     val registrationView = remember { RegistrationView(model) }
     val entrantHomeView = remember { EntrantHomeView() }
     val ownerHomeView = remember { CampsiteOwnerHomeView() }
@@ -116,26 +116,6 @@ fun App(id: String, model: Model) {
     val ownerLotteriesView = remember { OwnerLotteriesView() }
     val addEditCampsiteView = remember { AddEditCampsite() }
 
-    // register every view with the model so they get updated when it changes
-    LaunchedEffect(Unit) {
-        model.addView(registrationView)
-        model.addView(entrantHomeView)
-        model.addView(ownerHomeView)
-        model.addView(adminHomeView)
-        model.addView(profileView)
-        model.addView(notificationsView)
-        model.addView(campsiteDetailsView)
-        model.addView(mapView)
-        model.addView(reservationsView)
-        model.addView(lotteriesView)
-        model.addView(searchView)
-        model.addView(searchResultsView)
-        model.addView(ownerCampsitesView)
-        model.addView(ownerReservationsView)
-        model.addView(ownerLotteriesView)
-        model.addView(addEditCampsiteView)
-    }
-
     LaunchedEffect(Unit) {
         model.getUserObj { user -> startDestination = startRouteFor(user) }
     }
@@ -149,26 +129,54 @@ fun App(id: String, model: Model) {
         return
     }
 
+    // register each view with the model and its route
     NavHost(navController = navController, startDestination = start) {
+        model.addView(registrationView)
         composable(Routes.REGISTRATION) { registrationView.ShowScreen(navController) }
 
+        model.addView(entrantHomeView)
         composable(Routes.ENTRANT_HOME) { entrantHomeView.ShowScreen(navController) }
+
+        model.addView(ownerHomeView)
         composable(Routes.OWNER_HOME) { ownerHomeView.ShowScreen(navController) }
+
+        model.addView(adminHomeView)
         composable(Routes.ADMIN_HOME) { adminHomeView.ShowScreen(navController) }
 
+        model.addView(profileView)
         composable(Routes.PROFILE) { profileView.ShowScreen(navController) }
+
+        model.addView(notificationsView)
         composable(Routes.NOTIFICATIONS) { notificationsView.ShowScreen(navController) }
+
+        model.addView(campsiteDetailsView)
         composable(Routes.CAMPSITE_DETAILS) { campsiteDetailsView.ShowScreen(navController) }
+
+        model.addView(mapView)
         composable(Routes.MAP) { mapView.ShowScreen(navController) }
 
+        model.addView(reservationsView)
         composable(Routes.RESERVATIONS) { reservationsView.ShowScreen(navController) }
+
+        model.addView(lotteriesView)
         composable(Routes.LOTTERIES) { lotteriesView.ShowScreen(navController) }
+
+        model.addView(searchView)
         composable(Routes.SEARCH) { searchView.ShowScreen(navController) }
+
+        model.addView(searchResultsView)
         composable(Routes.SEARCH_RESULTS) { searchResultsView.ShowScreen(navController) }
 
+        model.addView(ownerCampsitesView)
         composable(Routes.OWNER_CAMPSITES) { ownerCampsitesView.ShowScreen(navController) }
+
+        model.addView(ownerReservationsView)
         composable(Routes.OWNER_RESERVATIONS) { ownerReservationsView.ShowScreen(navController) }
+
+        model.addView(addEditCampsiteView)
         composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen() }
+
+        model.addView(ownerLotteriesView)
         composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
     }
 }
