@@ -20,11 +20,15 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
+import com.example.code.Controllers.OwnerEditCampsiteController
 import com.example.code.Model.Campsite
 import com.example.code.Model.Location
 import com.example.code.ui.theme.CodeTheme
 
 class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), InputFieldFunctions {
+
+    val controller = OwnerEditCampsiteController(model)
+
     val bgColor = secondaryGreenColor
     val headerbgColor = ownerHeaderBackgroundColor
     val headerTextColor = ownerHeaderTextColor
@@ -60,8 +64,8 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
     var headerName = if (isEdit) {"Edit Campsite"} else { "Add Campsite" }
 
     override fun update(model: Model) {
-//        val tempCampsite : Campsite? = model.getCampsiteToDisplay()
         val tempCampsite = model.getTempCampsite()
+        oldCampsite = tempCampsite
         if (tempCampsite != null && isEdit){
             oldCampsite = tempCampsite
             campsiteName = tempCampsite.name
@@ -69,14 +73,9 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
             parkName = tempCampsite.location
             maxGuests = tempCampsite.maxOccupancy.toString()
             pricePerNight = tempCampsite.pricePerNight.toString()
-//            bookingPeriodStart = tempCampsite.a
-//            bookingPeriodEnd =
         }
         else {
             clear()
-//            bookingPeriodStart = ""
-//            bookingPeriodEnd = ""
-//            tags = ""
         }
     }
 
@@ -87,8 +86,8 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
         val parkNameState = TextFieldState(parkName)
         val campDescriptionState = TextFieldState(campDescription)
         val addressState = TextFieldState(address)
-        val maxGuestsState = TextFieldState("")
-        val pricePerNightState = TextFieldState("")
+        val maxGuestsState = TextFieldState(maxGuests)
+        val pricePerNightState = TextFieldState(pricePerNight)
         val bookingPeriodStartState = TextFieldState("")
         val bookingPeriodEndState = TextFieldState("")
 
@@ -215,15 +214,32 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
                     }
                     Button(
                         onClick = {
-//                            val newCampsite = Campsite(
-//                                // all the variables (convert to Int and Floats as needed)
-//                            )
-//                            if ( oldCampsite != null) {  //  we are editing a campsite
-//                                //  call Controller to call editCampsite()
-//                            }
-//                            else {  //  we are registering a brand-new campsite
-//                                //  call Controller to call newCampsite()
-//                            }
+
+                            if ( oldCampsite != null) {  //  we are editing a campsite
+                                //  call Controller to call editCampsite()
+                                controller.onEditCampsite(
+                                    navController,
+                                    oldCampsite!!,
+                                    newName = campsiteNameState.toString(),
+                                    newLocation = addressState.text.toString(),
+                                    newDescription = campDescriptionState.text.toString(),
+                                    newMaxOccupants = maxGuestsState.text.toString().toInt(),
+                                    newPrice = pricePerNightState.text.toString().toDouble()
+                                    )
+                            }
+                            else {  //  we are registering a brand-new campsite
+                                //  call Controller to call newCampsite()
+                                val newCampsite = Campsite(
+                                    id = "",
+                                    ownerId = "",
+                                    name = campsiteNameState.text.toString(),
+                                    location = addressState.text.toString(),
+                                    description = campDescriptionState.text.toString(),
+                                    maxOccupancy = maxGuestsState.text.toString().toInt(),
+                                    pricePerNight = pricePerNightState.text.toString().toDouble(),
+                                    )
+                                controller.onAddCampsite(navController, newCampsite)
+                            }
                             // call Controller to navController to pop
                         },
                         modifier = Modifier
