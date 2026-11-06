@@ -1,8 +1,10 @@
 import android.annotation.SuppressLint
 import androidx.compose.runtime.mutableStateListOf
+import com.example.code.Model.DateRange
 import com.example.code.Model.Lottery
 import com.example.code.Model.Reservation
 import com.google.firebase.Firebase
+import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.firestore
 import android.content.Context
 import android.provider.Settings
@@ -14,17 +16,24 @@ interface ModelUpdater<V>{
 
 open class Model: ModelUpdater<View>{
     // lazy so making a model object doesnt need firebase running eg in unit tests
+    // excluded so firestore doesnt try to save the database inside every object
+    @get:Exclude
     val db by lazy { Firebase.firestore }
-    var deviceId: String = ""
+
+    // device id of whoever is using the app
+    // named currentDeviceId so it doesnt clash with User.deviceId
+    // excluded so it doesnt get saved into every document
+    @get:Exclude
+    var currentDeviceId: String = ""
 
     /**
      * function that sets the device id of the user, this is needed by all models,
-     * reference the deviceId attribute.
+     * reference the currentDeviceId attribute.
      *
      * @param deviceId this is the deviceId passed in by the view
      */
     fun setDeviceInformation(deviceId: String){
-        this.deviceId = deviceId
+        this.currentDeviceId = deviceId
     }
 
 
@@ -89,6 +98,12 @@ open class Model: ModelUpdater<View>{
         notifyViews()
     }
 
+    /**
+     * gets all the details of a campsite
+     *
+     * @param campId id of the campsite
+     * @param onResult gets the campsite or null if it wasnt found
+     */
     fun getCampsite(campId: String, onResult: (Campsite?) -> Unit) {
         campsiteRef.document(campId).get()
             .addOnSuccessListener { document ->
@@ -108,23 +123,6 @@ open class Model: ModelUpdater<View>{
             }
             .addOnFailureListener {
                 onResult(emptyList())
-            }
-    }
-
-    /**
-     * gets all the details of a campsite
-     *
-     * @param campId id of the campsite
-     * @param onResult gets the campsite or null if it wasnt found
-     */
-    fun getCampsiteInfo(campId: String, onResult: (Campsite?) -> Unit) {
-        campsiteRef.document(campId).get()
-            .addOnSuccessListener { document ->
-                val campsite = document.toObject(Campsite::class.java)
-                onResult(campsite)
-            }
-            .addOnFailureListener {
-                onResult(null)
             }
     }
 
@@ -156,6 +154,28 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
                 onResult(reservations)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    /**
+     * gets the booked dates of a campsite for its owner
+     *
+     * a date is booked when an active reservation covers it
+     *
+     * @param campId id of the campsite
+     * @param onResult gets each stay sorted by check in or an empty list if it failed
+     */
+    fun getBookedDates(campId: String, onResult: (List<DateRange>) -> Unit) {
+        reservationRef.whereEqualTo("campsiteId", campId).whereEqualTo("status", "ACTIVE").get()
+            .addOnSuccessListener { documents ->
+                // skip any reservation saved with bad dates instead of crashing
+                val stays = documents.toObjects(Reservation::class.java)
+                    .mapNotNull { runCatching { it.stay() }.getOrNull() }
+                    .sortedBy { it.start }
+                onResult(stays)
             }
             .addOnFailureListener {
                 onResult(emptyList())

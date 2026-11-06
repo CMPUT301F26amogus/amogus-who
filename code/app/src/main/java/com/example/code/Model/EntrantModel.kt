@@ -73,7 +73,9 @@ class EntrantModel: Model() {
      * This function is for signing the user into the app, make sure to
      * check if the user exists with "doesUserExist" function, before running signIn
      */
-    fun signIn()
+    fun signIn() {
+        // not written yet
+    }
 
 
     /**
