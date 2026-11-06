@@ -138,7 +138,7 @@ open class Model: ModelUpdater<View>{
     private val waitlistRef by lazy { db.collection("waitlist") }
 
     public var campsiteList: ArrayList<Campsite> = arrayListOf()
-        fun setCampsiteList(newArray: ArrayList<Campsite>?) {
+        fun settCampsiteList(newArray: ArrayList<Campsite>?) {
             if (newArray != null) {
                 campsiteList = newArray
             }
@@ -155,11 +155,11 @@ open class Model: ModelUpdater<View>{
      */
     var tempCampsite: Campsite? = null
 
-    fun getTempCampsite(): Campsite? {
+    fun gettTempCampsite(): Campsite? {
         return tempCampsite
     }
 
-    fun setTempCampsite(campsite: Campsite?) {
+    fun settTempCampsite(campsite: Campsite?) {
         tempCampsite = campsite
         notifyViews()
     }
@@ -629,10 +629,24 @@ open class Model: ModelUpdater<View>{
      * @param phoneNumber user's phone number from the view
      * @param email user's email from the view
      */
-    fun signUp(name: String, phoneNumber: String, email: String){
-        val newUser = User(currentDeviceId, name, email=email,phone=phoneNumber)
-        dataRef.document(currentDeviceId).set(User())
+    fun signUp(
+        deviceId: String,
+        name: String,
+        phoneNumber: String,
+        email: String,
+        onSuccess: () -> Unit,
+    ) {
+        val newUser = User(
+            name = name,
+            email = email,
+            phone = phoneNumber
+        )
 
+        dataRef.document(deviceId)
+            .set(newUser)
+            .addOnSuccessListener {
+                onSuccess()
+            }
     }
 
 

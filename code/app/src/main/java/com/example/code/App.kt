@@ -113,8 +113,8 @@ fun App(id: String, model: Model) {
     val searchView = remember { SearchView(model) }
     val searchResultsView = remember { SearchResultsView(model) }
     val ownerCampsitesView = remember { OwnerCampsiteListView() }
-    val ownerReservationsView = remember { OwnerReservationsView() }
-    val ownerLotteriesView = remember { OwnerLotteriesView() }
+    val ownerReservationsView = remember { OwnerReservationsView(model) }
+    val ownerLotteriesView = remember { OwnerLotteriesView(model) }
     val addEditCampsiteView = remember { AddEditCampsite() }
 
     LaunchedEffect(Unit) {
@@ -174,14 +174,12 @@ fun App(id: String, model: Model) {
         model.addView(ownerReservationsView)
         composable(Routes.OWNER_RESERVATIONS) { ownerReservationsView.ShowScreen(navController) }
 
+        model.addView(ownerLotteriesView)
+        composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
+
         model.addView(addEditCampsiteView)
         composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen() }
 
-        model.addView(ownerLotteriesView)
-        composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
-        composable(Routes.OWNER_CAMPSITES) { remember { OwnerCampsiteListView() }.ShowScreen(navController) }
-        composable(Routes.OWNER_RESERVATIONS) { remember { OwnerReservationsView() }.ShowScreen(navController) }
-        composable(Routes.OWNER_LOTTERIES) { remember { OwnerLotteriesView() }.ShowScreen(navController) }
-        composable(Routes.ADD_EDIT_CAMPSITE) { remember { AddEditCampsite(model) }.ShowScreen(navController) }
+
     }
 }
