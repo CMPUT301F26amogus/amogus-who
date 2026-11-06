@@ -21,6 +21,7 @@ package com.example.code.Views
 import Tab
 import View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -125,7 +126,8 @@ class ReservationsView: View() {
                     Text(
                         "X Cancel", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+
                     )
                     Spacer(modifier = Modifier.width(105.dp))
                     Text(
@@ -173,7 +175,9 @@ class ReservationsView: View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable(enabled = true,
+                            onClick = {  })
                     )
                 }
             }
