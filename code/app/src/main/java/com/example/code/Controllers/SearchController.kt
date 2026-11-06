@@ -12,14 +12,14 @@ class SearchController(
      * Searches for campsites
      */
     public fun search(name: String, navController: NavController){
-        var tempResult: List<Campsite>? = null
+        var tempResult: ArrayList<Campsite>? = null
         model.searchCampsite(campName = name){
                 result ->
             if (tempResult != null) {
-                tempResult = result
+                tempResult = result as ArrayList<Campsite>?
             }
         }
-
+        model.setCampsite(tempResult)
         navController.navigate(Routes.SEARCH_RESULTS)
     }
 }
