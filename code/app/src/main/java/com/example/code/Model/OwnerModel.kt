@@ -2,7 +2,6 @@ package com.example.code.Model
 
 import Model
 // the old Campsite in the default package not the one in this package
-import Campsite
 
 /**
  * everything a campsite owner works with

@@ -13,6 +13,7 @@ import com.example.code.Model.ReservationStatus
 import com.example.code.Model.User
 import com.example.code.Model.WaitlistEntry
 import com.google.firebase.firestore.FieldValue
+import com.example.code.Model.Campsite
 
 interface ModelUpdater<V>{
     fun addView(v:V)
@@ -32,6 +33,7 @@ open class Model: ModelUpdater<View>{
     @get:Exclude
     var currentDeviceId: String = ""
     var campId: String = ""
+    var notificationCount: Int = 0
 
 
 
@@ -290,20 +292,6 @@ open class Model: ModelUpdater<View>{
         return null
     }
 
-    // needs further improvement
-    /**
-     * Signs entrant up for lottery
-     *
-     *
-     * @param lottery the lottery the entrant wants to join
-     * @return The lottery that the entrant joined, if zero then lottery failed to join
-     */
-    fun joinLottery(lottery: Lottery){
-        dataRef.document(lottery.id).update(
-            "entrants", FieldValue.arrayUnion(currentDeviceId)
-        )
-    }
-
     /**
      * Takes a user profile and edits the user properties
      *
@@ -409,7 +397,7 @@ open class Model: ModelUpdater<View>{
         dataRef.document(lottery.id).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
-                    var currentLottery = snapshot.toObject(Lottery::class.java)
+                    val currentLottery = snapshot.toObject(Lottery::class.java)
 
                     if (currentLottery != null) {
                         //Check if user is already in the waitlist
@@ -456,15 +444,26 @@ open class Model: ModelUpdater<View>{
      * @param notification The notification message
      * @return The notification object
      */
-    fun notifyUser(notification: String): Notification {
+    fun notifyUser(notification: String) {
         var tempuser: User? = null
         getUserObj({ user -> tempuser = user })
 
         if (tempuser!!.notificationsEnabled) {
-            return Notification("",  listOf(tempuser!!.deviceId), notification)
+            dataRef.document("Notifications/$currentDeviceId/$notificationCount").set(Notification("", currentDeviceId, notification))
         }
-        return Notification("", emptyList(), "") // Return an empty notification if the user doesnt have notifs enabled
+        notificationCount++
+    }
 
+    fun getNotifications(): ArrayList<Notification>{
+        val notifications = ArrayList<Notification>()
+        for (i in 0..notificationCount){
+            dataRef.document("Notifications/$currentDeviceId/$i").get().addOnSuccessListener {
+                if (it.exists()){
+                    notifications.add(it.toObject(Notification::class.java)!!)
+                }
+            }
+        }
+        return notifications
     }
 
 }
