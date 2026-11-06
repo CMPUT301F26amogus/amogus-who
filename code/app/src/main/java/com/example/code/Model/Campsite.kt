@@ -36,7 +36,7 @@ class Campsite(
     tags: Set<String> = emptySet(),
     val availability: AvailabilitySchedule = AvailabilitySchedule(),
     ratings: Collection<Rating> = emptyList(),
-) : Model() {
+) {
     init {
         require(id.isNotBlank()) { "Campsite ID must not be blank" }
         require(ownerId.isNotBlank()) { "Owner ID must not be blank" }
