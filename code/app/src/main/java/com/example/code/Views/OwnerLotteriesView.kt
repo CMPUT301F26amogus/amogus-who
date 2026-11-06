@@ -35,10 +35,35 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
+class DummyLottery(
+    val campsiteName: String,
+    val location: String,
+    val entrants: Int,
+    val winners: Int,
+    val drawDate: String,
+    val state: String,
+) {}
+
 class OwnerLotteriesView : View() {
 
-    private val cardPrimary = Color(0xffcad9c8)
-    private val cardAccent = light
+    val lotteries = mutableListOf(
+        DummyLottery(
+            campsiteName = "Site Alpha",
+            location = "Downtown Edmonton",
+            entrants = 54,
+            winners = 3,
+            drawDate = "Dec 10, 2026",
+            state = "Open",
+        ),
+        DummyLottery(
+            campsiteName = "Site Beta",
+            location = "East Hastings",
+            entrants = 105,
+            winners = 5,
+            drawDate = "Oct 24, 2026",
+            state = "Drawn",
+        ),
+    )
 
     @Composable
     private fun SiteInfoBox(info: String, data: String) {
@@ -66,34 +91,14 @@ class OwnerLotteriesView : View() {
     }
 
     @Composable
-    private fun NewLotteryCard() {
-        Column(
-            modifier = Modifier
-                .clip(shape = RoundedCornerShape(12.dp))
-                .background(color = light)
-                .fillMaxWidth()
-                .padding(10.dp)
-        ) {
-            Text(
-                text = "Start a new lottery",
-                fontSize = 16.sp,
-                fontWeight = FontWeight.Bold,
-                color = primaryGreenTextColor,
-                modifier = Modifier
-                    .fillMaxWidth()
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-            Text(
-                text = "Campsite",
-                color = primaryTextColor,
-            )
-            Spacer(modifier = Modifier.height(10.dp))
-
-        }
-    }
-
-    @Composable
-    private fun LotteryCard() {
+    private fun LotteryCard(
+        campsiteName: String,
+        location: String,
+        entrants: Int,
+        winners: Int,
+        drawDate: String,
+        state: String,
+    ) {
         Column(
             modifier = Modifier
                 .clip(shape = RoundedCornerShape(12.dp))
@@ -116,13 +121,13 @@ class OwnerLotteriesView : View() {
                         modifier = Modifier,
                     ) {
                         Text(
-                            text = "Campsite Name",
+                            text = campsiteName,
                             fontSize = 20.sp,
                             fontWeight = FontWeight.Bold,
                             color = primaryGreenTextColor,
                         )
                         Text(
-                            text = "Location",
+                            text = location,
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = primaryGreenTextColor,
@@ -138,7 +143,7 @@ class OwnerLotteriesView : View() {
                             .width(90.dp)
                     ) {
                         Button(
-                            onClick = {},
+                            onClick = {/* Not a button in practice */},
                             modifier = Modifier
                                 .height(35.dp),
                             colors = ButtonDefaults.buttonColors(
@@ -146,7 +151,7 @@ class OwnerLotteriesView : View() {
                                 contentColor = primaryGreenTextColor,
                             )
                         ) {
-                            Text("Open")
+                            Text(state)
                         }
                     }
                 }
@@ -156,7 +161,7 @@ class OwnerLotteriesView : View() {
                 ) {
                     SiteInfoBox(
                         info = "Entrants",
-                        data = "100",     // TODO: update with real data
+                        data = entrants.toString(),
                     )
 
                     Spacer(
@@ -165,7 +170,7 @@ class OwnerLotteriesView : View() {
 
                     SiteInfoBox(
                         info = "Winners",
-                        data = "5",    // TODO: update with real data
+                        data = winners.toString(),
                     )
 
                     Spacer(
@@ -174,7 +179,7 @@ class OwnerLotteriesView : View() {
 
                     SiteInfoBox(
                         info = "Draw",
-                        data = "Sept 11, 2001",  // TODO: update with real data
+                        data = drawDate,  // TODO: will this stay a string?
                     )
                 }
             }
@@ -230,8 +235,21 @@ class OwnerLotteriesView : View() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            item {
-                LotteryCard()
+            items(count = lotteries.size) { lottery ->
+                LotteryCard(
+                    campsiteName = lotteries[lottery].campsiteName,
+                    location = lotteries[lottery].location,
+                    entrants = lotteries[lottery].entrants,
+                    winners = lotteries[lottery].winners,
+                    drawDate = lotteries[lottery].drawDate,
+                    state = lotteries[lottery].state,
+                )
+                if (lottery != lotteries.size - 1) {
+                    Spacer(
+                        modifier = Modifier
+                            .height(20.dp)
+                    )
+                }
             }
 
             item {
@@ -241,9 +259,6 @@ class OwnerLotteriesView : View() {
                 )
             }
 
-            item {
-                NewLotteryCard()
-            }
         }
     }
 

@@ -83,6 +83,9 @@ abstract class View: ViewObserver<Model>{
     protected val adminFooterTextColor = primaryTextColor
     protected val textColor = Color(0xff12553a)
     protected val creamBG = Color(0xffe4eeed)
+    protected val cardPrimary = Color(0xffcad9c8)
+    protected val cardAccent = light
+
 
     private val headerHeight = 120
     //Generic Component Composables go here
