@@ -21,6 +21,6 @@ class OwnerLotteriesController(
         if (lottery.status == LotteryStatus.OPEN) {
             model.drawLotteryWinner(lottery.id) { }
 
+        }
     }
-
 }
