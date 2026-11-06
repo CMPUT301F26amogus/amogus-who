@@ -36,7 +36,7 @@ class Lottery(
     var waitlistCapacity: Int? = null,
     var status: LotteryStatus = LotteryStatus.OPEN,
     waitlist: List<WaitlistEntry> = emptyList(),
-) : Model() {
+) {
 
     /**
      * makes a lottery from date ranges instead of strings
@@ -108,7 +108,7 @@ class Lottery(
         }
         registrationStart = period.start.toString()
         registrationEnd = period.end.toString()
-        notifyViews()
+
     }
 
     /**
@@ -124,7 +124,7 @@ class Lottery(
         }
         bookingStart = period.start.toString()
         bookingEnd = period.end.toString()
-        notifyViews()
+
     }
 
     private val _waitlist = waitlist.toMutableList()

@@ -19,7 +19,7 @@ class CampsiteTest {
         id = "site-1",
         ownerId = "owner-1",
         name = "Hinton Grande Cache",
-        location = hinton,
+        location = "hinton",
         maxOccupancy = maxOccupancy,
         pricePerNight = pricePerNight,
     )
@@ -33,12 +33,12 @@ class CampsiteTest {
 
     @Test(expected = IllegalArgumentException::class)
     fun blankId_throws() {
-        Campsite("", "owner-1", "Site", hinton, 4, 10.0)
+        Campsite("", "owner-1", "Site", "hinton", 4, 10.0)
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun blankOwnerId_throws() {
-        Campsite("site-1", "", "Site", hinton, 4, 10.0)
+        Campsite("site-1", "", "Site", "hinton", 4, 10.0)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -150,7 +150,7 @@ class CampsiteTest {
             id = "site-1",
             ownerId = "owner-1",
             name = "Site",
-            location = hinton,
+            location = "hinton",
             maxOccupancy = 4,
             pricePerNight = 10.0,
             ratings = listOf(Rating("user-1", "site-1", 3), Rating("user-2", "site-1", 5)),
@@ -169,8 +169,8 @@ class CampsiteTest {
     @Test
     fun equality_isById() {
         val a = campsite()
-        val b = Campsite("site-1", "owner-2", "Other", hinton, 2, 1.0)
-        val c = Campsite("site-2", "owner-1", "Hinton Grande Cache", hinton, 8, 65.0)
+        val b = Campsite("site-1", "owner-2", "Other", "hinton", 2, 1.0)
+        val c = Campsite("site-2", "owner-1", "Hinton Grande Cache", "hinton", 8, 65.0)
         assertEquals(a, b)
         assertNotEquals(a, c)
     }

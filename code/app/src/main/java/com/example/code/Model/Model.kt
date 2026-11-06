@@ -131,8 +131,8 @@ open class Model: ModelUpdater<View>{
     private val waitlistRef by lazy { db.collection("waitlist") }
 
     public var campsiteList: ArrayList<Campsite> = arrayListOf()
-        set(value) {
-            field = value
+        set(newArray) {
+            field = newArray
             notifyViews()
         }
 
@@ -235,16 +235,26 @@ open class Model: ModelUpdater<View>{
         lotteryRef.document(lottery.id).delete()
     }
 
-    fun updateLottery(lottery: Lottery, regStart: String, regEnd: String, bookStart: Date,
-                      bookEnd: Date, winnerCount: Int, waitlistCap: Int, lotteryStatus: LotteryStatus
-    ) {
-        lottery.registrationPeriod(regStart, regEnd)
-        lottery.bookingPeriod(bookStart, bookEnd)
-        lottery.numWinners = winnerCount
-        lottery.waitlistCapacity = waitlistCap
-        lottery.status = lotteryStatus
+    fun updateLottery(lottery: Lottery, onResult: (Result<Unit>) -> Unit) {
+        val updates = mapOf(
+            "campsiteIds" to lottery.campsiteIds,
+            "registrationStart" to lottery.registrationStart,
+            "registrationEnd" to lottery.registrationEnd,
+            "bookingStart" to lottery.bookingStart,
+            "bookingEnd" to lottery.bookingEnd,
+            "numWinners" to lottery.numWinners,
+            "waitlistCapacity" to lottery.waitlistCapacity,
+            "status" to lottery.status.name
+        )
 
-        lotteryRef.document(lottery.id).set(lottery)
+        lotteryRef.document(lottery.id)
+            .update(updates)
+            .addOnSuccessListener {
+                onResult(Result.success(Unit))
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
     }
 
     fun joinWaitlist(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {

@@ -29,7 +29,7 @@ class Reservation(
     var guests: Int = 0,
     var status: ReservationStatus = ReservationStatus.ACTIVE,
     var rulesAccepted: Boolean = false,
-) : Model() {
+) {
     /**
      * the check in and check out dates as a range
      *
