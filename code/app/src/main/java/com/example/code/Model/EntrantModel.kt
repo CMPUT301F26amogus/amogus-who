@@ -1,26 +1,24 @@
 package com.example.code.Model
 
 import Model
+import androidx.compose.animation.core.snap
 
 class EntrantModel: Model() {
 
-    // just making the function outlines so we can do the UML
 
 
     /**
-     * deletes an entrant from the database
+     *
      *
      * deletes an entrant based on the username
      * and returns true upon successful deletion
      * returns false if username wasnt found
      *
-     * @param 'entrant' 'username of entrant'
+     * @param entrant 'username of entrant'
      * @return 'true if deleted, false if couldnt delete'
      */
-    fun deleteEntrant(entrant: String): Boolean{
+    fun deleteProfile(){
 
-
-        return false
     }
 
     /**
@@ -43,11 +41,39 @@ class EntrantModel: Model() {
      * Create the entrant profile, with all their information.
      *
      *
-     * @param deviceInformation entrants device identification number MAC address?
+     * @param deviceInformation entrants device identification number // REPLACE
+     * @param name user's signUp name from view
+     * @param phoneNumber user's phone number from the view
+     * @param email user's email from the view
      */
-    fun signUp(deviceInformation: String){
+    fun signUp(deviceInformation: String, name: String, phoneNumber: String, email: String){
+        val newUser = User(deviceInformation, name, email=email,phone=phoneNumber)
+        userRef.document(deviceInformation).set(User())
 
     }
+
+    /**
+     * auto sign in, run this function to determine if the user is a new user -> register page
+     * or if user is in the database.
+     *
+     * @param deviceInformation user's device information, we use this to find the user
+     * @return true if
+     */
+    fun doesUserExist(deviceInformation: String): Boolean{
+        var exist = false
+        userRef.document(deviceInformation).get().addOnSuccessListener {
+            snapshot -> //snapshot represents the state of the document
+            exist = snapshot.exists(); // .exists() checks if the document exists
+        }
+        return exist // return if the document exists.
+    }
+
+
+    /**
+     * This function is for signing the user into the app, make sure to
+     * check if the user exists with "doesUserExist" function, before running signIn
+     */
+    fun signIn()
 
 
     /**
@@ -120,10 +146,21 @@ class EntrantModel: Model() {
         userRef.document(user.deviceId).delete()
     }
 
-    fun declineWin(user: User){
+    /**
+     * Lets user decline a lottery win
+     *
+     * @param user the user that won the lottery
+     *
+     */
+
+    fun declineWin(){
         // entrants should be able to decline a lottery win, but we dont have any connections set up
-        // like the entrants should have a list of lotteries they are participating in
-        // I think, but I still need to ask the rest of the group how these classes are working together.
+
+
+
+
+
+
     }
 
 }

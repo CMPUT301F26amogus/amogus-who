@@ -24,6 +24,7 @@ class User(
     var profileImageUrl: String? = null,
     var notificationsEnabled: Boolean = true,
     roles: Set<Role> = setOf(Role.ENTRANT),
+    var lotteries: ArrayList<Lottery>?=null,
 ) {
     init {
         require(deviceId.isNotBlank()) { "Device ID must not be blank" }
