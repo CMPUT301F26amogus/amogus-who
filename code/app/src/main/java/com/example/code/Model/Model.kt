@@ -5,6 +5,7 @@ import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.firestore
 import android.content.Context
 import android.provider.Settings
+import com.example.code.Model.AvailabilitySchedule
 import com.example.code.Model.Campsite
 import com.example.code.Model.DateRange
 import com.example.code.Model.EntryStatus
@@ -17,6 +18,7 @@ import com.example.code.Model.ReservationStatus
 import com.example.code.Model.User
 import com.example.code.Model.WaitlistEntry
 import com.google.firebase.firestore.FieldValue
+import kotlin.String
 
 interface ModelUpdater<V>{
     fun addView(v:V)
@@ -141,6 +143,18 @@ open class Model: ModelUpdater<View>{
     private val reservationRef by lazy { db.collection("reservations") }
     private val lotteryRef by lazy { db.collection("lotteries") }
     private val waitlistRef by lazy { db.collection("waitlist") }
+
+    public var campsiteList: ArrayList<Campsite> = arrayListOf()
+        set(value) {
+            field = value
+            notifyViews()
+        }
+
+    public var id: String = ""
+        set(value) {
+            field = value
+            notifyViews()
+        }
 
     fun createCampsite(campsite: Campsite) {
         campsiteRef.document(campsite.id).set(campsite)
