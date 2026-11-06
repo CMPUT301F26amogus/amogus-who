@@ -49,10 +49,15 @@ class DummyCampsite(
     val rating: Double,
 ) {}
 
+/**
+ *  OwnerCampsiteListView: the view for the owner to see their campsites
+ *
+ */
 class OwnerCampsiteListView : View() {
 
 //    val controller by lazy { OwnerCampsiteListController(model = M) }
 
+    // modify to pull real list from model
     val campsites = mutableListOf(
         DummyCampsite(
             campsiteName = "Lodge A",
@@ -278,6 +283,10 @@ class OwnerCampsiteListView : View() {
         }
     }
 
+    /**
+     *  ShowScreen: render the page
+     *
+     */
     @Composable
     fun ShowScreen() {
         Column(

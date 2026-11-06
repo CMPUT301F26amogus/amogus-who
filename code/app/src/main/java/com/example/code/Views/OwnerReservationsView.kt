@@ -49,10 +49,15 @@ class DummyReservation(
     val nights: Int,
 ) {}
 
+/**
+ *  OwnerReservationsView: the view for the owner to see reservations at their campsites
+ *
+ */
 class OwnerReservationsView : View() {
 
 
-//    val controller by lazy { OwnerReservationsController(model = M) }
+//    val controller by lazy { OwnerReservationsController(model = ) }
+    // change to access real reservations
     val reservations = mutableStateListOf(
         DummyReservation(
             name = "John Doe",
@@ -280,12 +285,16 @@ class OwnerReservationsView : View() {
         }
     }
 
+    /**
+     *  ShowScreen: render the page
+     *
+     */
     @Composable
     fun ShowScreen() {
-        var state by remember { mutableStateOf("Pending") }
-        val pendingColor by remember { mutableStateOf(primaryGreenColor) }
-        val upcomingColor by remember { mutableStateOf(secondaryGreenColor) }
-        val pastColor by remember { mutableStateOf(secondaryGreenColor) }
+        var state by remember { mutableStateOf("Present") }
+        val pendingColor = if (state == "Pending") primaryGreenColor else secondaryGreenColor
+        val upcomingColor = if (state == "Upcoming") primaryGreenColor else secondaryGreenColor
+        val pastColor = if (state == "Past") primaryGreenColor else secondaryGreenColor
         val tabs = remember {
             mutableStateListOf(
                 Tab(name = "Pending", color = pendingColor, option = {state = "Pending"}),

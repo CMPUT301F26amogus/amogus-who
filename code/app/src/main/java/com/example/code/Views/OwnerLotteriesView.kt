@@ -46,11 +46,16 @@ class DummyLottery(
     val state: String,
 ) {}
 
+/**
+ *  OwnerLotteriesView: the view for the owner to see their lotteries
+ *
+ */
 class OwnerLotteriesView : View() {
 
 
 //    val controller by lazy { OwnerLotteriesController(model = M) }
 
+    // modify to pull real lotteries from model
     val lotteries = mutableListOf(
         DummyLottery(
             campsiteName = "Site Alpha",
@@ -270,6 +275,10 @@ class OwnerLotteriesView : View() {
         }
     }
 
+    /**
+     *  ShowScreen: render the page
+     *
+     */
     @Composable
     fun ShowScreen() {
         Column(
