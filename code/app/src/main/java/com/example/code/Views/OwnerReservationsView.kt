@@ -1,5 +1,6 @@
 package com.example.code.Views
 
+import Model
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import Tab
@@ -55,10 +56,10 @@ class DummyReservation(
  *  OwnerReservationsView: the view for the owner to see reservations at their campsites
  *
  */
-class OwnerReservationsView : View() {
+class OwnerReservationsView(model : Model) : View() {
 
 
-//    val controller by lazy { OwnerReservationsController(model = ) }
+    val controller by lazy { OwnerReservationsController(model = model) }
     // change to access real reservations
     val reservations = mutableStateListOf(
         DummyReservation(
@@ -351,6 +352,6 @@ class OwnerReservationsView : View() {
 @Preview(showBackground = true)
 @Composable
 fun OwnerReservationsViewPreview() {
-    val view = OwnerReservationsView()
+    val view = OwnerReservationsView(model = Model())
     view.ShowScreen(rememberNavController())
 }

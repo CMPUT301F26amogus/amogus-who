@@ -52,10 +52,10 @@ class DummyLottery(
  *  OwnerLotteriesView: the view for the owner to see their lotteries
  *
  */
-class OwnerLotteriesView : View() {
+class OwnerLotteriesView(model : Model) : View() {
 
 
-//    val controller by lazy { OwnerLotteriesController(model = M) }
+    val controller by lazy { OwnerLotteriesController(model = model) }
 
     // modify to pull real lotteries from model
     val lotteries = mutableListOf(
@@ -208,7 +208,7 @@ class OwnerLotteriesView : View() {
                     .padding(10.dp),
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { /* controller.navigateToOwnerLottery() */ },
+                    onClick = { controller.navigateToOwnerLottery() },
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -327,6 +327,6 @@ class OwnerLotteriesView : View() {
 @Preview(showBackground = true)
 @Composable
 fun OwnerLotteriesViewPreview() {
-    val view = OwnerLotteriesView()
+    val view = OwnerLotteriesView(model = Model())
     view.ShowScreen(rememberNavController())
 }

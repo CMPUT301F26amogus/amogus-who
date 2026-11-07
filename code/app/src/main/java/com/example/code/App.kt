@@ -113,9 +113,9 @@ fun App(id: String, model: Model) {
     val searchView = remember { SearchView(model) }
     val searchResultsView = remember { SearchResultsView(model) }
     val ownerCampsitesView = remember { OwnerCampsiteListView() }
-    val ownerReservationsView = remember { OwnerReservationsView() }
-    val ownerLotteriesView = remember { OwnerLotteriesView() }
-    val addEditCampsiteView = remember { AddEditCampsite() }
+    val ownerReservationsView = remember { OwnerReservationsView(model) }
+    val ownerLotteriesView = remember { OwnerLotteriesView(model) }
+    val addEditCampsiteView = remember { AddEditCampsite(model) }
 
     LaunchedEffect(Unit) {
         model.getUserObj { user -> startDestination = startRouteFor(user) }
@@ -174,10 +174,12 @@ fun App(id: String, model: Model) {
         model.addView(ownerReservationsView)
         composable(Routes.OWNER_RESERVATIONS) { ownerReservationsView.ShowScreen(navController) }
 
-        model.addView(addEditCampsiteView)
-        composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen() }
-
         model.addView(ownerLotteriesView)
         composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
+
+        model.addView(addEditCampsiteView)
+        composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen(navController) }
+
+
     }
 }

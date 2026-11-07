@@ -121,7 +121,9 @@ class RegistrationView(M:Model): View() {
                     Row() {
                         ElevatedButton(
                             onClick = {
-                                controller.register(name = name, email = email, phoneNumber = number, navController = navController)
+                                if (controller.register(name = name, email = email, phoneNumber = number)) {
+                                    goToHome(navController, Routes.ENTRANT_HOME)
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
                             modifier = Modifier.width(160.dp).height(60.dp)
@@ -131,7 +133,9 @@ class RegistrationView(M:Model): View() {
                         }
                         ElevatedButton(
                             onClick = {
-                                controller.register(name = name, email = email, phoneNumber = number, navController = navController)
+                                if (controller.register(name = name, email = email, phoneNumber = number)) {
+                                    goToHome(navController, Routes.OWNER_HOME)
+                                }
                             },
                             colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
                             modifier = Modifier.width(160.dp).height(60.dp).padding(horizontal = 20.dp),
@@ -154,6 +158,14 @@ class RegistrationView(M:Model): View() {
         }
     }
 
+    /**
+     * Opens [homeRoute] and removes registration from the back stack, so Back can't return to it.
+     */
+    private fun goToHome(navController: NavController, homeRoute: String) {
+        navController.navigate(homeRoute) {
+            popUpTo(Routes.REGISTRATION) { inclusive = true }
+        }
+    }
 }
 
 @Preview(showBackground = true)
