@@ -165,8 +165,14 @@ open class Model: ModelUpdater<View>{
     }
 
     fun createCampsite(campsite: Campsite, onResult: (Boolean) -> Unit) {
-        campsiteRef.document(campsite.id).set(campsite)
-            .addOnSuccessListener { onResult(true) }
+
+        val doc = campsiteRef.document()
+            campsite.id = doc.id
+
+            doc.set(campsite)
+            .addOnSuccessListener {
+                onResult(true)
+            }
     }
 
     fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double) {

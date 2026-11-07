@@ -23,7 +23,7 @@ import Model
  * @throws IllegalArgumentException if any field is invalid
  */
 class Campsite(
-    val id: String,
+    var id: String,
     val ownerId: String,
     name: String,
     var location: String,
@@ -39,8 +39,8 @@ class Campsite(
     ratings: Collection<Rating> = emptyList(),
 ) {
     init {
-        require(id.isNotBlank()) { "Campsite ID must not be blank" }
-        require(ownerId.isNotBlank()) { "Owner ID must not be blank" }
+
+
     }
 
     /**
