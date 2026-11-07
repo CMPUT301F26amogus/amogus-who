@@ -1,6 +1,8 @@
 package com.example.code.Controllers
 
 import Model
+import androidx.navigation.NavController
+import com.example.code.Routes
 
 class RegistrationController(
     private val model : Model
@@ -26,4 +28,5 @@ class RegistrationController(
         }
         return true
     }
+
 }

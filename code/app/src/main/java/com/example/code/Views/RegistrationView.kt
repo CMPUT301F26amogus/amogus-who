@@ -158,14 +158,6 @@ class RegistrationView(M:Model): View() {
         }
     }
 
-    /**
-     * Opens [homeRoute] and removes registration from the back stack, so Back can't return to it.
-     */
-    private fun goToHome(navController: NavController, homeRoute: String) {
-        navController.navigate(homeRoute) {
-            popUpTo(Routes.REGISTRATION) { inclusive = true }
-        }
-    }
 }
 
 @Preview(showBackground = true)
