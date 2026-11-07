@@ -15,20 +15,18 @@ class UserTest {
     @Test
     fun newUser_defaultsToEntrantWithNotificationsOn() {
         val u = User(deviceId = "device-1", name = "Alex")
-        assertEquals(setOf(Role.ENTRANT), u.roles)
+        assertEquals(listOf(Role.ENTRANT), u.roles)
         assertTrue(u.notificationsEnabled)
         assertNull(u.email)
         assertNull(u.phone)
     }
 
-    @Test(expected = IllegalArgumentException::class)
-    fun blankDeviceId_throws() {
-        User(deviceId = " ", name = "Alex")
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun blankName_throwsInConstructor() {
-        User(deviceId = "device-1", name = "")
+    @Test
+    fun emptyUser_canBeMadeForFirestore() {
+        // firestore makes a User() with no arguments then fills in the fields
+        val u = User()
+        assertEquals("", u.deviceId)
+        assertEquals("", u.name)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -107,7 +105,7 @@ class UserTest {
     fun roles_cannotBeChangedFromOutside() {
         val u = user()
         // roles gives back a copy or a locked set so the user shouldnt change either way
-        runCatching { (u.roles as? MutableSet<Role>)?.add(Role.ADMIN) }
+        runCatching { (u.roles as? MutableList<Role>)?.add(Role.ADMIN) }
         assertFalse(u.hasRole(Role.ADMIN))
     }
 

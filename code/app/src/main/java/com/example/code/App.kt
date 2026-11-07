@@ -115,7 +115,7 @@ fun App(id: String, model: Model) {
     val ownerCampsitesView = remember { OwnerCampsiteListView() }
     val ownerReservationsView = remember { OwnerReservationsView(model) }
     val ownerLotteriesView = remember { OwnerLotteriesView(model) }
-    val addEditCampsiteView = remember { AddEditCampsite() }
+    val addEditCampsiteView = remember { AddEditCampsite(model) }
 
     LaunchedEffect(Unit) {
         model.getUserObj { user -> startDestination = startRouteFor(user) }
@@ -178,7 +178,7 @@ fun App(id: String, model: Model) {
         composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
 
         model.addView(addEditCampsiteView)
-        composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen() }
+        composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen(navController) }
 
 
     }

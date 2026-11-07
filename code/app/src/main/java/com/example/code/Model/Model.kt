@@ -636,6 +636,7 @@ open class Model: ModelUpdater<View>{
         onSuccess: () -> Unit,
     ) {
         val newUser = User(
+            deviceId = currentDeviceId,
             name = name,
             email = email,
             phone = phoneNumber

@@ -19,7 +19,7 @@ import Model
  * @throws IllegalArgumentException if any field is invalid
  */
 class User(
-    val deviceId: String="", // The constructor needs to contain default values for every param
+    var deviceId: String="", // The constructor needs to contain default values for every param
     name: String="",        // in order for us to be able to put an object in the database.
     email: String? = null,
     phone: String? = null,
@@ -29,16 +29,13 @@ class User(
     roles: Set<Role> = setOf(Role.ENTRANT),
     var lotteries: ArrayList<Lottery>?=null,
 ){
-    init {
-        require(deviceId.isNotBlank()) { "Device ID must not be blank" }
-    }
-
     /**
      * the users name trimmed
      *
      * @throws IllegalArgumentException if set to something blank
      */
-    var name: String = validName(name)
+    // not checked here so firestore can make an empty user before filling it in
+    var name: String = name.trim()
         set(value) { field = validName(value) }
 
     /**
@@ -64,9 +61,16 @@ class User(
 
     private val _roles: MutableSet<Role> = roles.toMutableSet()
 
-    /** read only copy of the users roles so they only change through [addRole] and [removeRole] */
-    val roles: Set<Role>
-        get() = _roles.toSet()
+    /**
+     * copy of the users roles, a list because firestore cant save sets
+     * use [addRole] and [removeRole] to change them, the setter is for firestore loading a user
+     */
+    var roles: List<Role>
+        get() = _roles.toList()
+        set(value) {
+            _roles.clear()
+            _roles.addAll(value)
+        }
 
     init {
         require(_roles.isNotEmpty()) { "A user must have at least one role" }

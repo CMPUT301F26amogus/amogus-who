@@ -118,6 +118,14 @@ class ReservationsView(model: Model): View() {
                     }
                 }
             }
+            Row() {
+                Footer(
+                    navController = navController,
+                    textColor = footerTextColor,
+                    backgroundColor = footerbgColor,
+                    buttonColor = footerButtonColor,
+                )
+            }
         }
     }
     @Composable
