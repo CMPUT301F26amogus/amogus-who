@@ -23,13 +23,13 @@ import Model
  * @throws IllegalArgumentException if any field is invalid
  */
 class Campsite(
-    var id: String,
-    val ownerId: String,
-    name: String,
-    var location: String,
+    var id: String="",
+    val ownerId: String="",
+    name: String="",
+    var location: String="",
     var lottery: Lottery = Lottery(),
-    maxOccupancy: Int,
-    pricePerNight: Double,
+    maxOccupancy: Int=0,
+    pricePerNight: Double=0.0,
     var description: String = "",
     var rulesAndPolicy: String = "",
     var imageUrl: String? = null,
