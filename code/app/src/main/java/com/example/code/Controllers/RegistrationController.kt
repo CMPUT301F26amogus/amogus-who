@@ -16,7 +16,6 @@ class RegistrationController(
         }
         try {
             model.signUp(
-                deviceId = model.currentDeviceId,
                 name = name,
                 phoneNumber = phoneNumber,
                 email = email,
