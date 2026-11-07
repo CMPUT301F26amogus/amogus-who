@@ -142,8 +142,9 @@ open class Model: ModelUpdater<View>{
     private val lotteryRef by lazy { db.collection("lotteries") }
     private val waitlistRef by lazy { db.collection("waitlist") }
 
-    fun createCampsite(campsite: Campsite) {
+    fun createCampsite(campsite: Campsite, onResult: (Boolean) -> Unit) {
         campsiteRef.document(campsite.id).set(campsite)
+            .addOnSuccessListener { onResult(true) }
     }
 
     fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double) {
