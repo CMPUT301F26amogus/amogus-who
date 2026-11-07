@@ -9,6 +9,7 @@ import com.example.code.Model.LotteryStatus
 import com.example.code.Model.Notification
 import com.example.code.Model.Reservation
 import com.example.code.Model.ReservationStatus
+import com.example.code.Model.Role
 import com.example.code.Model.User
 import com.example.code.Model.WaitlistEntry
 import kotlin.String
@@ -642,12 +643,14 @@ open class Model: ModelUpdater<View>{
         name: String,
         phoneNumber: String,
         email: String,
+        roleOf: Role= Role.ENTRANT,
         onSuccess: () -> Unit,
     ) {
         val newUser = User(
             name = name,
             email = email,
-            phone = phoneNumber
+            phone = phoneNumber,
+            role = roleOf
         )
 
         dataRef.document(deviceId)

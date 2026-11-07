@@ -26,7 +26,7 @@ class User(
     var profileImageUrl: String? = null,
     var notificationsEnabled: Boolean = true,
     var notificationCount: Int = 0,
-    roles: Set<Role> = setOf(Role.ENTRANT),
+    role: Role = Role.ENTRANT,
     var lotteries: ArrayList<Lottery>?=null,
 ){
     /**
