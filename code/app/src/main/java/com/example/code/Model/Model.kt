@@ -258,16 +258,26 @@ open class Model: ModelUpdater<View>{
         lotteryRef.document(lottery.id).delete()
     }
 
-    fun updateLottery(lottery: Lottery, regStart: String, regEnd: String, bookStart: Date,
-                      bookEnd: Date, winnerCount: Int, waitlistCap: Int, lotteryStatus: LotteryStatus
-    ) {
-        lottery.registrationPeriod(regStart, regEnd)
-        lottery.bookingPeriod(bookStart, bookEnd)
-        lottery.numWinners = winnerCount
-        lottery.waitlistCapacity = waitlistCap
-        lottery.status = lotteryStatus
+    fun updateLottery(lottery: Lottery, onResult: (Result<Unit>) -> Unit) {
+        val updates = mapOf(
+            "campsites" to lottery.campsites,
+            "registrationStart" to lottery.registrationStart,
+            "registrationEnd" to lottery.registrationEnd,
+            "bookingStart" to lottery.bookingStart,
+            "bookingEnd" to lottery.bookingEnd,
+            "numWinners" to lottery.numWinners,
+            "waitlistCapacity" to lottery.waitlistCapacity,
+            "status" to lottery.status.name
+        )
 
-        lotteryRef.document(lottery.id).set(lottery)
+        lotteryRef.document(lottery.id)
+            .update(updates)
+            .addOnSuccessListener {
+                onResult(Result.success(Unit))
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
     }
 
     fun joinWaitlist(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
@@ -621,10 +631,24 @@ open class Model: ModelUpdater<View>{
      * @param phoneNumber user's phone number from the view
      * @param email user's email from the view
      */
-    fun signUp(name: String, phoneNumber: String, email: String){
-        val newUser = User(currentDeviceId, name, email=email,phone=phoneNumber)
-        dataRef.document(currentDeviceId).set(User())
+    fun signUp(
+        deviceId: String,
+        name: String,
+        phoneNumber: String,
+        email: String,
+        onSuccess: () -> Unit,
+    ) {
+        val newUser = User(
+            name = name,
+            email = email,
+            phone = phoneNumber
+        )
 
+        dataRef.document(deviceId)
+            .set(newUser)
+            .addOnSuccessListener {
+                onSuccess()
+            }
     }
 
 
@@ -637,12 +661,8 @@ open class Model: ModelUpdater<View>{
      *      if returns null, then the view is the sign-up page
      *      if returns user, then view is homepage
      */
-    fun signIn(): User? {
-        getUserObj { user ->
-            // When getUserObj finishes, forward the result to the caller of signIn
-            return@getUserObj
-        }
-        return null
+    fun signIn(onResult: (User?) -> Unit){
+        getUserObj(onResult)
     }
 
     /**
@@ -840,7 +860,7 @@ open class Model: ModelUpdater<View>{
     /**
      *
      */
-    fun getNotifications(): ArrayList<Notification>{
+    fun getNotifications(onResult: (List<Notification>) -> Unit){
         val notifications = ArrayList<Notification>()
 
         setNotifCount {notificationCount = it}
@@ -851,14 +871,30 @@ open class Model: ModelUpdater<View>{
                     notifications.add(it.toObject(Notification::class.java)!!)
                 }
             }
+            onResult(notifications)
         }
-        return notifications
     }
 
 
 
     // Add
 
+    /**
+     * get lottery associated with campsite
+     *
+     * @param campsiteId id of the campsite
+     */
+    fun getLottery(campsiteId: String, onResult: (Lottery?) -> Unit) {
+        dataRef.document(campsiteId).get().addOnSuccessListener {
+            snapshot ->
+            if (snapshot.exists()) {
+                val campsite = snapshot.toObject(Campsite::class.java)
+                onResult(campsite?.lottery)
+            } else {
+                onResult(null)
+            }
+        }
+    }
 
 
 
