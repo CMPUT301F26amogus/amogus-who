@@ -1,6 +1,8 @@
 package com.example.code.Controllers
 
 import Model
+import androidx.navigation.NavController
+import com.example.code.Routes
 
 class RegistrationController(
     private val model : Model
@@ -16,7 +18,6 @@ class RegistrationController(
         }
         try {
             model.signUp(
-                deviceId = model.currentDeviceId,
                 name = name,
                 phoneNumber = phoneNumber,
                 email = email,
@@ -27,4 +28,5 @@ class RegistrationController(
         }
         return true
     }
+
 }

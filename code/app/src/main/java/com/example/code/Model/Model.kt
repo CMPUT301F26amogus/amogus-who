@@ -639,7 +639,6 @@ open class Model: ModelUpdater<View>{
      * @param email user's email from the view
      */
     fun signUp(
-        deviceId: String,
         name: String,
         phoneNumber: String,
         email: String,
@@ -647,13 +646,14 @@ open class Model: ModelUpdater<View>{
         onSuccess: () -> Unit,
     ) {
         val newUser = User(
+            deviceId = currentDeviceId,
             name = name,
             email = email,
             phone = phoneNumber,
             role = roleOf
         )
 
-        dataRef.document(deviceId)
+        dataRef.document(currentDeviceId)
             .set(newUser)
             .addOnSuccessListener {
                 onSuccess()
