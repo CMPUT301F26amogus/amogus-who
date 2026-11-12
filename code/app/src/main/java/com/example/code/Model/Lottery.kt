@@ -14,7 +14,7 @@ import java.time.LocalDate
  *
  * @property id unique id for this lottery
  * @property ownerId device id of the owner running it
- * @property campsiteIds ids of the campsites in this lottery
+ * @property campsites list of campsites this lottery is for
  * @property numWinners how many entrants get drawn
  * @property waitlistCapacity most entrants allowed on the waitlist or null for no limit
  * @property status where the lottery is in its lifecycle

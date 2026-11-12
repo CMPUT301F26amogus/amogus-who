@@ -22,19 +22,17 @@ interface ModelUpdater<V>{
 open class Model: ModelUpdater<View>{
 
     //region Properties and Firestore references
+
     // lazy so making a model object doesnt need firebase running eg in unit tests
     // excluded so firestore doesnt try to save the database inside every object
     @get:Exclude
     val db by lazy { Firebase.firestore }
     val dataRef = db.collection("EVERYTHING")
 
-    // device id of whoever is using the app
-    // named currentDeviceId so it doesnt clash with User.deviceId
-    // excluded so it doesnt get saved into every document
     @get:Exclude
-    var currentDeviceId: String = ""
-    var campId: String = ""
-    var notificationCount: Int = 0
+    var currentDeviceId: String = "" // DeviceID of current user
+    var campId: String = "" // Buffer for campsite ID
+    var notificationCount: Int = 0 // Tracker for total notification count
 
     private val usersRef by lazy { db.collection("users") }
     private val campsiteRef by lazy { db.collection("campsite") }
@@ -77,6 +75,7 @@ open class Model: ModelUpdater<View>{
 
     //region State held for the views
     public var campsiteList: ArrayList<Campsite> = arrayListOf()
+
     fun settCampsiteList(newArray: ArrayList<Campsite>?) {
         if (newArray != null) {
             campsiteList = newArray
@@ -127,7 +126,7 @@ open class Model: ModelUpdater<View>{
                 if (snapshot.exists()) {
                     val user = snapshot.toObject(User::class.java)
                     onResult(user) // we have to use a callback because getting the data
-                    // from the server is slow and so we need to
+                    // from the server is slow and so we need to wait for response
                 } else {
                     onResult(null)
                 }
@@ -178,16 +177,10 @@ open class Model: ModelUpdater<View>{
         roleOf: Role= Role.ENTRANT,
         onSuccess: () -> Unit,
     ) {
-        val newUser = User(
-            name = name,
-            email = email,
-            phone = phoneNumber,
-            role = roleOf
-        )
-
-        dataRef.document(deviceId)
-            .set(newUser)
+        val newUser = User(name = name, email = email, phone = phoneNumber, role = roleOf)
+        dataRef.document(deviceId).set(newUser)
             .addOnSuccessListener {
+                notifyViews()
                 onSuccess()
             }
     }
@@ -246,6 +239,9 @@ open class Model: ModelUpdater<View>{
                 "phone", phoneNumber
             )
         }
+        //notify views after change
+        notifyViews()
+
     }
 
     /**
@@ -254,6 +250,7 @@ open class Model: ModelUpdater<View>{
      */
     fun deleteProfile(){
         dataRef.document(currentDeviceId).delete()
+            .addOnSuccessListener {notifyViews()}
     }
     //endregion
 
@@ -266,6 +263,7 @@ open class Model: ModelUpdater<View>{
 
         doc.set(campsite)
             .addOnSuccessListener {
+                notifyViews()
                 onResult(true)
             }
     }
@@ -296,6 +294,7 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { document ->
                 val campsite = document.toObject(Campsite::class.java)
                 onResult(campsite)
+                notifyViews()
             }
             .addOnFailureListener {
                 onResult(null)
@@ -307,9 +306,11 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsites = documents.toObjects(Campsite::class.java)
                 onResult(campsites)
+                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
+                notifyViews()
             }
     }
 
@@ -318,9 +319,11 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsites = documents.toObjects(Campsite::class.java)
                 onResult(campsites)
+                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
+                notifyViews()
             }
     }
 
@@ -329,9 +332,11 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsite = documents.toObjects(Campsite::class.java)
                 onResult(campsite)
+                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
+                notifyViews()
             }
     }
 
@@ -340,12 +345,18 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsite = documents.toObjects(Campsite::class.java)
                 onResult(campsite[0].id)
+                notifyViews()
             }
     }
     //endregion
 
 
     //region Lotteries
+    /**
+     * saves a lottery to the database eg after changing its periods
+     *
+     * @param lottery the lottery to save
+     */
     fun createLottery(lottery: Lottery) {
         lotteryRef.document(lottery.id).set(lottery)
     }
@@ -370,6 +381,7 @@ open class Model: ModelUpdater<View>{
             .update(updates)
             .addOnSuccessListener {
                 onResult(Result.success(Unit))
+                notifyViews()
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
@@ -377,39 +389,14 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
-     * Updates lottery information, right now only updates
-     * registration period, booking period, and number of winners
-     *
-     * @param lottery the lottery to update
-     */
-    fun updateLottery(lottery: Lottery) {
-        lotteryRef.document(lottery.id).update(
-            "registrationPeriod", lottery.registrationPeriod(),
-            "bookingPeriod", lottery.bookingPeriod(),
-            "numWinners", lottery.numWinners
-        )
-        notifyViews()
-    }
-
-    /**
-     * saves a lottery to the database eg after changing its periods
-     *
-     * @param lottery the lottery to save
-     */
-    fun setLottery(lottery: Lottery) {
-        lotteryRef.document(lottery.id).set(lottery)
-    }
-
-    /**
      * Gets a list of lotteries that the user is in
      *
      *@param onResult gets the lotteries or an empty list if it failed
      */
-    fun getLotteries(onResult: (List<Lottery>) -> Unit) {
+    fun getLotteriesIn(onResult: (List<Lottery>) -> Unit) {
         getUserObj { user -> onResult(user!!.lotteries!!)}
+        notifyViews()
     }
-
-    // Add
 
     /**
      * get lottery associated with campsite
@@ -422,6 +409,7 @@ open class Model: ModelUpdater<View>{
             if (snapshot.exists()) {
                 val campsite = snapshot.toObject(Campsite::class.java)
                 onResult(campsite?.lottery)
+                notifyViews()
             } else {
                 onResult(null)
             }
@@ -540,7 +528,7 @@ open class Model: ModelUpdater<View>{
 
 
     //region Waitlist
-    fun joinWaitlist(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
+    fun joinWaitlistt(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
         val entryId = "${lotId}_${entrantId}"
         val entryRef = waitlistRef.document(entryId)
 
@@ -620,6 +608,7 @@ open class Model: ModelUpdater<View>{
                                 tempuser!!.lotteries!!.add(lottery)
                                 setUserObj(tempuser!!)
                                 onResult(true)
+                                notifyViews()
                             }
                             .addOnFailureListener { onResult(false) }
                     } else {
@@ -631,7 +620,7 @@ open class Model: ModelUpdater<View>{
             }
     }
 
-    fun leaveWaitlist(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
+    fun leaveWaitlistt(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
         val entryId = "${lotId}_${entrantId}"
 
         waitlistRef.document(entryId)
@@ -668,6 +657,7 @@ open class Model: ModelUpdater<View>{
                         dataRef.document(lottery.id).set(tempLottery)
                             .addOnSuccessListener {
                                 onResult(true) // Successfully updated database
+                                notifyViews()
                             }
                     } else {
                         onResult(false)
@@ -686,6 +676,7 @@ open class Model: ModelUpdater<View>{
                 val entries = documents.toObjects(WaitlistEntry::class.java)
 
                 onResult(Result.success(entries))
+                notifyViews()
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
@@ -706,6 +697,7 @@ open class Model: ModelUpdater<View>{
                 lotteries.addAll(user!!.lotteries!!)
             }
             onResult(lotteries)
+            notifyViews()
         }
     }
     //endregion
@@ -751,7 +743,10 @@ open class Model: ModelUpdater<View>{
                 reservationDoc.update(
                     "reservationStatus", ReservationStatus.REJECTED.name
                 )
-                    .addOnSuccessListener { onResult(Result.success(Unit)) }
+                    .addOnSuccessListener {
+                        onResult(Result.success(Unit))
+                        notifyViews()
+                    }
                     .addOnFailureListener { exception ->
                         onResult(Result.failure(exception))
                     }
@@ -766,14 +761,14 @@ open class Model: ModelUpdater<View>{
      *
      *@param reservation the Reservation object that the user is declining
      */
-    fun declineReservation(reservation: Reservation){
-        // entrants should be able to decline a lottery win, that is we change the reservation status
+    fun rejectReservation(reservation: Reservation){
         // I'm assuming that view people will pass in the reservation, because the user needs to click
         // on the reservation that they will cancel from a list of reservations.
 
         dataRef.document(reservation.id).update(
             "status", ReservationStatus.REJECTED
         )
+        notifyViews()
     }
 
     // models need a way to cancel reservation, I guess a canceled reservation is
@@ -784,10 +779,11 @@ open class Model: ModelUpdater<View>{
      *
      * @param reservation The reservation object
      */
-    fun cancelReservation(reservation: com.example.code.Model.Reservation){
+    fun cancelReservation(reservation: Reservation){
         dataRef.document(reservation.id).update(
             "status", ReservationStatus.CANCELLED
         )
+        notifyViews()
     }
 
     fun getReservationByUID(entrantId: String, onResult: (Result<List<ReservationStatus>>) -> Unit) {
@@ -802,6 +798,7 @@ open class Model: ModelUpdater<View>{
                 }
 
                 onResult(Result.success(statuses))
+                notifyViews()
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
@@ -819,6 +816,7 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
                 onResult(reservations)
+                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
@@ -836,6 +834,7 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
                 onResult(reservations)
+                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
@@ -858,6 +857,7 @@ open class Model: ModelUpdater<View>{
                     .mapNotNull { runCatching { it.stay() }.getOrNull() }
                     .sortedBy { it.start }
                 onResult(stays)
+                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
@@ -875,8 +875,9 @@ open class Model: ModelUpdater<View>{
     fun notifyUser(notification: String) {
         var tempuser: User? = null
         getUserObj({ user -> tempuser = user })
-
+        // if user has notifs enabled
         if (tempuser!!.notificationsEnabled) {
+            // creates a document in Notifs folder and device ID folder, for every notif count
             dataRef.document("Notifications/$currentDeviceId/$notificationCount").set(Notification("", currentDeviceId, notification))
         }
         tempuser!!.notificationCount++
@@ -884,7 +885,9 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
+     * gets all notifications from the device ID folder's notifications
      *
+     * @param onResult gets the notifications or an empty list if it failed
      */
     fun getNotifications(onResult: (List<Notification>) -> Unit){
         val notifications = ArrayList<Notification>()
@@ -892,12 +895,14 @@ open class Model: ModelUpdater<View>{
         setNotifCount {notificationCount = it}
 
         for (i in 0..notificationCount){
+            // gets all notifications from the device ID folder's notifications
             dataRef.document("Notifications/$currentDeviceId/$i").get().addOnSuccessListener {
                 if (it.exists()){
                     notifications.add(it.toObject(Notification::class.java)!!)
                 }
             }
             onResult(notifications)
+            notifyViews()
         }
     }
     //endregion
