@@ -1,0 +1,156 @@
+package com.example.code.model
+
+/**
+ * someone using the app
+ *
+ * users are identified by their device so theres no username or password
+ * roles is a set so one person can be an entrant owner and admin at once
+ * two users are equal when they have the same [deviceId]
+ *
+ * @property deviceId id of the device this user signed up on
+ * @property profileImageUrl link to their profile picture or null if they dont have one
+ * @property notificationsEnabled false if they opted out of notifications
+ * @param name shown on their profile and cant be blank
+ * @param email optional and checked if given
+ * @param phone optional and checked if given
+ * @param roles starting roles and must not be empty
+ * @throws IllegalArgumentException if any field is invalid
+ */
+class User(
+    var deviceId: String="", // The constructor needs to contain default values for every param
+    name: String="",        // in order for us to be able to put an object in the database.
+    email: String? = null,
+    phone: String? = null,
+    var profileImageUrl: String? = null,
+    var notificationsEnabled: Boolean = true,
+    var notificationCount: Int = 0,
+    role: Role = Role.ENTRANT,
+    var lotteries: ArrayList<Lottery>?=null,
+){
+    /* Gemini 3.6 Flash
+     * "There seem to be a ton of files in the test suite that also have build errors, please go through them and apply a fix."
+     * 2026-11-11
+     */
+    private val _roles: MutableSet<Role> = mutableSetOf(role)
+
+    constructor(
+        deviceId: String = "",
+        name: String = "",
+        roles: Set<Role>,
+    ) : this(
+        deviceId = deviceId,
+        name = name,
+        role = roles.firstOrNull() ?: Role.ENTRANT,
+    ) {
+        require(roles.isNotEmpty()) { "A user must have at least one role" }
+        _roles.clear()
+        _roles.addAll(roles)
+    }
+
+    /**
+     * the users name trimmed
+     *
+     * @throws IllegalArgumentException if set to something blank
+     */
+    // not checked here so firestore can make an empty user before filling it in
+    var name: String = name.trim()
+        set(value) { field = validName(value) }
+
+    /**
+     * the users email or null if not given
+     *
+     * setting it to blank clears it
+     *
+     * @throws IllegalArgumentException if it doesnt look like an email
+     */
+    var email: String? = validEmail(email)
+        set(value) { field = validEmail(value) }
+
+    /**
+     * the users phone number or null if not given
+     *
+     * setting it to blank clears it
+     * allows plus spaces dashes dots and brackets with 7 to 15 digits
+     *
+     * @throws IllegalArgumentException if it doesnt look like a phone number
+     */
+    var phone: String? = validPhone(phone)
+        set(value) { field = validPhone(value) }
+
+    /**
+     * copy of the users roles, a list because firestore cant save sets
+     * use [addRole] and [removeRole] to change them, the setter is for firestore loading a user
+     */
+    var roles: List<Role>
+        get() = _roles.toList()
+        set(value) {
+            _roles.clear()
+            _roles.addAll(value)
+        }
+
+    init {
+        require(_roles.isNotEmpty()) { "A user must have at least one role" }
+    }
+
+    /**
+     * checks if the user has a role
+     *
+     * @param role the role to check
+     * @return true if they have it
+     */
+    fun hasRole(role: Role): Boolean = role in _roles
+
+    /**
+     * gives the user a role and does nothing if they already have it
+     *
+     * @param role the role to add
+     */
+    fun addRole(role: Role) {
+        _roles.add(role)
+    }
+
+    /**
+     * takes a role away from the user
+     *
+     * @param role the role to remove
+     * @throws IllegalArgumentException if its their only role
+     */
+    fun removeRole(role: Role) {
+        require(_roles != setOf(role)) { "Cannot remove a user's only role" }
+        _roles.remove(role)
+    }
+
+    override fun equals(other: Any?): Boolean =
+        other is User && other.deviceId == deviceId
+
+    override fun hashCode(): Int = deviceId.hashCode()
+
+    override fun toString(): String = "User(deviceId=$deviceId, name=$name, roles=$_roles)"
+
+    private companion object {
+        val EMAIL_REGEX = Regex("^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$")
+        val PHONE_CHARS_REGEX = Regex("^\\+?[0-9 ()\\-.]+$")
+
+        fun validName(name: String): String {
+            require(name.isNotBlank()) { "Name must not be blank" }
+            return name.trim()
+        }
+
+        // blank counts as no email
+        fun validEmail(email: String?): String? {
+            val trimmed = email?.trim()
+            if (trimmed.isNullOrEmpty()) return null
+            require(EMAIL_REGEX.matches(trimmed)) { "Invalid email: $email" }
+            return trimmed
+        }
+
+        // blank counts as no phone
+        fun validPhone(phone: String?): String? {
+            val trimmed = phone?.trim()
+            if (trimmed.isNullOrEmpty()) return null
+            val digits = trimmed.count { it.isDigit() }
+            require(PHONE_CHARS_REGEX.matches(trimmed) && digits in 7..15) { "Invalid phone number: $phone" }
+            return trimmed
+        }
+    }
+}
