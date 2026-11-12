@@ -31,14 +31,18 @@ class CampsiteTest {
         assertEquals(0, c.ratingCount)
     }
 
+    /* Gemini 3.6 Flash
+     * "There seem to be a ton of files in the test suite that also have build errors, please go through them and apply a fix."
+     * 2026-11-11
+     */
     @Test(expected = IllegalArgumentException::class)
     fun blankId_throws() {
-        Campsite("", "owner-1", "Site", "hinton", 4, 10.0)
+        Campsite("", "owner-1", "Site", "hinton", maxOccupancy = 4, pricePerNight = 10.0)
     }
 
     @Test(expected = IllegalArgumentException::class)
     fun blankOwnerId_throws() {
-        Campsite("site-1", "", "Site", "hinton", 4, 10.0)
+        Campsite("site-1", "", "Site", "hinton", maxOccupancy = 4, pricePerNight = 10.0)
     }
 
     @Test(expected = IllegalArgumentException::class)
@@ -169,8 +173,8 @@ class CampsiteTest {
     @Test
     fun equality_isById() {
         val a = campsite()
-        val b = Campsite("site-1", "owner-2", "Other", "hinton", 2, 1.0)
-        val c = Campsite("site-2", "owner-1", "Hinton Grande Cache", "hinton", 8, 65.0)
+        val b = Campsite("site-1", "owner-2", "Other", "hinton", maxOccupancy = 2, pricePerNight = 1.0)
+        val c = Campsite("site-2", "owner-1", "Hinton Grande Cache", "hinton", maxOccupancy = 8, pricePerNight = 65.0)
         assertEquals(a, b)
         assertNotEquals(a, c)
     }

@@ -27,7 +27,7 @@ import java.time.LocalDate
 class Lottery(
     val id: String = "",
     val ownerId: String = "",
-    var campsites: List<Campsite> = emptyList(),
+    campsiteIds: List<String> = emptyList(),
     registrationStart: String = "",
     registrationEnd: String = "",
     bookingStart: String = "",
@@ -37,6 +37,14 @@ class Lottery(
     var status: LotteryStatus = LotteryStatus.OPEN,
     waitlist: List<WaitlistEntry> = emptyList(),
 ) {
+    /* Gemini 3.6 Flash
+     * "There seem to be a ton of files in the test suite that also have build errors, please go through them and apply a fix."
+     * 2026-11-11
+     */
+    var campsites: List<Campsite> = campsiteIds.map { Campsite(id = it) }
+
+    val campsiteIds: List<String>
+        get() = campsites.map { it.id }
 
     /**
      * makes a lottery from date ranges instead of strings
@@ -47,7 +55,7 @@ class Lottery(
     constructor(
         id: String,
         ownerId: String,
-        campsites: List<Campsite>,
+        campsiteIds: List<String>,
         registrationPeriod: DateRange,
         bookingPeriod: DateRange,
         numWinners: Int,
@@ -55,10 +63,17 @@ class Lottery(
         status: LotteryStatus = LotteryStatus.OPEN,
         waitlist: List<WaitlistEntry> = emptyList(),
     ) : this(
-        id, ownerId, campsites,
-        registrationPeriod.start.toString(), registrationPeriod.end.toString(),
-        bookingPeriod.start.toString(), bookingPeriod.end.toString(),
-        numWinners, waitlistCapacity, status, waitlist,
+        id = id,
+        ownerId = ownerId,
+        campsiteIds = campsiteIds,
+        registrationStart = registrationPeriod.start.toString(),
+        registrationEnd = registrationPeriod.end.toString(),
+        bookingStart = bookingPeriod.start.toString(),
+        bookingEnd = bookingPeriod.end.toString(),
+        numWinners = numWinners,
+        waitlistCapacity = waitlistCapacity,
+        status = status,
+        waitlist = waitlist,
     )
 
     /** first day of registration like 2027-05-01 and it only changes through [setRegistrationPeriod] */

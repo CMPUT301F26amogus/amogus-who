@@ -22,8 +22,15 @@ class OwnerEditCampsiteController (
         navController.navigate("owner_home")
     }
 
+    /* Gemini 3.6 Flash
+     * "There are build errors in RegistrationView.kt and OwnerEditCampsiteController.kt, can you find them and apply some fixes to them?"
+     * 2026-11-11
+     */
     fun onAddCampsite (navController: NavController, new : Campsite) {
-        model.createCampsite(new)
-        navController.navigate("owner_home")
+        model.createCampsite(new) { success ->
+            if (success) {
+                navController.navigate("owner_home")
+            }
+        }
     }
 }

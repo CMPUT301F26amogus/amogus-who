@@ -158,6 +158,16 @@ class RegistrationView(M:Model): View() {
         }
     }
 
+    /* Gemini 3.6 Flash
+     * "There are build errors in RegistrationView.kt and OwnerEditCampsiteController.kt, can you find them and apply some fixes to them?"
+     * 2026-11-11
+     */
+    private fun goToHome(navController: NavController, homeRoute: String) {
+        navController.navigate(homeRoute) {
+            popUpTo(Routes.REGISTRATION) { inclusive = true }
+        }
+    }
+
 }
 
 @Preview(showBackground = true)

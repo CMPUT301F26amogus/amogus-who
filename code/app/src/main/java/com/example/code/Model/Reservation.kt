@@ -29,6 +29,40 @@ class Reservation(
     var status: ReservationStatus = ReservationStatus.ACTIVE,
     var rulesAccepted: Boolean = false,
 ) {
+    /* Gemini 3.6 Flash
+     * "There seem to be a ton of files in the test suite that also have build errors, please go through them and apply a fix."
+     * 2026-11-11
+     */
+    var lotteryId: String = ""
+
+    val campsiteId: String
+        get() = campsite?.id ?: ""
+
+    val entrantId: String
+        get() = entrant?.deviceId ?: ""
+
+    constructor(
+        id: String = "",
+        campsiteId: String = "",
+        lotteryId: String = "",
+        entrantId: String = "",
+        checkIn: String = "",
+        checkOut: String = "",
+        guests: Int = 0,
+        status: ReservationStatus = ReservationStatus.ACTIVE,
+        rulesAccepted: Boolean = false,
+    ) : this(
+        id = id,
+        campsite = Campsite(id = campsiteId),
+        entrant = User(deviceId = entrantId),
+        checkIn = checkIn,
+        checkOut = checkOut,
+        guests = guests,
+        status = status,
+        rulesAccepted = rulesAccepted,
+    ) {
+        this.lotteryId = lotteryId
+    }
     /**
      * the check in and check out dates as a range
      *

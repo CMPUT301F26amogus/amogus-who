@@ -29,6 +29,26 @@ class User(
     role: Role = Role.ENTRANT,
     var lotteries: ArrayList<Lottery>?=null,
 ){
+    /* Gemini 3.6 Flash
+     * "There seem to be a ton of files in the test suite that also have build errors, please go through them and apply a fix."
+     * 2026-11-11
+     */
+    private val _roles: MutableSet<Role> = mutableSetOf(role)
+
+    constructor(
+        deviceId: String = "",
+        name: String = "",
+        roles: Set<Role>,
+    ) : this(
+        deviceId = deviceId,
+        name = name,
+        role = roles.firstOrNull() ?: Role.ENTRANT,
+    ) {
+        require(roles.isNotEmpty()) { "A user must have at least one role" }
+        _roles.clear()
+        _roles.addAll(roles)
+    }
+
     /**
      * the users name trimmed
      *
@@ -58,8 +78,6 @@ class User(
      */
     var phone: String? = validPhone(phone)
         set(value) { field = validPhone(value) }
-
-    private val _roles: MutableSet<Role> = roles.toMutableSet()
 
     /**
      * copy of the users roles, a list because firestore cant save sets
