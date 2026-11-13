@@ -1,10 +1,9 @@
 package com.example.code
 
 import Model
-import androidx.navigation.compose.rememberNavController
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.code.Views.AddEditCampsite
+import com.example.code.views.AddEditCampsite
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
