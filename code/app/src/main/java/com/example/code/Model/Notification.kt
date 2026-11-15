@@ -16,10 +16,10 @@ import java.time.Instant
  * @property lotteryId the lottery its about or null if its not about one
  */
 data class Notification(
-    val id: String,
-    val recipientId: String,
-    val message: String,
-    val sentAt: Instant = Instant.now(),
+    val id: String = "",
+    val recipientId: String = "",
+    val message: String = "",
+    val sentAt: Instant = Instant.now(), // TODO: this isnt supported type for firestore
     val lotteryId: String? = null,
 ){
 

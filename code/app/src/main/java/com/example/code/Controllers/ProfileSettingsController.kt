@@ -16,7 +16,10 @@ class ProfileSettingsController(
                 tempuser = user
             }
         }
-        model.updateProfile(user = tempuser, name = name, email = email, phoneNumber = number)
+        // I changed the update profile method to not expect User obj, so tempUser isnt needed anymore
+        // if this somehow breaks this code just lmk and I'll change it back
+        // -- Hui Yan
+        model.updateProfile( name = name, email = email, phoneNumber = number)
     }
 
     /**

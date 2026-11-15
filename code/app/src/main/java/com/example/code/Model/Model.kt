@@ -19,6 +19,13 @@ interface ModelUpdater<V>{
     fun removeView(v:V)
 }
 
+//TODO: our classes are kinda a big jumble of shit:
+    // 1. User and Campsite classes both hold lottery objects, meaning if lottery is changed for the user or the campsite
+        // one of them will have an unchanged version, I think we should be querying for the lottery object, instead of storing it in the class
+        // theres probably more of this TODO: check for more of this, whatever this is
+    // 2. We need to run the app and make sure this database implementation works, or else we go back to the old implementation using a "EVERYTHING" collection
+
+
 open class Model: ModelUpdater<View>{
 
     //region Properties and Firestore references
@@ -27,18 +34,29 @@ open class Model: ModelUpdater<View>{
     // excluded so firestore doesnt try to save the database inside every object
     @get:Exclude
     val db by lazy { Firebase.firestore }
-    val dataRef = db.collection("EVERYTHING")
 
     @get:Exclude
     var currentDeviceId: String = "" // DeviceID of current user
     var campId: String = "" // Buffer for campsite ID
     var notificationCount: Int = 0 // Tracker for total notification count
 
-    private val usersRef by lazy { db.collection("users") }
-    private val campsiteRef by lazy { db.collection("campsite") }
-    private val reservationRef by lazy { db.collection("reservations") }
-    private val lotteryRef by lazy { db.collection("lotteries") }
-    private val waitlistRef by lazy { db.collection("waitlist") }
+    // Top collections
+    private val usersRef by lazy { db.collection("users") } // admin, owner, and entrants
+    private val campsiteRef by lazy { db.collection("campsites") } // campsites and their availibilities
+    private val reservationRef by lazy { db.collection("reservations") } // winners have their reservations stored here
+    private val lotteryRef by lazy { db.collection("lotteries") } // lotteries and their entries/waitlist
+    private val notificationRef by lazy { db.collection("notifications") }
+    // we will need these in the future so why not
+    private val reviewRef by lazy { db.collection("reviews") }
+    private val messageRef by lazy { db.collection("messages") }
+    private val imageRef by lazy { db.collection("images") }
+
+    // Subcollections
+    // waitlist entries live under their lottery: lotteries/{lotId}/entrants/{entryId}
+    private fun waitlistRef(lotId: String) = lotteryRef.document(lotId).collection("entrants") // collection "entrants" will hold the waitlists for the entrants
+    // availability lives under its campsite: campsites/{campId}/availability/{docId}
+    // It could be better to make document for each date? that could be easier querying, but idk it'll bloat our database up
+    private fun availabilityRef(campId: String) = campsiteRef.document(campId).collection("availability")
     //endregion
 
 
@@ -121,7 +139,7 @@ open class Model: ModelUpdater<View>{
      * Otherwise this returns user as an object
      */
     fun getUserObj( onResult: (User?) -> Unit) {
-        dataRef.document(currentDeviceId).get()
+        usersRef.document(currentDeviceId).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
                     val user = snapshot.toObject(User::class.java)
@@ -134,7 +152,7 @@ open class Model: ModelUpdater<View>{
     }
 
     fun setNotifCount(onResult: (Int) -> Unit){
-        dataRef.document(currentDeviceId).get().addOnSuccessListener { snapshot ->
+        usersRef.document(currentDeviceId).get().addOnSuccessListener { snapshot ->
             if (snapshot.exists()) {
                 val user = snapshot.toObject(User::class.java)
                 notificationCount = user!!.notificationCount
@@ -153,7 +171,7 @@ open class Model: ModelUpdater<View>{
      * @param user replacement user
      */
     fun setUserObj(user:User){
-        dataRef.document(currentDeviceId).set(user)
+        usersRef.document(currentDeviceId).set(user)
     }
     //endregion
 
@@ -178,7 +196,7 @@ open class Model: ModelUpdater<View>{
         onSuccess: () -> Unit,
     ) {
         val newUser = User(name = name, email = email, phone = phoneNumber, role = roleOf)
-        dataRef.document(deviceId).set(newUser)
+        usersRef.document(deviceId).set(newUser)
             .addOnSuccessListener {
                 notifyViews()
                 onSuccess()
@@ -196,7 +214,8 @@ open class Model: ModelUpdater<View>{
     fun signIn(onResult: (User?) -> Unit){
         getUserObj(onResult)
     }
-
+    // This function just isnt needed anymore I think, but I cant delete it without checking throughly what it does
+    // TODO: Check if this is deletable
     fun getUserByDevice(deviceId: String, onResult: (User?) -> Unit) {
         usersRef.whereEqualTo("deviceId", deviceId)
             .get()
@@ -218,24 +237,23 @@ open class Model: ModelUpdater<View>{
      *
      * 'This function doesnt do any filtering for invalid phone numbers or emails, or names'
      *
-     * @param user Users object, should be remembered within the controller upon login.
      * @param name optional, set new name of the user
      * @param email optional, set new email for user
      * @param phoneNumber optional, set new phone number for user
      */
-    fun updateProfile(user: User, name: String="", email: String="", phoneNumber: String=""){
+    fun updateProfile( name: String="", email: String="", phoneNumber: String=""){
         if (name != "") {
-            dataRef.document(currentDeviceId).update(
+            usersRef.document(currentDeviceId).update(
                 "name", name
             )
         }
         if (email != ""){
-            dataRef.document(currentDeviceId).update(
+            usersRef.document(currentDeviceId).update(
                 "email", email
             )
         }
         if(phoneNumber != ""){
-            dataRef.document(currentDeviceId).update(
+            usersRef.document(currentDeviceId).update(
                 "phone", phoneNumber
             )
         }
@@ -249,7 +267,7 @@ open class Model: ModelUpdater<View>{
      *
      */
     fun deleteProfile(){
-        dataRef.document(currentDeviceId).delete()
+        usersRef.document(currentDeviceId).delete()
             .addOnSuccessListener {notifyViews()}
     }
     //endregion
@@ -263,8 +281,8 @@ open class Model: ModelUpdater<View>{
 
         doc.set(campsite)
             .addOnSuccessListener {
-                notifyViews()
                 onResult(true)
+                notifyViews()
             }
     }
 
@@ -404,7 +422,7 @@ open class Model: ModelUpdater<View>{
      * @param campsiteId id of the campsite
      */
     fun getLottery(campsiteId: String, onResult: (Lottery?) -> Unit) {
-        dataRef.document(campsiteId).get().addOnSuccessListener {
+        campsiteRef.document(campsiteId).get().addOnSuccessListener {
                 snapshot ->
             if (snapshot.exists()) {
                 val campsite = snapshot.toObject(Campsite::class.java)
@@ -432,6 +450,7 @@ open class Model: ModelUpdater<View>{
                 }
 
                 // Check whether registration has ended.
+                // TODO: class expects "registrationEnd", but its "regEnd"
                 val regEnd = lotteryDoc.getLong("regEnd") ?: 0L
 
                 if (System.currentTimeMillis() < regEnd) {
@@ -440,6 +459,7 @@ open class Model: ModelUpdater<View>{
                 }
 
                 // Check whether the lottery has already been drawn.
+                // TODO: class expects "status", but we using "lotteryStatus"
                 val status = lotteryDoc.getString("lotteryStatus")
 
                 if (status == LotteryStatus.DRAWN.name) {
@@ -455,7 +475,7 @@ open class Model: ModelUpdater<View>{
                 }
 
                 // Retrieve all entrants who are still waiting.
-                waitlistRef
+                waitlistRef(lotId)
                     .whereEqualTo("lotId", lotId)
                     .whereEqualTo("waitlistStatus", EntryStatus.WAITING.name)
                     .get()
@@ -473,6 +493,7 @@ open class Model: ModelUpdater<View>{
                         // Randomly select winners.
                         val winners = entries.shuffled().take(winnerCount)
                         val winnerIds = winners.mapNotNull {
+                            // TODO: I dont even know what is happening here but this just seems wrong, if it isnt then just delete this
                             it.getString("entrantId")
                         }
 
@@ -528,9 +549,11 @@ open class Model: ModelUpdater<View>{
 
 
     //region Waitlist
+
+    // they only wanted joinWaitList to take in a lottery object, so I remade it to take in lottery, idk what to do with this
     fun joinWaitlistt(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
         val entryId = "${lotId}_${entrantId}"
-        val entryRef = waitlistRef.document(entryId)
+        val entryRef = waitlistRef(lotId).document(entryId)
 
         entryRef.get()
             .addOnSuccessListener { document ->
@@ -571,7 +594,7 @@ open class Model: ModelUpdater<View>{
         // that is the user has a list of lotteries that they are in
         var tempuser: User? = null
         getUserObj { user -> tempuser = user }
-        dataRef.document(lottery.id).get()
+        lotteryRef.document(lottery.id).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
                     val currentLottery = snapshot.toObject(Lottery::class.java)
@@ -602,7 +625,7 @@ open class Model: ModelUpdater<View>{
                         currentLottery.waitlist = updatedWaitlist
 
                         // adds the user to the waitlist in the lottery
-                        dataRef.document(lottery.id).set(currentLottery)
+                        lotteryRef.document(lottery.id).set(currentLottery)
                             .addOnSuccessListener {
                                 // sneakily adds the lottery to the user's waitlist as well :)
                                 tempuser!!.lotteries!!.add(lottery)
@@ -623,7 +646,7 @@ open class Model: ModelUpdater<View>{
     fun leaveWaitlistt(lotId: String, entrantId: String, onResult: (Result<Unit>) -> Unit) {
         val entryId = "${lotId}_${entrantId}"
 
-        waitlistRef.document(entryId)
+        waitlistRef(lotId).document(entryId)
             .update("waitlistStatus", "LEFT")
             .addOnSuccessListener {
                 onResult(Result.success(Unit))
@@ -640,7 +663,7 @@ open class Model: ModelUpdater<View>{
      * @param lottery Lottery that the entrant wants to leave waitlist from
      */
     fun leaveWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
-        dataRef.document(lottery.id).get()
+        lotteryRef.document(lottery.id).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
                     val tempLottery = snapshot.toObject(Lottery::class.java)
@@ -654,7 +677,7 @@ open class Model: ModelUpdater<View>{
                         }
 
                         // Save the updated lottery object back to Firestore
-                        dataRef.document(lottery.id).set(tempLottery)
+                        lotteryRef.document(lottery.id).set(tempLottery)
                             .addOnSuccessListener {
                                 onResult(true) // Successfully updated database
                                 notifyViews()
@@ -669,7 +692,7 @@ open class Model: ModelUpdater<View>{
     }
 
     fun getWaitlist(lotId: String, onResult: (Result<List<WaitlistEntry>>) -> Unit) {
-        waitlistRef.whereEqualTo("lotId", lotId)
+        waitlistRef(lotId).whereEqualTo("lotteryId", lotId)
             .whereEqualTo("waitlistStatus", EntryStatus.WAITING.name)
             .get()
             .addOnSuccessListener { documents ->
@@ -690,7 +713,7 @@ open class Model: ModelUpdater<View>{
      */
     fun getWaitlist(onResult: (List<Lottery>) -> Unit){
         val lotteries = ArrayList<Lottery>()
-        dataRef.document(currentDeviceId).get().addOnSuccessListener {
+        usersRef.document(currentDeviceId).get().addOnSuccessListener {
                 snapshot ->
             if (snapshot.exists()){
                 val user = snapshot.toObject(User::class.java)
@@ -714,12 +737,12 @@ open class Model: ModelUpdater<View>{
      */
     fun makeReservation(checkIn: String, checkOut: String, guests: Int, campsite: Campsite){
         val newReservation = Reservation(checkIn = checkIn, checkOut = checkOut, guests = guests, campsite = campsite)
-        dataRef.add(newReservation).addOnSuccessListener {
+        reservationRef.add(newReservation).addOnSuccessListener {
                 documentReference ->
             newReservation.id = documentReference.id
             newReservation.status = ReservationStatus.ACTIVE
             getUserObj(){ user -> newReservation.entrant = user }
-            dataRef.document(documentReference.id).set(newReservation)
+            reservationRef.document(documentReference.id).set(newReservation)
         }
     }
 
@@ -765,7 +788,7 @@ open class Model: ModelUpdater<View>{
         // I'm assuming that view people will pass in the reservation, because the user needs to click
         // on the reservation that they will cancel from a list of reservations.
 
-        dataRef.document(reservation.id).update(
+        reservationRef.document(reservation.id).update(
             "status", ReservationStatus.REJECTED
         )
         notifyViews()
@@ -780,16 +803,18 @@ open class Model: ModelUpdater<View>{
      * @param reservation The reservation object
      */
     fun cancelReservation(reservation: Reservation){
-        dataRef.document(reservation.id).update(
+        reservationRef.document(reservation.id).update(
             "status", ReservationStatus.CANCELLED
         )
         notifyViews()
     }
 
     fun getReservationByUID(entrantId: String, onResult: (Result<List<ReservationStatus>>) -> Unit) {
+        // TODO: Change the search to use entrant? idk I'll come back to this
         reservationRef.whereEqualTo("entrantId", entrantId).get()
             .addOnSuccessListener { documents ->
                 val statuses = documents.documents.mapNotNull {
+                    // TODO: the class actually expects "status"
                     val status = it.getString("reservationStatus")
 
                     status?.let {
@@ -812,6 +837,9 @@ open class Model: ModelUpdater<View>{
      * @param onResult gets the reservations or an empty list if it failed
      */
     fun getActiveReservations(entrantId: String, onResult: (List<Reservation>) -> Unit) {
+        // For some reason we changed the reservation class to not include entrantID, I vaguely remember this conversation
+        // but now this function doesnt work.
+        // TODO: Change the search to use entrant? idk I'll come back to this
         reservationRef.whereEqualTo("entrantId", entrantId).whereEqualTo("status", "ACTIVE").get()
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
@@ -830,6 +858,7 @@ open class Model: ModelUpdater<View>{
      * @param onResult gets the reservations or an empty list if it failed
      */
     fun getCancelledReservations(entrantId: String, onResult: (List<Reservation>) -> Unit) {
+        // TODO: Change the search to use entrant? idk I'll come back to this
         reservationRef.whereEqualTo("entrantId", entrantId).whereEqualTo("status", "CANCELLED").get()
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
@@ -850,6 +879,10 @@ open class Model: ModelUpdater<View>{
      * @param onResult gets each stay sorted by check in or an empty list if it failed
      */
     fun getBookedDates(campId: String, onResult: (List<DateRange>) -> Unit) {
+        // We changed reservation to hold a whole campsite class instead of the ID, idk why
+        // need to ask the view ppl why they needed to do that,
+        // we should be taking intensive notes whenever we change a class
+        // TODO: Change the search to use campsite? idk I'll come back to this
         reservationRef.whereEqualTo("campsiteId", campId).whereEqualTo("status", "ACTIVE").get()
             .addOnSuccessListener { documents ->
                 // skip any reservation saved with bad dates instead of crashing
@@ -877,15 +910,15 @@ open class Model: ModelUpdater<View>{
         getUserObj({ user -> tempuser = user })
         // if user has notifs enabled
         if (tempuser!!.notificationsEnabled) {
-            // creates a document in Notifs folder and device ID folder, for every notif count
-            dataRef.document("Notifications/$currentDeviceId/$notificationCount").set(Notification("", currentDeviceId, notification))
+            // creates a document in the notifications collection, one per notif count
+            notificationRef.document("${currentDeviceId}_$notificationCount").set(Notification("", currentDeviceId, notification))
         }
         tempuser!!.notificationCount++
         setUserObj(tempuser!!)
     }
 
     /**
-     * gets all notifications from the device ID folder's notifications
+     * gets all notifications for this device ID from the notifications collection
      *
      * @param onResult gets the notifications or an empty list if it failed
      */
@@ -895,8 +928,8 @@ open class Model: ModelUpdater<View>{
         setNotifCount {notificationCount = it}
 
         for (i in 0..notificationCount){
-            // gets all notifications from the device ID folder's notifications
-            dataRef.document("Notifications/$currentDeviceId/$i").get().addOnSuccessListener {
+            // gets all notifications for this device ID from the notifications collection
+            notificationRef.document("${currentDeviceId}_$i").get().addOnSuccessListener {
                 if (it.exists()){
                     notifications.add(it.toObject(Notification::class.java)!!)
                 }
