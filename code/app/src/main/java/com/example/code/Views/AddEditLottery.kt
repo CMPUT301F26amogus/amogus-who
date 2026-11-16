@@ -38,6 +38,9 @@ import kotlin.text.toInt
 
 class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), InputFieldFunctions{
 
+    /** View Values
+     *      the colors, values, and predefined Modifiers used in the drawing of the visual elements
+     * */
     val bgColor = secondaryGreenColor
     val headerBackgroundColor = ownerHeaderBackgroundColor
     val headerTextColor = ownerHeaderTextColor
@@ -51,6 +54,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     var headerName = if (isEdit) { "Edit Lottery" } else { "Add Lottery" }
 
 
+    /** Display variables
+     *      the variable versions of each field within Lottery creation
+     * */
     var oldLottery : Lottery? = null
     var lotteryCampsiteID = 0
     var waitListCapacity = 0  //  can be empty, its optional: US 02.04.07
@@ -61,6 +67,10 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     var registrationStart = ""
     var registrationEnd = ""
 
+    /** Update
+     *      If this view is an edit view then it will grab the values of the lottery to be edited,
+     *      otherwise it will clear the variables to be empty fields to act as an add view
+     * */
     override fun update(model: Model){
         if (isEdit){
 //            oldLottery = model.getLotteryToDisplay()
