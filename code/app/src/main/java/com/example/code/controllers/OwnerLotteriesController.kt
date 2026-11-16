@@ -1,17 +1,21 @@
 package com.example.code.controllers
 
 import Model
+import androidx.navigation.NavController
+import com.example.code.Routes.ADD_EDIT_LOTTERY
 import com.example.code.model.Lottery
 import com.example.code.model.LotteryStatus
 
 class OwnerLotteriesController(
     private val model: Model
 ) {
+    private val lotteryToDisplay: Lottery? = null
     /**
      * Navigates to the owner lottery screen.
      */
-    fun navigateToOwnerLottery() {
-
+    fun navigateToOwnerLottery(navController: NavController) {  // Needs to take a NavController and Lottery object
+        model.settTheLottery(lotteryToDisplay)
+        navController.navigate(ADD_EDIT_LOTTERY)
     }
 
     /**
