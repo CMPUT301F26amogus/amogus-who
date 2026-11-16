@@ -271,6 +271,7 @@ open class Model: ModelUpdater<View>{
     /** Sets the specific lottery to be displayed */
     fun settTheLottery(newLottery: Lottery?) {
         theLottery = newLottery
+        notifyViews()
     }
 
     public
