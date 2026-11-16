@@ -259,17 +259,17 @@ open class Model: ModelUpdater<View>{
 
     /** Register to hold a specific lottery to be displayed, for the purposes of edit lottery
      * Ideally this is a lottery ID, which getLottery() would use to query the thing on the spot */
-    var theLottery: Lottery? = null  //  "the" suggests a singular specific item
+    var theLottery: Lottery? = null  //  "the" suggests a singular specific item I also didn't want to possibly interfere with leaveWaitlist
 
     /** returns the specific lottery to be displayed*/
-    fun getTheLottery() : Lottery? {
+    fun gettTheLottery() : Lottery? {
         /** Ideally this would pull the lottery in question straight from the database on the spot
          * to get the most current version*/
         return theLottery
     }
 
     /** Sets the specific lottery to be displayed */
-    fun setTheLottery(newLottery: Lottery) {
+    fun settTheLottery(newLottery: Lottery) {
         theLottery = newLottery
     }
 
