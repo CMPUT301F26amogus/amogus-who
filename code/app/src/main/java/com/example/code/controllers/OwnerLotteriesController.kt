@@ -9,11 +9,10 @@ import com.example.code.model.LotteryStatus
 class OwnerLotteriesController(
     private val model: Model
 ) {
-    private val lotteryToDisplay: Lottery? = null
     /**
      * Navigates to the owner lottery screen.
      */
-    fun navigateToOwnerLottery(navController: NavController) {  // Needs to take a NavController and Lottery object
+    fun navigateToOwnerLottery(navController: NavController, lotteryToDisplay: Lottery) {  // Needs to take a NavController and Lottery object
         model.settTheLottery(lotteryToDisplay)
         navController.navigate(ADD_EDIT_LOTTERY)
     }
