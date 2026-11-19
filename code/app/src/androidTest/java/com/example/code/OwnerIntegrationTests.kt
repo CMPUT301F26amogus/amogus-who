@@ -21,7 +21,7 @@ class OwnerIntegrationTests {
             .performClick()
         // verify messages
         composeTestRule
-            .onNodeWithText("Messages")
+            .onNodeWithTag("Header: Messages")
             .assertExists()
     }
     @Test
@@ -32,7 +32,7 @@ class OwnerIntegrationTests {
             .performClick()
         // verify lotteries
         composeTestRule
-            .onNodeWithText("Lotteries")
+            .onNodeWithTag("Header: Lotteries")
             .assertExists()
     }
     @Test
@@ -43,7 +43,7 @@ class OwnerIntegrationTests {
             .performClick()
         // verify reservations
         composeTestRule
-            .onNodeWithText("Reservations")
+            .onNodeWithTag("Header: Reservations")
             .assertExists()
     }
     @Test
@@ -54,7 +54,7 @@ class OwnerIntegrationTests {
             .performClick()
         // verify scan
         composeTestRule
-            .onNodeWithText("QR Code")
+            .onNodeWithTag("Header: QR Code")
             .assertExists()
     }
     @Test
@@ -65,7 +65,7 @@ class OwnerIntegrationTests {
             .performClick()
         // verify profile
         composeTestRule
-            .onNodeWithText("Profile Settings")
+            .onNodeWithTag("Header: Profile Settings")
             .assertExists()
     }
     @Test
@@ -76,7 +76,7 @@ class OwnerIntegrationTests {
             .performClick()
         // verify campsites
         composeTestRule
-            .onNodeWithText("My Campsites")
+            .onNodeWithTag("Header: My Campsites")
             .assertExists()
     }
     @Test
@@ -87,7 +87,7 @@ class OwnerIntegrationTests {
             .performClick()
         // verify campsites
         composeTestRule
-            .onNodeWithText("Notifications")
+            .onNodeWithTag("Header: Notifications")
             .assertExists()
     }
 }
