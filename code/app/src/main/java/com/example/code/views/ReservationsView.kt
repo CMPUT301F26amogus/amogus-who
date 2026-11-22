@@ -53,20 +53,16 @@ class ReservationsView(model: Model): View() {
     val footerButtonColor = entrantFooterButtonColor
     @Composable
     public fun ShowScreen(navController: NavController) {
-        var state by remember { mutableStateOf("Active") }
+        var state by remember { mutableStateOf("Current") }
         val tabs = mutableListOf<Tab>(
             Tab(
-                name = "Active",
+                name = "Current",
                 color = entrantFooterBackgroundColor,
-                option = {state = "Active"}),
+                option = {state = "Current"}),
             Tab(
                 name = "Past",
                 color = secondaryGreenColor,
-                option = {state = "Past"}),
-            Tab(
-                name = "Cancelled",
-                color = secondaryGreenColor,
-                option = {state = "Cancelled"}),
+                option = {state = "Previous"}),
         )
         Column() {
             Row() {
@@ -83,7 +79,7 @@ class ReservationsView(model: Model): View() {
             ) {
                 TabManager(tabs,state)
             }
-            if (state=="Active") {
+            if (state=="Current") {
                 Row(modifier = Modifier.weight(1f).background(primaryGreenColor)) {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
