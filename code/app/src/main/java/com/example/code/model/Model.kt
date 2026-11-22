@@ -12,6 +12,7 @@ import com.example.code.model.ReservationStatus
 import com.example.code.model.Role
 import com.example.code.model.User
 import com.example.code.model.WaitlistEntry
+import java.time.LocalDate
 import kotlin.String
 
 interface ModelUpdater<V>{
@@ -554,21 +555,56 @@ open class Model: ModelUpdater<View>{
 
 
     /**
-     * Create a reservation for a campsite
+     * books a campsite for whoever is using the app
      *
-     * @param checkIn check in date
-     * @param checkOut check out date
+     * waits for the user to load first so the reservation gets saved with its entrant
+     *
+     * @param checkIn check in date like 2027-05-01
+     * @param checkOut check out date like 2027-05-03
      * @param guests number of guests
      * @param campsite the campsite to book
+     * @param lotteryId which lottery they won to get it
+     * @param rulesAccepted true if they agreed to the campsite rules
+     * @param onResult gets true once its saved or false if the user wasnt found the dates were bad or saving failed
      */
-    fun makeReservation(checkIn: String, checkOut: String, guests: Int, campsite: Campsite){
-        val newReservation = Reservation(checkIn = checkIn, checkOut = checkOut, guests = guests, campsite = campsite)
-        dataRef.add(newReservation).addOnSuccessListener {
-            documentReference ->
-            newReservation.id = documentReference.id
-            newReservation.status = ReservationStatus.ACTIVE
-            getUserObj(){ user -> newReservation.entrant = user }
-            dataRef.document(documentReference.id).set(newReservation)
+    fun makeReservation(
+        checkIn: String,
+        checkOut: String,
+        guests: Int,
+        campsite: Campsite,
+        lotteryId: String = "",
+        rulesAccepted: Boolean = false,
+        onResult: (Boolean) -> Unit = {},
+    ) {
+        getUserObj { user ->
+            if (user == null) {
+                onResult(false)
+                return@getUserObj
+            }
+
+            // make the doc first so the id is set and it only gets written once
+            val doc = reservationRef.document()
+            val newReservation = Reservation(
+                id = doc.id,
+                campsite = campsite,
+                entrant = user,
+                checkIn = checkIn,
+                checkOut = checkOut,
+                guests = guests,
+                status = ReservationStatus.ACTIVE,
+                rulesAccepted = rulesAccepted,
+            )
+            newReservation.lotteryId = lotteryId
+
+            // dont save bad dates since the reservation lists cant read them
+            if (runCatching { newReservation.stay() }.isFailure) {
+                onResult(false)
+                return@getUserObj
+            }
+
+            doc.set(newReservation)
+                .addOnSuccessListener { onResult(true) }
+                .addOnFailureListener { onResult(false) }
         }
     }
 
@@ -589,6 +625,28 @@ open class Model: ModelUpdater<View>{
                     .mapNotNull { runCatching { it.stay() }.getOrNull() }
                     .sortedBy { it.start }
                 onResult(stays)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    /**
+     * gets the active reservations at all of an owners campsites
+     *
+     * @param ownerId device id of the campsite owner
+     * @param onResult gets the reservations sorted by check in or an empty list if it failed
+     */
+    fun getOwnerActiveReservations(ownerId: String, onResult: (List<Reservation>) -> Unit) {
+        reservationRef.whereEqualTo("campsite.ownerId", ownerId)
+            .whereEqualTo("status", ReservationStatus.ACTIVE.name).get()
+            .addOnSuccessListener { documents ->
+                val today = LocalDate.now()
+                // skip any reservation saved with bad dates instead of crashing
+                val active = documents.toObjects(Reservation::class.java)
+                    .filter { runCatching { it.isActive(today) }.getOrDefault(false) }
+                    .sortedBy { it.checkIn }
+                onResult(active)
             }
             .addOnFailureListener {
                 onResult(emptyList())

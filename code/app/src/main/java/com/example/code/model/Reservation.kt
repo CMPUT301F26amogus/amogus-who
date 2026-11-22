@@ -72,4 +72,17 @@ class Reservation(
      * @throws IllegalArgumentException if check out isnt after check in
      */
     fun stay(): DateRange = DateRange(LocalDate.parse(checkIn), LocalDate.parse(checkOut))
+
+    /**
+     * checks if this stay is still coming up or happening now
+     *
+     * nothing sets PAST yet so the check out date decides when a stay is over
+     * its a function and not a property so firestore doesnt try to save it
+     *
+     * @param today the date to compare against so tests can pick one
+     * @return true if its active and check out hasnt passed yet
+     * @throws java.time.format.DateTimeParseException if check out isnt like 2027-05-03
+     */
+    fun isActive(today: LocalDate = LocalDate.now()): Boolean =
+        status == ReservationStatus.ACTIVE && !LocalDate.parse(checkOut).isBefore(today)
 }
