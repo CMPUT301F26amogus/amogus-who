@@ -16,11 +16,13 @@ import java.time.Instant
  * @property lotteryId the lottery its about or null if its not about one
  */
 data class Notification(
-    val id: String = "",
-    val recipientId: String = "",
-    val message: String = "",
-    val sentAt: Instant = Instant.now(), // TODO: this isnt supported type for firestore
-    val lotteryId: String? = null,
+    var id: String = "",
+    var entrantId: String = "",
+    var ownerId: String = "",
+    var content: String = "",
+    var timestamp: String = "", // Timestamp in format YYYY-MM-DDTHH:MM:SS, example: 2020-06-07T17:38:21
+    var lotteryId: String = ""
 ){
+    // maybe make timestamp into a temp constructor parameter to create a timestamp checker
 
 }

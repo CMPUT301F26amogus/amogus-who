@@ -18,17 +18,15 @@ import Model
  * @param roles starting roles and must not be empty
  * @throws IllegalArgumentException if any field is invalid
  */
-class User(
+open class User(
     var deviceId: String="",
     name: String="",
     email: String? = null,
     phone: String? = null,
     var profileImageUrl: String? = null,
     var notificationsEnabled: Boolean = true,
-    var notificationCount: Int = 0,
+    var notifications: ArrayList<String> = arrayListOf(), // holds a array of notification Id's
     role: Role = Role.ENTRANT,
-    // do we
-    var lotteries: ArrayList<Lottery>?=null,
 ){
     /**
      * the users name trimmed

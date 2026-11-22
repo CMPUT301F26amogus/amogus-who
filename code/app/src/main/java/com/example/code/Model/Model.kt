@@ -1,17 +1,9 @@
+package com.example.code.Model
+
+import View
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.firestore
-import com.example.code.Model.Campsite
-import com.example.code.Model.DateRange
-import com.example.code.Model.EntryStatus
-import com.example.code.Model.Lottery
-import com.example.code.Model.LotteryStatus
-import com.example.code.Model.Notification
-import com.example.code.Model.Reservation
-import com.example.code.Model.ReservationStatus
-import com.example.code.Model.Role
-import com.example.code.Model.User
-import com.example.code.Model.WaitlistEntry
 import kotlin.String
 
 interface ModelUpdater<V>{
@@ -19,11 +11,6 @@ interface ModelUpdater<V>{
     fun removeView(v:V)
 }
 
-//TODO: our classes are kinda a big jumble of shit:
-    // 1. User and Campsite classes both hold lottery objects, meaning if lottery is changed for the user or the campsite
-        // one of them will have an unchanged version, I think we should be querying for the lottery object, instead of storing it in the class
-        // theres probably more of this TODO: check for more of this, whatever this is
-    // 2. We need to run the app and make sure this database implementation works, or else we go back to the old implementation using a "EVERYTHING" collection
 
 
 open class Model: ModelUpdater<View>{

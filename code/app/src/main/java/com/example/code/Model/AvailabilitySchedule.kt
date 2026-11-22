@@ -14,14 +14,14 @@ import java.util.TreeSet
  * @throws IllegalArgumentException if a saved booking isnt open or overlaps another one
  */
 class AvailabilitySchedule(
-    openNights: Collection<LocalDate> = emptyList(),
+    openNights: Collection<String> = emptyList(),
     bookings: Collection<DateRange> = emptyList(),
 ) {
     private val _openNights = TreeSet<LocalDate>()
     private val _bookings = mutableListOf<DateRange>()
 
     init {
-        _openNights.addAll(openNights)
+        //_openNights.addAll(openNights)
         bookings.forEach { book(it) }
     }
 

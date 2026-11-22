@@ -33,7 +33,7 @@ class Lottery(
     bookingStart: String = "",
     bookingEnd: String = "",
     var numWinners: Int = 0,
-    var waitlistCapacity: Int? = null,
+    var waitlistCapacity: Int = 0,
     var status: LotteryStatus = LotteryStatus.OPEN,
     waitlist: List<WaitlistEntry> = emptyList(),
 ) {

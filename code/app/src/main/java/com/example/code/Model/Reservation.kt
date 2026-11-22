@@ -15,19 +15,20 @@ import java.time.LocalDate
  * @property entrantId device id of the entrant who booked it
  * @property checkIn check in date like 2027-05-01
  * @property checkOut check out date like 2027-05-03
- * @property guests how many people are coming
+ * @property numGuests how many people are coming
  * @property status if its active past cancelled or rejected
  * @property rulesAccepted true once the entrant agreed to the campsite rules
  */
 class Reservation(
     var id: String = "",
-    val campsite: Campsite? = null,
-    var entrant: User? = null,
+    var campsiteId: String = "",
+    var entrantId: String = "",
     var checkIn: String = "",
     var checkOut: String = "",
-    var guests: Int = 0,
-    var status: ReservationStatus = ReservationStatus.ACTIVE,
+    var numGuests: Int = 1, // at least one guest
+    var status: ReservationStatus = ReservationStatus.ACTIVE, // is this default?
     var rulesAccepted: Boolean = false,
+    var lotteryId: String = ""
 ) {
     /**
      * the check in and check out dates as a range
