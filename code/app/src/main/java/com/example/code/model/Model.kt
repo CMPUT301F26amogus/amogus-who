@@ -24,7 +24,14 @@ open class Model: ModelUpdater<View>{
     // excluded so firestore doesnt try to save the database inside every object
     @get:Exclude
     val db by lazy { Firebase.firestore }
-    val dataRef = db.collection("EVERYTHING")
+
+    /*
+    * The following line was modified by Gemini 3.6 Flash
+    * View previews were not rendering in Android Studio, so I clicked "Fix with AI"
+    * 2026-11-22
+    * */
+    @get:Exclude
+    val dataRef by lazy { db.collection("EVERYTHING") }
 
     // device id of whoever is using the app
     // named currentDeviceId so it doesnt clash with User.deviceId
