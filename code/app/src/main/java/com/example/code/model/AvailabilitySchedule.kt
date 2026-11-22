@@ -13,7 +13,7 @@ import java.util.TreeSet
  * @param bookings saved bookings to load and they get the same checks as [book]
  * @throws IllegalArgumentException if a saved booking isnt open or overlaps another one
  */
-class AvailabilitySchedule(
+class   AvailabilitySchedule(
     openNights: Collection<LocalDate> = emptyList(),
     bookings: Collection<DateRange> = emptyList(),
 ) {

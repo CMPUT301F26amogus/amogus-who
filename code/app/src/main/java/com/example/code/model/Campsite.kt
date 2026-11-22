@@ -23,7 +23,7 @@ package com.example.code.model
 class Campsite(
     var id: String="site-1",
     val ownerId: String="owner-1",
-    name: String="Campsite",
+    name: String= "Campsite",
     var location: String="",
     var lottery: Lottery = Lottery(),
     maxOccupancy: Int=1,
