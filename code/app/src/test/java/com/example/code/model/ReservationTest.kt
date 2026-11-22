@@ -2,6 +2,7 @@ package com.example.code.model
 
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertFalse
+import org.junit.Assert.assertTrue
 import org.junit.Test
 import java.time.LocalDate
 import java.time.format.DateTimeParseException
@@ -67,5 +68,54 @@ class ReservationTest {
     @Test(expected = IllegalArgumentException::class)
     fun stay_sameDayCheckOutThrows() {
         reservation(checkIn = "2027-05-01", checkOut = "2027-05-01").stay()
+    }
+
+    // US 02.07.01 owner sees active reservations
+
+    @Test
+    fun isActive_upcomingStayIsActive() {
+        assertTrue(reservation().isActive(today = LocalDate.of(2027, 4, 1)))
+    }
+
+    @Test
+    fun isActive_stayHappeningNowIsActive() {
+        assertTrue(reservation().isActive(today = LocalDate.of(2027, 5, 2)))
+    }
+
+    // they havent checked out yet on check out day
+    @Test
+    fun isActive_checkOutDayIsActive() {
+        assertTrue(reservation().isActive(today = LocalDate.of(2027, 5, 3)))
+    }
+
+    @Test
+    fun isActive_finishedStayIsNotActive() {
+        assertFalse(reservation().isActive(today = LocalDate.of(2027, 5, 4)))
+    }
+
+    @Test
+    fun isActive_cancelledIsNotActive() {
+        val r = reservation()
+        r.status = ReservationStatus.CANCELLED
+        assertFalse(r.isActive(today = LocalDate.of(2027, 4, 1)))
+    }
+
+    @Test
+    fun isActive_rejectedIsNotActive() {
+        val r = reservation()
+        r.status = ReservationStatus.REJECTED
+        assertFalse(r.isActive(today = LocalDate.of(2027, 4, 1)))
+    }
+
+    @Test
+    fun isActive_pastIsNotActive() {
+        val r = reservation()
+        r.status = ReservationStatus.PAST
+        assertFalse(r.isActive(today = LocalDate.of(2027, 4, 1)))
+    }
+
+    @Test(expected = DateTimeParseException::class)
+    fun isActive_blankCheckOutThrows() {
+        Reservation().isActive()
     }
 }
