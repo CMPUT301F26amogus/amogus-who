@@ -195,6 +195,8 @@ class CampsiteDetailsView(M:Model): View() {
 @Composable
 fun CampsiteDetailsPreview() {
     val v = CampsiteDetailsView(Model())
+    // the preview has no real campsite selected, so give it a sample one
+    v.campsiteToView = Campsite(name = "Sample Campsite", location = "Edmonton, AB")
     CodeTheme {
         (
             v.ShowScreen(rememberNavController())
