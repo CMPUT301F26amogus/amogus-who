@@ -39,6 +39,8 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.testTag
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +64,10 @@ class ProfileSettingsView(M: Model): View() {
         var email by remember { mutableStateOf("") }
         var number by remember { mutableStateOf("") }
         var notifications by remember { mutableStateOf(true) }
+        // start the toggle at the user's saved setting
+        LaunchedEffect(Unit) {
+            controller.loadNotificationsEnabled { notifications = it }
+        }
         Column() {
             Row() {
                 Header(
@@ -97,7 +103,6 @@ class ProfileSettingsView(M: Model): View() {
                     Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
                         enabled = true,
                         onClick = {
-                            notifications = false
                             controller.updateProfile(name = name, email = email, number = number)
                         }), color = textColor)
                 }
@@ -117,7 +122,6 @@ class ProfileSettingsView(M: Model): View() {
                     Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
                         enabled = true,
                         onClick = {
-                            notifications = false
                             controller.updateProfile(name = name, email = email, number = number)
                         }), color = textColor)
                 }
@@ -137,7 +141,6 @@ class ProfileSettingsView(M: Model): View() {
                     Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
                         enabled = true,
                         onClick = {
-                            notifications = false
                             controller.updateProfile(name = name, email = email, number = number)
                         }), color = textColor)
                 }
@@ -149,11 +152,11 @@ class ProfileSettingsView(M: Model): View() {
                     if (notifications) {
                         Text(
                             "No",
-                            modifier = Modifier.clickable(
+                            modifier = Modifier.testTag("notificationsNo").clickable(
                                 enabled = true,
                                 onClick = {
                                     notifications = false
-                                    controller.updateProfile(name = name, email = email, number = number)
+                                    controller.setNotificationsEnabled(false)
                                 })
                             ,
                             color = textColor,
@@ -193,11 +196,11 @@ class ProfileSettingsView(M: Model): View() {
                             fontSize = 25.sp)
                         Text(
                             "Yes",
-                            modifier = Modifier.clickable(
+                            modifier = Modifier.testTag("notificationsYes").clickable(
                                 enabled = true,
                                 onClick = {
                                     notifications = true
-                                    controller.updateProfile(name = name, email = email, number = number)
+                                    controller.setNotificationsEnabled(true)
                                 }),
                             color = textColor,
                             fontSize = 17.sp

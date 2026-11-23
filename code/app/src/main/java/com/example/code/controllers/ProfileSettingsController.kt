@@ -20,6 +20,33 @@ class ProfileSettingsController(
     }
 
     /**
+     * Loads whether the current user allows notifications (US 01.10.01).
+     *
+     * @param onResult called with true if notifications are on; not called if there's no user
+     */
+    public fun loadNotificationsEnabled(onResult: (Boolean) -> Unit) {
+        model.getUserObj { user ->
+            if (user != null) {
+                onResult(user.notificationsEnabled)
+            }
+        }
+    }
+
+    /**
+     * Turns notifications on or off for the current user and saves it (US 01.10.01).
+     *
+     * @param enabled false to opt out of notifications
+     */
+    public fun setNotificationsEnabled(enabled: Boolean) {
+        model.getUserObj { user ->
+            if (user != null) {
+                user.notificationsEnabled = enabled
+                model.setUserObj(user)
+            }
+        }
+    }
+
+    /**
      * Deletes the active users profile
      */
     public fun deleteProfile(){
