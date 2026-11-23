@@ -1,7 +1,6 @@
 package com.example.code
 
 import Model
-import View
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.material3.CircularProgressIndicator
@@ -17,24 +16,24 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
-import com.example.code.Model.Role
-import com.example.code.Model.User
-import com.example.code.Views.AddEditCampsite
-import com.example.code.Views.AdminHomeView
-import com.example.code.Views.CampsiteDetailsView
-import com.example.code.Views.CampsiteOwnerHomeView
-import com.example.code.Views.EntrantHomeView
-import com.example.code.Views.LotteriesView
-import com.example.code.Views.MapView
-import com.example.code.Views.NotificationsView
-import com.example.code.Views.OwnerCampsiteListView
-import com.example.code.Views.OwnerLotteriesView
-import com.example.code.Views.OwnerReservationsView
-import com.example.code.Views.ProfileSettingsView
-import com.example.code.Views.RegistrationView
-import com.example.code.Views.ReservationsView
-import com.example.code.Views.SearchResultsView
-import com.example.code.Views.SearchView
+import com.example.code.model.Role
+import com.example.code.model.User
+import com.example.code.views.AddEditCampsite
+import com.example.code.views.AdminHomeView
+import com.example.code.views.CampsiteDetailsView
+import com.example.code.views.CampsiteOwnerHomeView
+import com.example.code.views.EntrantHomeView
+import com.example.code.views.LotteriesView
+import com.example.code.views.MapView
+import com.example.code.views.NotificationsView
+import com.example.code.views.OwnerCampsiteListView
+import com.example.code.views.OwnerLotteriesView
+import com.example.code.views.OwnerReservationsView
+import com.example.code.views.ProfileSettingsView
+import com.example.code.views.RegistrationView
+import com.example.code.views.ReservationsView
+import com.example.code.views.SearchResultsView
+import com.example.code.views.SearchView
 
 /**
  * The names of every screen in the app.
