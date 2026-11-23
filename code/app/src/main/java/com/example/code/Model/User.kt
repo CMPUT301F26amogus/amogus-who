@@ -15,7 +15,7 @@ import Model
  * @param name shown on their profile and cant be blank
  * @param email optional and checked if given
  * @param phone optional and checked if given
- * @param roles starting roles and must not be empty
+ * @param role starting roles and must not be empty
  * @throws IllegalArgumentException if any field is invalid
  */
 open class User(

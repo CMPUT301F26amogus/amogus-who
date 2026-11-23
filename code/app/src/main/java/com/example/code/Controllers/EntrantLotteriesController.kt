@@ -29,15 +29,13 @@ class EntrantLotteriesController(
      * Sets the active site to view
      */
     public fun viewCampsite(cid: String, navController: NavController){
-        //set campsite to view
-        var tempCampsite: Campsite? = null
-        model.getCampsite(cid){
-            result ->
+        // getCampsite is async so the campsite is only here inside the callback,
+        // set it and navigate in there or the details screen opens with nothing
+        model.getCampsite(cid){ result ->
             if (result != null) {
-                tempCampsite = result
+                model.settTempCampsite(result) // why are we even using 2 t's in this model func, idk man
+                navController.navigate(Routes.CAMPSITE_DETAILS)
             }
         }
-        model.settTempCampsite(tempCampsite)
-        navController.navigate(Routes.CAMPSITE_DETAILS)
     }
 }
