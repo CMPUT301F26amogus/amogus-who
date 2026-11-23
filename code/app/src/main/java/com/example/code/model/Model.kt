@@ -51,8 +51,8 @@ open class Model: ModelUpdater<View>{
     private val imageRef by lazy { db.collection("images") }
 
     // Subcollections
-    // waitlist entries live under their lottery: lotteries/{lotId}/entrants/{entryId}
-    // the entry id is "{lotId}_{deviceId}" and the entry is a WaitlistEntry object
+    // waitlist entries live under their lottery: lotteries/{lotId}/entrants/{deviceId}
+    // entry is a WaitlistEntry object
     private fun waitlistRef(lotId: String) = lotteryRef.document(lotId).collection("entrants") // collection "entrants" will hold the waitlists for the entrants
     // availability lives under its campsite: campsites/{campId}/availability/{docId}
     // It could be better to make document for each date? that could be easier querying, but idk it'll bloat our database up
@@ -657,13 +657,12 @@ open class Model: ModelUpdater<View>{
      */
     fun leaveWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
         // update fails if the entry doesnt exist so that covers "never joined"
-        waitlistRef(lottery.id).document("${lottery.id}_$currentDeviceId")
-            .update("status", EntryStatus.DECLINED.name)
+        waitlistRef(lottery.id).document(currentDeviceId).delete()
+
             .addOnSuccessListener {
-                onResult(true) // Successfully updated database
+                onResult(true) //even if user isnt in lottery it will return true, but i dont think we need to implement this
                 notifyViews()
             }
-            .addOnFailureListener { onResult(false) }
     }
 
     /**
