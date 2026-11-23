@@ -32,8 +32,13 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -58,6 +63,7 @@ class CampsiteDetailsView(M:Model): View() {
         val footerTextColor = entrantFooterTextColor
         val footerbgColor = entrantFooterBackgroundColor
         val footerButtonColor = entrantFooterButtonColor
+        var lotteryMessage by remember { mutableStateOf<String?>(null) }
         Column() {
             Row() {
                 Header(
@@ -133,7 +139,8 @@ class CampsiteDetailsView(M:Model): View() {
                         }
                     }
                     Spacer(modifier = Modifier.width(5.dp))
-                    Row(modifier = Modifier.height(90.dp)){
+                    // tall enough for both lottery buttons plus the result message
+                    Row(modifier = Modifier.height(130.dp)){
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.width(250.dp).background(bgColor)) {
                             Spacer(modifier = Modifier.height(15.dp).background(bgColor).fillMaxWidth())
@@ -143,19 +150,30 @@ class CampsiteDetailsView(M:Model): View() {
                         }
                         Spacer(modifier = Modifier.width(5.dp))
                         Column(Modifier.width(200.dp).background(bgColor)) {
+                            // joining the lottery puts the entrant on its waitlist (US 01.02.01)
                             ElevatedButton(
-                                onClick = {controller.joinLottery(campsiteToView!!.lottery)},
+                                onClick = { controller.joinLottery(campsiteToView!!.lottery) { lotteryMessage = it } },
                                 colors = ButtonDefaults.buttonColors(containerColor = light),
-                                modifier = Modifier.width(140.dp),
+                                modifier = Modifier.width(140.dp).testTag("joinLotteryButton"),
                             ) {
                                 Text(text = "Join Lottery", color = Color(0xff40139a))
                             }
+                            // leaving takes the entrant off the waitlist (US 01.02.02)
                             ElevatedButton(
-                                onClick = {controller.leaveLottery(campsiteToView!!.lottery)},
+                                onClick = { controller.leaveLottery(campsiteToView!!.lottery) { lotteryMessage = it } },
                                 colors = ButtonDefaults.buttonColors(containerColor = light),
-                                modifier = Modifier.width(140.dp),
+                                modifier = Modifier.width(140.dp).testTag("leaveLotteryButton"),
                             ) {
-                                Text(text = "Join Waitlist", color = Color(0xff2a2828))
+                                Text(text = "Leave Lottery", color = Color(0xff2a2828))
+                            }
+                            // result of the last join or leave, e.g. "You joined the lottery"
+                            lotteryMessage?.let {
+                                Text(
+                                    text = it,
+                                    fontSize = 13.sp,
+                                    color = textColor,
+                                    modifier = Modifier.testTag("lotteryMessage"),
+                                )
                             }
                         }
                     }
