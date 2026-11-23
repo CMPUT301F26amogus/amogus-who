@@ -1,3 +1,4 @@
+
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentSnapshot
@@ -6,7 +7,7 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import kotlin.String
 
-import com.example.code.Model.*
+import com.example.code.model.*
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -21,6 +22,10 @@ interface ModelUpdater<V>{
 
 
 open class Model: ModelUpdater<View>{
+
+    // All the code below is refactored with Claude Sonnet 5.5
+    // Prompt: "Fix this, double tripple check, ask me if you nee help"
+    // 2026-11-23
 
     //region Properties and Firestore references
 
@@ -183,23 +188,23 @@ open class Model: ModelUpdater<View>{
      * Signs up entrant into the database
      * Create the entrant profile, with all their information.
      *
-     * @param deviceId device id of the user, also used as their document id
+     * the account is saved under [currentDeviceId]
+     *
      * @param name user's signUp name from view
      * @param phoneNumber user's phone number from the view
      * @param email user's email from the view
      * @param roleOf the starting role of the user
      */
     fun signUp(
-        deviceId: String,
         name: String,
         phoneNumber: String,
         email: String,
         roleOf: Role= Role.ENTRANT,
         onSuccess: () -> Unit,
     ) {
-        // deviceId has to be passed in so the saved user has it, User equality is based on it
-        val newUser = User(deviceId = deviceId, name = name, email = email, phone = phoneNumber, role = roleOf)
-        usersRef.document(deviceId).set(newUser)
+        // deviceId has to be set on the user so the saved user has it, User equality is based on it
+        val newUser = User(deviceId = currentDeviceId, name = name, email = email, phone = phoneNumber, role = roleOf)
+        usersRef.document(currentDeviceId).set(newUser)
             .addOnSuccessListener {
                 notifyViews()
                 onSuccess()
@@ -305,8 +310,13 @@ open class Model: ModelUpdater<View>{
             }
     }
 
-    fun getCampsiteByOwner(ownerId: String, onResult: (List<Campsite>) -> Unit) {
-        campsiteRef.whereEqualTo("ownerId", ownerId).get()
+    /**
+     * gets the campsites the current user owns
+     *
+     * @param onResult gets the campsites or an empty list if it failed
+     */
+    fun getCampsiteByOwner(onResult: (List<Campsite>) -> Unit) {
+        campsiteRef.whereEqualTo("ownerId", currentDeviceId).get()
             .addOnSuccessListener { documents ->
                 val campsites = documents.toObjects(Campsite::class.java)
                 onResult(campsites)
@@ -659,10 +669,10 @@ open class Model: ModelUpdater<View>{
     /**
      * gets the entrants still waiting on a lottery, for the owner
      *
-     * @param lotId id of the lottery
+     * @param lottery the lottery to get the waitlist of
      */
-    fun getWaitlist(lotId: String, onResult: (Result<List<WaitlistEntry>>) -> Unit) {
-        waitlistRef(lotId)
+    fun getWaitlist(lottery: Lottery, onResult: (Result<List<WaitlistEntry>>) -> Unit) {
+        waitlistRef(lottery.id)
             .whereEqualTo("status", EntryStatus.WAITING.name)
             .get()
             .addOnSuccessListener { documents ->
@@ -737,12 +747,10 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
-     * gets the status of every reservation an entrant has
-     *
-     * @param entrantId device id of the entrant
+     * gets the status of every reservation the current user has
      */
-    fun getReservationByUID(entrantId: String, onResult: (Result<List<ReservationStatus>>) -> Unit) {
-        reservationRef.whereEqualTo("entrantId", entrantId).get()
+    fun getReservationByUID(onResult: (Result<List<ReservationStatus>>) -> Unit) {
+        reservationRef.whereEqualTo("entrantId", currentDeviceId).get()
             .addOnSuccessListener { documents ->
                 val statuses = documents.documents.mapNotNull { doc ->
                     doc.getString("status")?.let { ReservationStatus.valueOf(it) }
@@ -757,13 +765,12 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
-     * gets an entrants reservations that are still active
+     * gets the current users reservations that are still active
      *
-     * @param entrantId device id of the entrant
      * @param onResult gets the reservations or an empty list if it failed
      */
-    fun getActiveReservations(entrantId: String, onResult: (List<Reservation>) -> Unit) {
-        reservationRef.whereEqualTo("entrantId", entrantId).whereEqualTo("status", "ACTIVE").get()
+    fun getActiveReservations(onResult: (List<Reservation>) -> Unit) {
+        reservationRef.whereEqualTo("entrantId", currentDeviceId).whereEqualTo("status", "ACTIVE").get()
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
                 onResult(reservations)
@@ -775,13 +782,12 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
-     * gets an entrants cancelled reservations for the reservations view
+     * gets the current users cancelled reservations for the reservations view
      *
-     * @param entrantId device id of the entrant
      * @param onResult gets the reservations or an empty list if it failed
      */
-    fun getCancelledReservations(entrantId: String, onResult: (List<Reservation>) -> Unit) {
-        reservationRef.whereEqualTo("entrantId", entrantId).whereEqualTo("status", "CANCELLED").get()
+    fun getCancelledReservations(onResult: (List<Reservation>) -> Unit) {
+        reservationRef.whereEqualTo("entrantId", currentDeviceId).whereEqualTo("status", "CANCELLED").get()
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
                 onResult(reservations)

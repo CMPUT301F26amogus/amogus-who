@@ -1,4 +1,4 @@
-package com.example.code.Model
+package com.example.code.model
 
 class Entrant: User() {
     /**

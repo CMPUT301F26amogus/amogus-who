@@ -1,7 +1,4 @@
-package com.example.code.Model
-
-import Model
-import java.time.LocalDate
+package com.example.code.model
 
 /**
  * a lottery an owner runs for one or more of their campsites

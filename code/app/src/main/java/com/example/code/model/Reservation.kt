@@ -1,7 +1,4 @@
-package com.example.code.Model
-
-import Model
-import java.time.LocalDate
+package com.example.code.model
 
 /**
  * a stay an entrant booked after winning a lottery

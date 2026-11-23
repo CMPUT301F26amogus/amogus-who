@@ -1,4 +1,4 @@
-package com.example.code.Model
+package com.example.code.model
 
 class Admin {
     fun removeCampsite(campsite: String): List<User> {
