@@ -30,14 +30,5 @@ class Reservation(
     var rulesAccepted: Boolean = false,
     var lotteryId: String = ""
 ) {
-    /**
-     * the check in and check out dates as a range
-     *
-     * its a function and not a property so firestore doesnt try to save it
-     *
-     * @return the stay from [checkIn] to [checkOut]
-     * @throws java.time.format.DateTimeParseException if a date isnt like 2027-05-01
-     * @throws IllegalArgumentException if check out isnt after check in
-     */
-    fun stay(): DateRange = DateRange(LocalDate.parse(checkIn), LocalDate.parse(checkOut))
+
 }
