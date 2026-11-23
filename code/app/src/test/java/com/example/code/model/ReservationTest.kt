@@ -118,4 +118,108 @@ class ReservationTest {
     fun isActive_blankCheckOutThrows() {
         Reservation().isActive()
     }
+
+    // US 02.07.02 owner sees past reservations
+
+    @Test
+    fun isPast_upcomingStayIsNotPast() {
+        assertFalse(reservation().isPast(today = LocalDate.of(2027, 4, 1)))
+    }
+
+    @Test
+    fun isPast_stayHappeningNowIsNotPast() {
+        assertFalse(reservation().isPast(today = LocalDate.of(2027, 5, 2)))
+    }
+
+    // they havent checked out yet on check out day
+    @Test
+    fun isPast_checkOutDayIsNotPast() {
+        assertFalse(reservation().isPast(today = LocalDate.of(2027, 5, 3)))
+    }
+
+    @Test
+    fun isPast_dayAfterCheckOutIsPast() {
+        assertTrue(reservation().isPast(today = LocalDate.of(2027, 5, 4)))
+    }
+
+    @Test
+    fun isPast_markedPastIsPastEvenBeforeCheckOut() {
+        val r = reservation()
+        r.status = ReservationStatus.PAST
+        assertTrue(r.isPast(today = LocalDate.of(2027, 4, 1)))
+    }
+
+    // past ones dont need real dates since the status already says its over
+    @Test
+    fun isPast_markedPastWithBlankDatesIsPast() {
+        val r = Reservation()
+        r.status = ReservationStatus.PAST
+        assertTrue(r.isPast())
+    }
+
+    @Test
+    fun isPast_cancelledFinishedStayIsNotPast() {
+        val r = reservation()
+        r.status = ReservationStatus.CANCELLED
+        assertFalse(r.isPast(today = LocalDate.of(2027, 5, 4)))
+    }
+
+    @Test
+    fun isPast_rejectedFinishedStayIsNotPast() {
+        val r = reservation()
+        r.status = ReservationStatus.REJECTED
+        assertFalse(r.isPast(today = LocalDate.of(2027, 5, 4)))
+    }
+
+    // an active stay is always exactly one of active or past
+    @Test
+    fun isPast_neverOverlapsIsActive() {
+        val r = reservation()
+        for (day in 1..10) {
+            val today = LocalDate.of(2027, 4, 28).plusDays(day.toLong())
+            assertTrue(r.isActive(today) != r.isPast(today))
+        }
+    }
+
+    @Test(expected = DateTimeParseException::class)
+    fun isPast_activeWithBlankCheckOutThrows() {
+        Reservation().isPast()
+    }
+
+    // US 02.07.03 owner sees cancelled reservations
+
+    @Test
+    fun isCancelled_newReservationIsNotCancelled() {
+        assertFalse(reservation().isCancelled())
+    }
+
+    @Test
+    fun isCancelled_cancelledIsCancelled() {
+        val r = reservation()
+        r.status = ReservationStatus.CANCELLED
+        assertTrue(r.isCancelled())
+    }
+
+    // the owner rejecting it is a different list
+    @Test
+    fun isCancelled_rejectedIsNotCancelled() {
+        val r = reservation()
+        r.status = ReservationStatus.REJECTED
+        assertFalse(r.isCancelled())
+    }
+
+    @Test
+    fun isCancelled_pastIsNotCancelled() {
+        val r = reservation()
+        r.status = ReservationStatus.PAST
+        assertFalse(r.isCancelled())
+    }
+
+    // doesnt look at dates so bad ones dont matter
+    @Test
+    fun isCancelled_blankDatesDontThrow() {
+        val r = Reservation()
+        r.status = ReservationStatus.CANCELLED
+        assertTrue(r.isCancelled())
+    }
 }

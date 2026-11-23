@@ -1,5 +1,6 @@
 package com.example.code.model
 
+import com.google.firebase.firestore.Exclude
 import java.time.LocalDate
 
 /**
@@ -85,4 +86,31 @@ class Reservation(
      */
     fun isActive(today: LocalDate = LocalDate.now()): Boolean =
         status == ReservationStatus.ACTIVE && !LocalDate.parse(checkOut).isBefore(today)
+
+    /**
+     * checks if this stay is over
+     *
+     * nothing sets PAST yet so an active stay counts once check out has passed
+     * so every active or past reservation is exactly one of [isActive] or isPast
+     *
+     * @param today the date to compare against so tests can pick one
+     * @return true if its marked past or its active and check out was before today
+     * @throws java.time.format.DateTimeParseException if its active and check out isnt like 2027-05-03
+     */
+    fun isPast(today: LocalDate = LocalDate.now()): Boolean = when (status) {
+        ReservationStatus.PAST -> true
+        ReservationStatus.ACTIVE -> LocalDate.parse(checkOut).isBefore(today)
+        else -> false
+    }
+
+    /**
+     * checks if the entrant cancelled this stay
+     *
+     * rejected ones dont count since the owner did that not the entrant
+     * excluded so firestore doesnt save it as a cancelled field
+     *
+     * @return true if its cancelled
+     */
+    @Exclude
+    fun isCancelled(): Boolean = status == ReservationStatus.CANCELLED
 }

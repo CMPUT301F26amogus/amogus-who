@@ -654,6 +654,50 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
+     * gets the past reservations at all of an owners campsites
+     *
+     * loads active ones too since nothing sets PAST yet so finished stays are still saved as active
+     *
+     * @param ownerId device id of the campsite owner
+     * @param onResult gets the reservations newest first or an empty list if it failed
+     */
+    fun getOwnerPastReservations(ownerId: String, onResult: (List<Reservation>) -> Unit) {
+        reservationRef.whereEqualTo("campsite.ownerId", ownerId)
+            .whereIn("status", listOf(ReservationStatus.ACTIVE.name, ReservationStatus.PAST.name)).get()
+            .addOnSuccessListener { documents ->
+                val today = LocalDate.now()
+                // skip any reservation saved with bad dates instead of crashing
+                val past = documents.toObjects(Reservation::class.java)
+                    .filter { runCatching { it.isPast(today) }.getOrDefault(false) }
+                    .sortedByDescending { it.checkIn }
+                onResult(past)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    /**
+     * gets the cancelled reservations at all of an owners campsites
+     *
+     * @param ownerId device id of the campsite owner
+     * @param onResult gets the reservations sorted by check in or an empty list if it failed
+     */
+    fun getOwnerCancelledReservations(ownerId: String, onResult: (List<Reservation>) -> Unit) {
+        reservationRef.whereEqualTo("campsite.ownerId", ownerId)
+            .whereEqualTo("status", ReservationStatus.CANCELLED.name).get()
+            .addOnSuccessListener { documents ->
+                val cancelled = documents.toObjects(Reservation::class.java)
+                    .filter { it.isCancelled() }
+                    .sortedBy { it.checkIn }
+                onResult(cancelled)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    /**
      * saves a lottery to the database eg after changing its periods
      *
      * @param lottery the lottery to save
