@@ -1,6 +1,7 @@
 package com.example.code
 
-import Model
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
 import android.annotation.SuppressLint
 import android.provider.Settings
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
@@ -29,7 +30,7 @@ class OwnerIntegrationTests {
         Settings.Secure.ANDROID_ID,
     )
 
-    private val userDoc by lazy { Model().dataRef.document(deviceId) }
+    private val userDoc by lazy { Firebase.firestore.collection("users").document(deviceId) }
 
     // blocks until firestore answers so the owner is saved before the app opens
     private fun <T> await(task: Task<T>): T = Tasks.await(task, 10, TimeUnit.SECONDS)

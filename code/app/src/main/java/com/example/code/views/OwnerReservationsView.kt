@@ -41,7 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.controllers.OwnerReservationsController
-import com.example.code.model.Reservation
+import com.example.code.model.OwnerReservation
 
 /**
  *  OwnerReservationsView: the view for the owner to see reservations at their campsites
@@ -51,12 +51,12 @@ class OwnerReservationsView(model : Model) : View() {
 
     val controller by lazy { OwnerReservationsController(model = model) }
     // one list per tab so each tab only shows its own reservations
-    val activeReservations = mutableStateListOf<Reservation>()
-    val pastReservations = mutableStateListOf<Reservation>()
-    val cancelledReservations = mutableStateListOf<Reservation>()
+    val activeReservations = mutableStateListOf<OwnerReservation>()
+    val pastReservations = mutableStateListOf<OwnerReservation>()
+    val cancelledReservations = mutableStateListOf<OwnerReservation>()
 
     // swaps a lists contents with what firestore sent back
-    private fun replaceWith(list: MutableList<Reservation>, result: List<Reservation>) {
+    private fun replaceWith(list: MutableList<OwnerReservation>, result: List<OwnerReservation>) {
         list.clear()
         list.addAll(result)
     }
@@ -263,14 +263,16 @@ class OwnerReservationsView(model : Model) : View() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(reservations.size) { reservation ->
+                val row = reservations[reservation]
                 CampsiteCard(
-                    name = reservations[reservation].entrant?.name ?: "<unnamed camper>",
-                    campsiteName = reservations[reservation].campsite?.name ?: "<unnamed campsite>",
-                    location = reservations[reservation].campsite?.location ?: "<unnamed location>",
-                    startDate = reservations[reservation].checkIn,
-                    endDate = reservations[reservation].checkOut,
-                    guests = reservations[reservation].guests,
-                    nights = 0,     // TODO: figure out how to math endDate - startDate
+                    name = row.entrantName.ifBlank { "<unnamed camper>" },
+                    campsiteName = row.campsite?.name ?: "<unnamed campsite>",
+                    location = row.campsite?.location ?: "<unnamed location>",
+                    startDate = row.reservation.checkIn,
+                    endDate = row.reservation.checkOut,
+                    guests = row.reservation.numGuests,
+                    // 0 if the dates were saved wrong instead of crashing
+                    nights = runCatching { row.reservation.nights().toInt() }.getOrDefault(0),
                     state = state,
                 )
                 if (reservation != reservations.size - 1) {

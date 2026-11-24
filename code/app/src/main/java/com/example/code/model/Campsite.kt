@@ -116,7 +116,7 @@ class Campsite(
      * @param stay the dates being booked
      * @return [pricePerNight] times the number of nights
      */
-    fun priceFor(stay: DateRange): Double = pricePerNight * stay.nights
+    //fun priceFor(stay: DateRange): Double = pricePerNight * stay.nights
 
     /**
      * adds a rating and rating again replaces the old one

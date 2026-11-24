@@ -7,33 +7,43 @@ class CampsiteDetailsController(
     private val model : Model
 ) {
     /**
-     * Joins a lottery for the active user and site
+     * Puts the current user on the lottery's waitlist (US 01.02.01).
+     *
+     * @param lottery the campsite's lottery
+     * @param onResult called with a message to show the user
      */
-    public fun joinLottery(lottery: Lottery){
-        model.joinWaitlist(
-            lottery = lottery,
-        ){}
-    }
-    /**
-     * Leaves a lottery for the active user and site
-     */
-    public fun leaveLottery(lottery: Lottery){
-        model.leaveWaitlist(
-            lottery = lottery,
-        ){}
-    }
-
-    /**
-     * Joins the waitlist for an active user and site
-     */
-    public fun joinWaitlist(){
-
+    public fun joinLottery(lottery: Lottery, onResult: (String) -> Unit) {
+        if (lottery.id.isBlank()) {
+            onResult("This campsite has no lottery yet")
+            return
+        }
+        model.joinWaitlist(lottery = lottery) { joined ->
+            if (joined) {
+                onResult("You joined the lottery")
+            } else {
+                // the model doesn't say why, it's one of these
+                onResult("Couldn't join. You may already be in it, or it's full.")
+            }
+        }
     }
 
     /**
-     * Leaves the waitlist for an active user and site
+     * Takes the current user off the lottery's waitlist (US 01.02.02).
+     *
+     * @param lottery the campsite's lottery
+     * @param onResult called with a message to show the user
      */
-    public fun leaveWaitlist(){
-
+    public fun leaveLottery(lottery: Lottery, onResult: (String) -> Unit) {
+        if (lottery.id.isBlank()) {
+            onResult("This campsite has no lottery yet")
+            return
+        }
+        model.leaveWaitlist(lottery = lottery) { left ->
+            if (left) {
+                onResult("You left the lottery")
+            } else {
+                onResult("Couldn't leave the lottery")
+            }
+        }
     }
 }

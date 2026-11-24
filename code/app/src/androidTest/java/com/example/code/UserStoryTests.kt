@@ -45,26 +45,22 @@ class UserStoryTests {
         Settings.Secure.ANDROID_ID,
     )
 
-    private val userDoc by lazy { Model().dataRef.document(deviceId) }
+    private val usersRef by lazy { Firebase.firestore.collection("users") }
+    private val campsiteRef by lazy { Firebase.firestore.collection("campsites") }
     private val reservationRef by lazy { Firebase.firestore.collection("reservations") }
+    private val userDoc by lazy { usersRef.document(deviceId) }
 
     // made up names so the test can find its own card and not someone elses
+    // ids end in the device id so two people running the tests dont share data
     private val testCampsite = Campsite(
-        id = "us-02-07-01-site",
+        id = "us-02-07-site-$deviceId",
         ownerId = deviceId,
         name = "US 02.07.01 Campsite",
         location = "Test Park",
     )
-    private val testEntrant = User(deviceId = "us-02-07-01-entrant", name = "US 02.07.01 Entrant")
-    private val activeReservation = Reservation(
-        id = "us-02-07-01-active-$deviceId",
-        campsite = testCampsite,
-        entrant = testEntrant,
-        checkIn = LocalDate.now().plusDays(7).toString(),
-        checkOut = LocalDate.now().plusDays(9).toString(),
-        guests = 2,
-        status = ReservationStatus.ACTIVE,
-    )
+
+    // reservations only keep the entrants id so each entrant gets a user doc for the name on the card
+    private val seededEntrants = mutableListOf<User>()
 
     // makes a reservation at the test campsite with its own entrant so each card can be found by name
     private fun seededReservation(
@@ -72,16 +68,27 @@ class UserStoryTests {
         entrantName: String,
         checkInDaysFromNow: Long,
         status: ReservationStatus,
-    ) = Reservation(
-        id = "us-02-07-$key-$deviceId",
-        campsite = testCampsite,
-        entrant = User(deviceId = "us-02-07-$key-entrant", name = entrantName),
-        checkIn = LocalDate.now().plusDays(checkInDaysFromNow).toString(),
-        checkOut = LocalDate.now().plusDays(checkInDaysFromNow + 2).toString(),
-        guests = 2,
-        status = status,
-    )
+    ): Reservation {
+        val entrant = User(deviceId = "us-02-07-$key-entrant-$deviceId", name = entrantName)
+        seededEntrants.add(entrant)
+        return Reservation(
+            id = "us-02-07-$key-$deviceId",
+            campsiteId = testCampsite.id,
+            entrantId = entrant.deviceId,
+            checkIn = LocalDate.now().plusDays(checkInDaysFromNow).toString(),
+            checkOut = LocalDate.now().plusDays(checkInDaysFromNow + 2).toString(),
+            numGuests = 2,
+            status = status,
+        )
+    }
 
+    // the name on this reservations card
+    private fun nameOf(reservation: Reservation): String =
+        seededEntrants.first { it.deviceId == reservation.entrantId }.name
+
+    private val activeReservation =
+        seededReservation("active", "US 02.07.01 Entrant", 7, ReservationStatus.ACTIVE)
+    private val testEntrant = seededEntrants.single { it.deviceId == activeReservation.entrantId }
     // still saved as active since nothing sets PAST but check out was a week ago
     private val finishedReservation =
         seededReservation("finished", "US 02.07.02 Finished Entrant", -10, ReservationStatus.ACTIVE)
@@ -120,11 +127,15 @@ class UserStoryTests {
             // keep whatever profile this device had so we can put it back after
             savedUser = await(userDoc.get()).data
             await(userDoc.set(User(deviceId = deviceId, name = "US 02.07 Owner", role = Role.OWNER)))
+            await(campsiteRef.document(testCampsite.id).set(testCampsite))
+            seededEntrants.forEach { await(usersRef.document(it.deviceId).set(it)) }
             seededReservations.forEach { await(reservationRef.document(it.id).set(it)) }
         }
 
         override fun after() {
             seededReservations.forEach { await(reservationRef.document(it.id).delete()) }
+            seededEntrants.forEach { await(usersRef.document(it.deviceId).delete()) }
+            await(campsiteRef.document(testCampsite.id).delete())
             val user = savedUser
             if (user != null) await(userDoc.set(user)) else await(userDoc.delete())
         }
@@ -240,14 +251,14 @@ class UserStoryTests {
         openOwnerReservations("Past")
 
         // finished stays show up whether theyre still saved as active or marked past
-        waitForText(finishedReservation.entrant!!.name)
-        assertShown(finishedReservation.entrant!!.name)
-        assertShown(markedPastReservation.entrant!!.name)
+        waitForText(nameOf(finishedReservation))
+        assertShown(nameOf(finishedReservation))
+        assertShown(nameOf(markedPastReservation))
 
         // active cancelled and rejected ones dont belong here
         assertNotShown(testEntrant.name)
-        assertNotShown(cancelledReservation.entrant!!.name)
-        assertNotShown(rejectedReservation.entrant!!.name)
+        assertNotShown(nameOf(cancelledReservation))
+        assertNotShown(nameOf(rejectedReservation))
 
         // past ones are over so theres nothing to accept or reject
         composeTestRule
@@ -262,8 +273,8 @@ class UserStoryTests {
             .onNodeWithText("Active")
             .performClick()
         waitForText(testEntrant.name)
-        assertNotShown(finishedReservation.entrant!!.name)
-        assertNotShown(markedPastReservation.entrant!!.name)
+        assertNotShown(nameOf(finishedReservation))
+        assertNotShown(nameOf(markedPastReservation))
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.03", 2026-11-23
@@ -274,13 +285,13 @@ class UserStoryTests {
     fun us_02_07_03_owner_views_cancelled_reservations() {
         openOwnerReservations("Cancelled")
 
-        waitForText(cancelledReservation.entrant!!.name)
-        assertShown(cancelledReservation.entrant!!.name)
+        waitForText(nameOf(cancelledReservation))
+        assertShown(nameOf(cancelledReservation))
 
         // rejected is the owner turning someone down not a cancellation
-        assertNotShown(rejectedReservation.entrant!!.name)
+        assertNotShown(nameOf(rejectedReservation))
         assertNotShown(testEntrant.name)
-        assertNotShown(finishedReservation.entrant!!.name)
+        assertNotShown(nameOf(finishedReservation))
 
         // cancelled ones are already done so theres nothing to accept or reject
         composeTestRule
@@ -304,16 +315,16 @@ class UserStoryTests {
         waitForStatus(toDeclineReservation.id, ReservationStatus.CANCELLED)
 
         openOwnerReservations("Cancelled")
-        waitForText(toCancelReservation.entrant!!.name)
-        assertShown(toCancelReservation.entrant!!.name)
-        assertShown(toDeclineReservation.entrant!!.name)
+        waitForText(nameOf(toCancelReservation))
+        assertShown(nameOf(toCancelReservation))
+        assertShown(nameOf(toDeclineReservation))
 
         // and theyre gone from active
         composeTestRule
             .onNodeWithText("Active")
             .performClick()
         waitForText(testEntrant.name)
-        assertNotShown(toCancelReservation.entrant!!.name)
-        assertNotShown(toDeclineReservation.entrant!!.name)
+        assertNotShown(nameOf(toCancelReservation))
+        assertNotShown(nameOf(toDeclineReservation))
     }
 }

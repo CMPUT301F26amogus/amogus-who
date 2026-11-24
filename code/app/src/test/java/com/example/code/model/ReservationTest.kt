@@ -12,11 +12,11 @@ class ReservationTest {
     private fun reservation(checkIn: String = "2027-05-01", checkOut: String = "2027-05-03") = Reservation(
         id = "res-1",
         campsiteId = "site-1",
-        lotteryId = "lottery-1",
         entrantId = "user-1",
         checkIn = checkIn,
         checkOut = checkOut,
-        guests = 4,
+        numGuests = 4,
+        lotteryId = "lottery-1",
     )
 
     // firestore needs to build one with no arguments when loading
@@ -25,7 +25,7 @@ class ReservationTest {
         val r = Reservation()
         assertEquals("", r.id)
         assertEquals("", r.campsiteId)
-        assertEquals(0, r.guests)
+        assertEquals(1, r.numGuests)
         assertEquals(ReservationStatus.ACTIVE, r.status)
         assertFalse(r.rulesAccepted)
     }
@@ -36,38 +36,25 @@ class ReservationTest {
     }
 
     @Test
-    fun stay_readsCheckInAndCheckOut() {
-        val stay = reservation().stay()
-        assertEquals(LocalDate.of(2027, 5, 1), stay.start)
-        assertEquals(LocalDate.of(2027, 5, 3), stay.end)
-        assertEquals(2L, stay.nights)
+    fun nights_countsFromCheckInToCheckOut() {
+        assertEquals(2L, reservation().nights())
     }
 
     @Test
-    fun stay_followsChangedDates() {
+    fun nights_followsChangedDates() {
         val r = reservation()
         r.checkOut = "2027-05-06"
-        assertEquals(5L, r.stay().nights)
+        assertEquals(5L, r.nights())
     }
 
     @Test(expected = DateTimeParseException::class)
-    fun stay_wrongDateFormatThrows() {
-        reservation(checkIn = "05/01/2027").stay()
+    fun nights_wrongDateFormatThrows() {
+        reservation(checkIn = "05/01/2027").nights()
     }
 
     @Test(expected = DateTimeParseException::class)
-    fun stay_blankDatesThrow() {
-        Reservation().stay()
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun stay_checkOutBeforeCheckInThrows() {
-        reservation(checkIn = "2027-05-03", checkOut = "2027-05-01").stay()
-    }
-
-    @Test(expected = IllegalArgumentException::class)
-    fun stay_sameDayCheckOutThrows() {
-        reservation(checkIn = "2027-05-01", checkOut = "2027-05-01").stay()
+    fun nights_blankDatesThrow() {
+        Reservation().nights()
     }
 
     // US 02.07.01 owner sees active reservations

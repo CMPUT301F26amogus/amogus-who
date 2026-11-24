@@ -12,9 +12,11 @@ import java.time.temporal.ChronoUnit
  * @property start first date in the range or the check in date
  * @property end date right after the range ends or the check out date
  * @throws IllegalArgumentException if end isnt after start
+ *
+ * start and end have defaults so firestore can load saved bookings
  */
-data class DateRange(val start: LocalDate, val end: LocalDate) {
-
+data class DateRange(val start: String = "", val end: String = "") {
+/*
     init {
         require(end.isAfter(start)) { "End date ($end) must be after start date ($start)" }
     }
@@ -57,4 +59,9 @@ data class DateRange(val start: LocalDate, val end: LocalDate) {
      */
     fun dates(): List<LocalDate> =
         (0 until nights).map { start.plusDays(it) }
+
+ */
+
+
+    //the above code used to work for LocalDate, in UML we agreeed to change it to String cause of firebase.
 }

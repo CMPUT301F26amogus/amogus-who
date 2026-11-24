@@ -40,12 +40,12 @@ class LotteriesView(M: Model): View() {
     var currentLotteries = emptyList<Lottery>()
     var previousLotteries = emptyList<Reservation>()
     override fun update(model: Model) {
-        model.getCancelledReservations(entrantId = model.currentDeviceId){
+        model.getCancelledReservations(){
             result -> previousLotteries = result
         }
-        model.getWaitlist(){
-                result -> currentLotteries = result
-        }
+        //model.getWaitlist(){ TODO: this function call is stopping the program from running, how do you expect to get waitlist without passing in the lotteryId?
+        //        result -> currentLotteries = result
+        //}
     }
     val controller = EntrantLotteriesController(M)
     val bgColor = secondaryGreenColor
@@ -95,13 +95,14 @@ class LotteriesView(M: Model): View() {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
+                        /*TODO: this doesnt work anymore
                         itemsIndexed(previousLotteries) { index, reservation ->
                             PreviousCampsiteLotteryRow(
                                 lottery = reservation.campsite!!.lottery,
                                 campsite = reservation.campsite,
                                 navController = navController
                             )
-                        }
+                        }*/
                     }
                 }
             }
