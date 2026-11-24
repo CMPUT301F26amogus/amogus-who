@@ -95,7 +95,7 @@ class UserStoryTests {
     private val rejectedReservation =
         seededReservation("rejected", "US 02.07.03 Rejected Entrant", 7, ReservationStatus.REJECTED)
     // start active and get cancelled or declined by the entrant during the test
-    // check in after the 02.07.01 one so it stays first under upcoming
+    // check in after the 02.07.01 one so it stays first under active
     private val toCancelReservation =
         seededReservation("to-cancel", "US 02.07.03 Cancels Entrant", 8, ReservationStatus.ACTIVE)
     private val toDeclineReservation =
@@ -206,9 +206,9 @@ class UserStoryTests {
             .onNodeWithTag("Header: Reservations")
             .assertExists()
 
-        // active reservations are the ones under upcoming
+        // active reservations are the ones under the active tab
         composeTestRule
-            .onNodeWithText("Upcoming")
+            .onNodeWithText("Active")
             .performClick()
 
         // the seeded reservation shows up with its entrant and campsite
@@ -244,7 +244,7 @@ class UserStoryTests {
         assertShown(finishedReservation.entrant!!.name)
         assertShown(markedPastReservation.entrant!!.name)
 
-        // upcoming cancelled and rejected ones dont belong here
+        // active cancelled and rejected ones dont belong here
         assertNotShown(testEntrant.name)
         assertNotShown(cancelledReservation.entrant!!.name)
         assertNotShown(rejectedReservation.entrant!!.name)
@@ -257,9 +257,9 @@ class UserStoryTests {
             .onNodeWithText("Accept")
             .assertDoesNotExist()
 
-        // and a finished stay isnt still listed as upcoming
+        // and a finished stay isnt still listed as active
         composeTestRule
-            .onNodeWithText("Upcoming")
+            .onNodeWithText("Active")
             .performClick()
         waitForText(testEntrant.name)
         assertNotShown(finishedReservation.entrant!!.name)
@@ -308,9 +308,9 @@ class UserStoryTests {
         assertShown(toCancelReservation.entrant!!.name)
         assertShown(toDeclineReservation.entrant!!.name)
 
-        // and theyre gone from upcoming
+        // and theyre gone from active
         composeTestRule
-            .onNodeWithText("Upcoming")
+            .onNodeWithText("Active")
             .performClick()
         waitForText(testEntrant.name)
         assertNotShown(toCancelReservation.entrant!!.name)

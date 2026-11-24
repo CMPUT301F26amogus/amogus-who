@@ -32,7 +32,7 @@ class Campsite(
     var rulesAndPolicy: String = "",
     var imageUrl: String? = null,
     amenities: List<String> = emptyList(),
-    tags: Set<String> = emptySet(),
+    tags: List<String> = emptyList(),
     val availability: AvailabilitySchedule = AvailabilitySchedule(),
     ratings: Collection<Rating> = emptyList(),
 ) {
@@ -75,8 +75,12 @@ class Campsite(
     var amenities: List<String> = cleanAmenities(amenities)
         set(value) { field = cleanAmenities(value) }
 
-    /** tags in lowercase so filtering by tag doesnt care about caps */
-    var tags: Set<String> = cleanTags(tags)
+    /**
+     * tags in lowercase with blanks and duplicates dropped so filtering by tag doesnt care about caps
+     *
+     * a list not a set since firestore cant save or load sets
+     */
+    var tags: List<String> = cleanTags(tags)
         set(value) { field = cleanTags(value) }
 
     // one rating per user keyed by user id
@@ -162,7 +166,7 @@ class Campsite(
         fun cleanAmenities(amenities: List<String>): List<String> =
             amenities.map { it.trim() }.filter { it.isNotEmpty() }.distinct()
 
-        fun cleanTags(tags: Set<String>): Set<String> =
-            tags.map { it.trim().lowercase() }.filter { it.isNotEmpty() }.toSet()
+        fun cleanTags(tags: List<String>): List<String> =
+            tags.map { it.trim().lowercase() }.filter { it.isNotEmpty() }.distinct()
     }
 }

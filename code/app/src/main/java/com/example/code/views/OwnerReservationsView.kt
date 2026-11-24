@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -49,7 +50,16 @@ import com.example.code.model.Reservation
 class OwnerReservationsView(model : Model) : View() {
 
     val controller by lazy { OwnerReservationsController(model = model) }
-    val reservations = mutableStateListOf<Reservation>()
+    // one list per tab so each tab only shows its own reservations
+    val activeReservations = mutableStateListOf<Reservation>()
+    val pastReservations = mutableStateListOf<Reservation>()
+    val cancelledReservations = mutableStateListOf<Reservation>()
+
+    // swaps a lists contents with what firestore sent back
+    private fun replaceWith(list: MutableList<Reservation>, result: List<Reservation>) {
+        list.clear()
+        list.addAll(result)
+    }
 
     // This component is to be used in each reservation card
     // It stores the dates of a given reservation
@@ -241,6 +251,11 @@ class OwnerReservationsView(model : Model) : View() {
     // This component is sandwiched between the tab manager and footer
     @Composable
     private fun Content(state: String) {
+        val reservations = when (state) {
+            "Active" -> activeReservations
+            "Past" -> pastReservations
+            else -> cancelledReservations
+        }
 
         LazyColumn(
             modifier = Modifier
@@ -285,6 +300,12 @@ class OwnerReservationsView(model : Model) : View() {
                 Tab(name = "Past", color = pastColor, option = {state = "Past"}),
                 Tab(name = "Cancelled", color = cancelledColor, option = {state = "Cancelled"}),
             )
+        }
+        // load every tab when the screen opens since nothing calls update for reservations
+        LaunchedEffect(Unit) {
+            controller.onActiveReservations { replaceWith(activeReservations, it) }
+            controller.onPastReservations { replaceWith(pastReservations, it) }
+            controller.onCancelledReservations { replaceWith(cancelledReservations, it) }
         }
         Column(
             modifier = Modifier.fillMaxSize(),

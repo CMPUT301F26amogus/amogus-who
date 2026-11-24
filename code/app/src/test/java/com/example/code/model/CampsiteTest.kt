@@ -100,8 +100,8 @@ class CampsiteTest {
     @Test
     fun tags_areLowercasedTrimmedAndDeduped() {
         val c = campsite()
-        c.tags = setOf(" Lakeside", "lakeside", "PET FRIENDLY", "")
-        assertEquals(setOf("lakeside", "pet friendly"), c.tags)
+        c.tags = listOf(" Lakeside", "lakeside", "PET FRIENDLY", "")
+        assertEquals(listOf("lakeside", "pet friendly"), c.tags)
     }
 
     @Test
