@@ -84,7 +84,13 @@ open class Model: ModelUpdater<View>{
         views.remove(v)
     }
 
-    /** tells every registered view this model changed so they can redraw */
+    /**
+     * tells every registered view this model changed so they can redraw
+     *
+     * only call this from functions that CHANGE data, never from get functions.
+     * some views fetch data in update(), so a get function that calls this starts
+     * an endless loop of queries that crashes the app (out of memory)
+     */
     protected fun notifyViews(){
         views.forEach { it.update(this) }
     }
@@ -308,7 +314,6 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { document ->
                 val campsite = document.toObject(Campsite::class.java)
                 onResult(campsite)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(null)
@@ -325,11 +330,9 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsites = documents.toObjects(Campsite::class.java)
                 onResult(campsites)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
-                notifyViews()
             }
     }
 
@@ -338,11 +341,9 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsites = documents.toObjects(Campsite::class.java)
                 onResult(campsites)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
-                notifyViews()
             }
     }
 
@@ -352,11 +353,9 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsite = documents.toObjects(Campsite::class.java)
                 onResult(campsite)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
-                notifyViews()
             }
     }
 
@@ -365,7 +364,6 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsite = documents.toObjects(Campsite::class.java)
                 onResult(campsite[0].id)
-                notifyViews()
             }
     }
     //endregion
@@ -432,14 +430,12 @@ open class Model: ModelUpdater<View>{
 
                 if (lotteryIds.isEmpty()) {
                     onResult(emptyList())
-                    notifyViews()
                     return@addOnSuccessListener
                 }
 
                 Tasks.whenAllSuccess<DocumentSnapshot>(lotteryIds.map { lotteryRef.document(it).get() })
                     .addOnSuccessListener { snapshots ->
                         onResult(snapshots.mapNotNull { it.toObject(Lottery::class.java) })
-                        notifyViews()
                     }
                     .addOnFailureListener { onResult(emptyList()) }
             }
@@ -457,7 +453,6 @@ open class Model: ModelUpdater<View>{
             if (snapshot.exists()) {
                 val campsite = snapshot.toObject(Campsite::class.java)
                 onResult(campsite?.lottery)
-                notifyViews()
             } else {
                 onResult(null)
             }
@@ -683,7 +678,6 @@ open class Model: ModelUpdater<View>{
                 val entries = documents.toObjects(WaitlistEntry::class.java)
 
                 onResult(Result.success(entries))
-                notifyViews()
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
@@ -761,7 +755,6 @@ open class Model: ModelUpdater<View>{
                 }
 
                 onResult(Result.success(statuses))
-                notifyViews()
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
@@ -778,7 +771,6 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
                 onResult(reservations)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
@@ -795,7 +787,6 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val reservations = documents.toObjects(Reservation::class.java)
                 onResult(reservations)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
@@ -820,7 +811,6 @@ open class Model: ModelUpdater<View>{
                     .map { DateRange(it.checkIn, it.checkOut) }
                     .sortedBy { it.start }
                 onResult(stays)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
@@ -874,7 +864,6 @@ open class Model: ModelUpdater<View>{
                     .sortedBy { it.timestamp }
                 notificationCount = notifications.size
                 onResult(notifications)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
