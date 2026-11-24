@@ -3,7 +3,9 @@ import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Exclude
+import com.google.firebase.firestore.FieldPath
 import com.google.firebase.firestore.FieldValue
+import com.google.firebase.firestore.QuerySnapshot
 import com.google.firebase.firestore.firestore
 import kotlin.String
 
@@ -717,16 +719,51 @@ open class Model: ModelUpdater<View>{
     /**
      * removes user from reservation, this allows user to decline reservation
      *
+     * saved as cancelled since rejected is only for the owner rejecting the entrant
+     *
      *@param reservation the Reservation object that the user is declining
      */
-    fun rejectReservation(reservation: Reservation){
+    fun declineReservation(reservation: Reservation){
         // I'm assuming that view people will pass in the reservation, because the user needs to click
         // on the reservation that they will cancel from a list of reservations.
 
         reservationRef.document(reservation.id).update(
-            "status", ReservationStatus.REJECTED
+            "status", ReservationStatus.CANCELLED.name
         )
         notifyViews()
+    }
+
+    /**
+     * lets an owner reject a booked reservation eg when a fire closes the campsite
+     *
+     * only active reservations can be rejected
+     *
+     * @param reservationId id of the reservation to reject
+     * @param onResult success once its rejected or a failure if it wasnt found wasnt active or saving failed
+     */
+    fun rejectReservation(reservationId: String, onResult: (Result<Unit>) -> Unit) {
+        val reservationDoc = reservationRef.document(reservationId)
+
+        reservationDoc.get()
+            .addOnSuccessListener { document ->
+                if (!document.exists()) {
+                    onResult(Result.failure(Exception("Reservation not found")))
+                    return@addOnSuccessListener
+                }
+
+                if (document.getString("status") != ReservationStatus.ACTIVE.name) {
+                    onResult(Result.failure(Exception("Reservation is not active")))
+                    return@addOnSuccessListener
+                }
+
+                reservationDoc.update("status", ReservationStatus.REJECTED.name)
+                    .addOnSuccessListener {
+                        onResult(Result.success(Unit))
+                        notifyViews()
+                    }
+                    .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
+            }
+            .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
     }
 
     // models need a way to cancel reservation, I guess a canceled reservation is
@@ -815,6 +852,96 @@ open class Model: ModelUpdater<View>{
             .addOnFailureListener {
                 onResult(emptyList())
             }
+    }
+
+    /**
+     * gets every reservation at an owners campsites with the campsite and entrant name for each card
+     *
+     * reservations only keep ids so this finds the owners campsites first then their reservations
+     * then the entrants names
+     * whereIn takes at most 30 values so the ids are asked for in chunks
+     *
+     * @param ownerId device id of the campsite owner
+     * @param onResult gets the reservations or an empty list if anything failed
+     */
+    private fun getOwnerReservations(ownerId: String, onResult: (List<OwnerReservation>) -> Unit) {
+        campsiteRef.whereEqualTo("ownerId", ownerId).get()
+            .addOnSuccessListener { campDocs ->
+                val campsites = campDocs.toObjects(Campsite::class.java).associateBy { it.id }
+                if (campsites.isEmpty()) {
+                    onResult(emptyList())
+                    return@addOnSuccessListener
+                }
+
+                val reservationQueries = campsites.keys.chunked(30).map {
+                    reservationRef.whereIn("campsiteId", it).get()
+                }
+                Tasks.whenAllSuccess<QuerySnapshot>(reservationQueries)
+                    .addOnSuccessListener { reservationSnaps ->
+                        val reservations = reservationSnaps.flatMap { it.toObjects(Reservation::class.java) }
+                        val entrantIds = reservations.map { it.entrantId }.filter { it.isNotBlank() }.distinct()
+
+                        // user docs are keyed by device id so look them up by document id
+                        val userQueries = entrantIds.chunked(30).map {
+                            usersRef.whereIn(FieldPath.documentId(), it).get()
+                        }
+                        Tasks.whenAllSuccess<QuerySnapshot>(userQueries)
+                            .addOnSuccessListener { userSnaps ->
+                                val names = userSnaps.flatMap { it.documents }
+                                    .associate { it.id to (it.getString("name") ?: "") }
+                                onResult(reservations.map {
+                                    OwnerReservation(it, campsites[it.campsiteId], names[it.entrantId] ?: "")
+                                })
+                            }
+                            .addOnFailureListener { onResult(emptyList()) }
+                    }
+                    .addOnFailureListener { onResult(emptyList()) }
+            }
+            .addOnFailureListener { onResult(emptyList()) }
+    }
+
+    /**
+     * gets the active reservations at all of an owners campsites
+     *
+     * @param ownerId device id of the campsite owner
+     * @param onResult gets the reservations sorted by check in or an empty list if it failed
+     */
+    fun getOwnerActiveReservations(ownerId: String, onResult: (List<OwnerReservation>) -> Unit) {
+        getOwnerReservations(ownerId) { all ->
+            val today = LocalDate.now()
+            // skip any reservation saved with bad dates instead of crashing
+            onResult(all.filter { runCatching { it.reservation.isActive(today) }.getOrDefault(false) }
+                .sortedBy { it.reservation.checkIn })
+        }
+    }
+
+    /**
+     * gets the past reservations at all of an owners campsites
+     *
+     * nothing sets PAST yet so finished stays still saved as active count too
+     *
+     * @param ownerId device id of the campsite owner
+     * @param onResult gets the reservations newest first or an empty list if it failed
+     */
+    fun getOwnerPastReservations(ownerId: String, onResult: (List<OwnerReservation>) -> Unit) {
+        getOwnerReservations(ownerId) { all ->
+            val today = LocalDate.now()
+            // skip any reservation saved with bad dates instead of crashing
+            onResult(all.filter { runCatching { it.reservation.isPast(today) }.getOrDefault(false) }
+                .sortedByDescending { it.reservation.checkIn })
+        }
+    }
+
+    /**
+     * gets the cancelled reservations at all of an owners campsites
+     *
+     * @param ownerId device id of the campsite owner
+     * @param onResult gets the reservations sorted by check in or an empty list if it failed
+     */
+    fun getOwnerCancelledReservations(ownerId: String, onResult: (List<OwnerReservation>) -> Unit) {
+        getOwnerReservations(ownerId) { all ->
+            onResult(all.filter { it.reservation.isCancelled() }.sortedBy { it.reservation.checkIn })
+        }
     }
     //endregion
 
