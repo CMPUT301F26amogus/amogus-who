@@ -472,7 +472,7 @@ open class Model: ModelUpdater<View>{
                     return@addOnSuccessListener
                 }
 
-                val status = document.getString("reservationStatus")
+                val status = document.getString("status")
 
                 if (status != ReservationStatus.ACTIVE.name) {
                     onResult(Result.failure(Exception("Reservation is not pending")))
@@ -480,7 +480,7 @@ open class Model: ModelUpdater<View>{
                 }
 
                 reservationDoc.update(
-                    "reservationStatus", ReservationStatus.REJECTED.name
+                    "status", ReservationStatus.REJECTED.name
                 )
                     .addOnSuccessListener { onResult(Result.success(Unit)) }
                     .addOnFailureListener { exception ->
@@ -823,9 +823,10 @@ open class Model: ModelUpdater<View>{
         // entrants should be able to decline a lottery win, that is we change the reservation status
         // I'm assuming that view people will pass in the reservation, because the user needs to click
         // on the reservation that they will cancel from a list of reservations.
+        // saved as cancelled since rejected is only for the owner rejecting the entrant
 
-        dataRef.document(reservation.id).update(
-            "status", ReservationStatus.REJECTED
+        reservationRef.document(reservation.id).update(
+            "status", ReservationStatus.CANCELLED.name
         )
     }
 
@@ -838,8 +839,8 @@ open class Model: ModelUpdater<View>{
      * @param reservation The reservation object
      */
     fun cancelReservation(reservation: com.example.code.model.Reservation){
-        dataRef.document(reservation.id).update(
-            "status", ReservationStatus.CANCELLED
+        reservationRef.document(reservation.id).update(
+            "status", ReservationStatus.CANCELLED.name
         )
     }
 
