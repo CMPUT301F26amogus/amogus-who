@@ -138,8 +138,8 @@ open class Model: ModelUpdater<View>{
      * Always check for null, if this is null then user doesnt exist.
      * Otherwise this returns user as an object
      */
-    fun getUserObj( onResult: (User?) -> Unit) {
-        usersRef.document(currentDeviceId).get()
+    fun getUserObj(deviceId: String = currentDeviceId, onResult: (User?) -> Unit) {
+        usersRef.document(deviceId).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
                     val user = snapshot.toObject(User::class.java)
@@ -220,7 +220,7 @@ open class Model: ModelUpdater<View>{
      *      if returns user, then view is homepage
      */
     fun signIn(onResult: (User?) -> Unit){
-        getUserObj(onResult)
+        getUserObj{user -> onResult(user)}
     }
 
     /**
@@ -596,7 +596,7 @@ open class Model: ModelUpdater<View>{
      * @param onResult Callback returning true if joined successfully, false if full, already joined, or failed
      */
     fun joinWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
-        val entryId = "${lottery.id}_$currentDeviceId"
+        val entryId = currentDeviceId
         val entryDoc = waitlistRef(lottery.id).document(entryId)
 
         lotteryRef.document(lottery.id).get()
@@ -831,18 +831,18 @@ open class Model: ModelUpdater<View>{
      * saves it in the notifications collection and adds its id to the users notifications list
      * does nothing if the user turned notifications off
      *
-     * @param notification The notification message
+     * @param content The notification message
      */
-    fun notifyUser(notification: String) {
+    fun notifyUser(content: String, userId: String) {
         // getUserObj is async so everything that needs the user has to happen inside the callback
-        getUserObj { user ->
+        getUserObj(userId) { user ->
             if (user == null || !user.notificationsEnabled) return@getUserObj
 
             val doc = notificationRef.document()
             val newNotification = Notification(
                 id = doc.id,
                 entrantId = currentDeviceId,
-                content = notification,
+                content = content,
                 // format YYYY-MM-DDTHH:MM:SS, truncated so the seconds always show
                 timestamp = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                     .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
