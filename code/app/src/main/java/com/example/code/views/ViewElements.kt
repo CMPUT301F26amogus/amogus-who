@@ -4,19 +4,26 @@ import android.R
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
+import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
@@ -27,6 +34,8 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.PurpleGrey40
@@ -56,7 +65,7 @@ interface Element {
  * Draw is readily available to accept overrides for each different element of the card, whilst
  * maintaining the format!
  * */
-abstract class ViewCards(
+abstract class ViewCard(
     val title: String,
 //    val subtitle: String? = null,
 //    val quickDetails: List<QuickDetail>? = null,
@@ -80,6 +89,7 @@ abstract class ViewCards(
             verticalArrangement = Arrangement.spacedBy(5.dp)
         ) {
             HeaderRow()
+            Spacer(Modifier.padding(vertical = 4.dp))
             QuickDetailsRow()
             ActionButtonRow()
         }
@@ -91,7 +101,7 @@ abstract class ViewCards(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 8.dp, end = 8.dp, top = 10.dp),
+                .padding(start = 12.dp, end = 12.dp, top = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(10.dp),
         ) {
@@ -104,6 +114,9 @@ abstract class ViewCards(
                 /**subtitle*/
                 DrawSubtitle()
             }
+            Spacer(
+                modifier = Modifier.weight(1f)
+            )
             DrawTopRightIcon()
         }
     }
@@ -146,10 +159,11 @@ abstract class ViewCards(
 
     /**Default function for drawing the Tittle in format*/
     @Composable
-    protected fun DrawTitle() {
+    protected open fun DrawTitle() {
         Text(
             text = title,
             fontSize = 24.sp,
+            fontWeight = FontWeight(5),
             textAlign = TextAlign.Start,
             modifier = Modifier.testTag("title")
         )
@@ -157,20 +171,137 @@ abstract class ViewCards(
 
     /**Hook for optional subtitle*/
     @Composable
-    protected fun DrawSubtitle() {}
+    protected open fun DrawSubtitle() {}
 
     /**Hook for optional button in the top right (like for rating or lottery status)*/
     @Composable
-    protected fun DrawTopRightIcon() {}
+    protected open fun DrawTopRightIcon() {}
 
     /**Hook for optional quick details in the card*/
     @Composable
-    protected fun DrawQuickDetails() {}
+    protected open fun DrawQuickDetails() {}
 
     /**Hook for card action buttons*/
     @Composable
-    protected fun DrawActionButtons() {}
+    protected open fun DrawActionButtons() {}
 }
+
+open class CampsiteCard(
+    title: String,
+    val subtitle: String,
+    val maxOccupants: String,
+    val address: String,
+    val rating: String,
+    val onDetail: () -> Unit,
+    colourPrimary: Color,
+    colourSecondary: Color,
+    val colourTitleText: Color,
+    val colorActionText: Color,
+    tag: String
+) : ViewCard(
+    title = title,
+    colourPrimary = colourPrimary,
+    colourSecondary = colourSecondary,
+    tag = tag
+) {
+    @Composable
+    override fun DrawTitle() {
+        Text(
+            text = title,
+            fontSize = 24.sp,
+            fontWeight = FontWeight.Bold,
+            color = colourTitleText,
+            textAlign = TextAlign.Start,
+            modifier = Modifier
+                .testTag("Title")
+        )
+    }
+
+    @Composable
+    override fun DrawSubtitle() {
+        Text(
+            text = subtitle,
+            fontSize = 15.sp,
+            color = colourTitleText,
+            textAlign = TextAlign.Start,
+            modifier = Modifier
+                .testTag("Subtitle")
+        )
+    }
+
+    @Composable
+    override fun DrawQuickDetails() {
+        QuickDetail(
+            text = "Max Occupants: $maxOccupants",
+            color = colourSecondary,
+            tag = "maxOccupantsDetail"
+        ).Draw()
+        QuickDetail(
+            text = "Address: $address",
+            color = colourSecondary,
+            tag = "addressDetail"
+        ).Draw()
+    }
+
+    @Composable
+    override fun DrawActionButtons() {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 12.dp),
+            horizontalArrangement = Arrangement.End
+        ) {
+            ActionButton(
+                onPress = onDetail,
+                fillColour = colourSecondary,
+                textColor = colorActionText,
+                label = "> Details",
+                tag = "detailsButton"
+            ).Draw()
+        }
+    }
+
+    @Composable
+    override fun DrawTopRightIcon() {
+        ExtendedFloatingActionButton(
+            modifier = Modifier
+                .height(35.dp)
+                .testTag("rating"),
+            onClick = { /* Not a button in practice */ },
+            shape = CircleShape,
+            containerColor = Color(0xfff7f2fa),
+            contentColor = Color(0xFF6750A4),
+            icon = {
+                Icon(
+                    imageVector = Icons.Outlined.Star,
+                    contentDescription = "Star",
+                )
+            },
+            text = { Text(rating) }
+        )
+    }
+
+}
+//
+//class OwnerCampsiteCard(
+//    title: String,
+//    val subtitle: String? = null,
+////    val quickDetails: List<QuickDetail>? = null,
+//    val onEdit : () -> Unit,
+//    val onDetails : () -> Unit,
+//    colourPrimary: Color = PurpleGrey40,
+//    colourSecondary: Color = Purple80,
+//    tag: String
+//): ViewCard(
+//    title = title,
+//    colourPrimary = colourPrimary,
+//    colourSecondary = colourSecondary,
+//    tag = tag
+//) {
+//
+//}
+
+
 
 /**ActionButton
  *
@@ -180,11 +311,13 @@ abstract class ViewCards(
  *
  * @param onPress       the action performed when the button is pressed
  * @param fillColour    liken to the 'Fill' field in figma, it is the colour of the button's background
+ * @param textColor     the color of the button's text, the default value is the default text value
  * @param label         the text displayed in the button
  * @param tag           the testTag of the button*/
 open class ActionButton(
     val onPress: () -> Unit,
     val fillColour: Color? = null,
+    val textColor: Color = Color.Unspecified,
     val label: String,
     val tag: String
 ): Element {
@@ -205,7 +338,10 @@ open class ActionButton(
                     .testTag(tag),
             ){
                 Row() {
-                    Text(label)
+                    Text(
+                        text =label,
+                        color = textColor
+                    )
                 }
             }
         }
@@ -288,16 +424,21 @@ class DeleteButton(
  * @param text      The string to be printed as text
  * @param tag       The testTag of the text
  * */
-abstract class QuickDetail(
+open class QuickDetail(
     val text: String,
+    val color: Color,
     val tag: String
 ): Element{
     @Composable
     override fun Draw(){
         Row(
-            horizontalArrangement = Arrangement.Start,
+            horizontalArrangement = Arrangement.spacedBy(10.dp),
             verticalAlignment = Alignment.CenterVertically,
-            modifier = Modifier.padding(start = 12.dp, end = 24.dp)
+            modifier = Modifier
+                .background(
+                    color = color,
+                    shape = RoundedCornerShape(8.dp)
+                )
         ){
             Contents()
         }
@@ -311,9 +452,11 @@ abstract class QuickDetail(
     fun Contents() {
         Text(
             text = text,
-            fontSize = 24.sp,
+            fontSize = 12.sp,
             textAlign = TextAlign.Start,
-            modifier = Modifier.testTag(tag)
+            modifier = Modifier
+                .padding(start = 8.dp, end = 24.dp)
+                .testTag(tag)
         )
     }
 }
