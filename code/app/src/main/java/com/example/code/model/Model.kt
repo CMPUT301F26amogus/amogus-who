@@ -51,7 +51,7 @@ open class Model: ModelUpdater<View>{
     private val imageRef by lazy { db.collection("images") }
 
     // Subcollections
-    // waitlist entries live under their lottery: lotteries/{lotId}/entrants/{deviceId}
+    // waitlist entries live under their lottery: lotteries/{lotId}/entrants/{lotId}_{deviceId}
     // entry is a WaitlistEntry object
     private fun waitlistRef(lotId: String) = lotteryRef.document(lotId).collection("entrants") // collection "entrants" will hold the waitlists for the entrants
     // availability lives under its campsite: campsites/{campId}/availability/{docId}
@@ -658,16 +658,16 @@ open class Model: ModelUpdater<View>{
      * leaves the waitlist of the lottery
      *
      * @param lottery Lottery that the entrant wants to leave waitlist from
-     * @param onResult true if the entry was updated, false if they were never on it or it failed
+     * @param onResult true if the entry was deleted, false if it failed
      */
     fun leaveWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
-        // update fails if the entry doesnt exist so that covers "never joined"
-        waitlistRef(lottery.id).document(currentDeviceId).delete()
-
+        // same id joinWaitlist saves the entry under, so we delete the right one
+        waitlistRef(lottery.id).document("${lottery.id}_$currentDeviceId").delete()
             .addOnSuccessListener {
                 onResult(true) //even if user isnt in lottery it will return true, but i dont think we need to implement this
                 notifyViews()
             }
+            .addOnFailureListener { onResult(false) }
     }
 
     /**
