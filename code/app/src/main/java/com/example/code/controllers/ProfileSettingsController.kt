@@ -9,17 +9,15 @@ class ProfileSettingsController(
     /**
      * Updates the active user's profile
      */
-    public fun updateProfile(name: String, email: String, number: String){
-//        var tempuser: User = User()
-//        model.getUserObj { user ->
-//            if (user != null) {
-//                tempuser = user
-//            }
-//        }
-        // I changed the update profile method to not expect User obj, so tempUser isnt needed anymore
-        // if this somehow breaks this code just lmk and I'll change it back
-        // -- Hui Yan
-        model.updateProfile( name = name, email = email, phoneNumber = number)
+    fun updateProfile(name: String, email: String, number: String) {
+        try {
+            model.updateProfile(name = name, email = email, phoneNumber = number)
+            // Optional: tell the View the update started/succeeded
+        } catch (e: IllegalArgumentException) {
+            // e.message holds the specific validation error from Model
+            // (e.g., blank name, invalid phone number, or invalid email)
+            print(e.message ?: "Invalid profile input")
+        }
     }
 
     /**

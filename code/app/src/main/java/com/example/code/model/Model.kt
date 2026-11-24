@@ -175,6 +175,11 @@ open class Model: ModelUpdater<View>{
      * @param phoneNumber user's phone number from the view
      * @param email user's email from the view
      * @param roleOf the starting role of the user
+     *
+     *
+     *  @throws IllegalArgumentException if name is blank
+     *  @throws IllegalArgumentException if it doesnt look like a phone number
+     *  @throws IllegalArgumentException if it doesnt look like an email
      */
     fun signUp(
         name: String,
