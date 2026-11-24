@@ -186,6 +186,23 @@ abstract class ViewCard(
     protected open fun DrawActionButtons() {}
 }
 
+
+/**CampsiteCard
+ *
+ * Subclass of ViewCard, CampsiteCard simply draws a card for a campsite with only a details button,
+ * TODO: turn this into a general campsite card, then specialize for different views (including reserve for Lottery options and edit for owners etc.)
+ *
+ * @param title             the name of the campsite
+ * @param subtitle          the park / area of the campsite
+ * @param maxOccupants      the value for Max Occupants quick detail box
+ * @param address           the address of the campsite
+ * @param rating            the star rating of the campsite
+ * @param onDetail          what happens when the `> Details` button is pressed, place some controller call here
+ * @param colourPrimary     the colour of the card's main background (the background of the upper part of the card)
+ * @param colourSecondary   the colour of the card's secondary background (quick details boxes, and the lower part of the card, were action buttons are)
+ * @param colourTitleText   the text colour of the title and subtitle
+ * @param colourActionText  the text colour of the `> Details` actionButton
+ * */
 open class CampsiteCard(
     title: String,
     val subtitle: String,
@@ -196,7 +213,7 @@ open class CampsiteCard(
     colourPrimary: Color,
     colourSecondary: Color,
     val colourTitleText: Color,
-    val colorActionText: Color,
+    val colourActionText: Color,
     tag: String
 ) : ViewCard(
     title = title,
@@ -254,7 +271,7 @@ open class CampsiteCard(
             ActionButton(
                 onPress = onDetail,
                 fillColour = colourSecondary,
-                textColor = colorActionText,
+                textColor = colourActionText,
                 label = "> Details",
                 tag = "detailsButton"
             ).Draw()
