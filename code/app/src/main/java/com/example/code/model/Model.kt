@@ -37,7 +37,6 @@ open class Model: ModelUpdater<View>{
     @get:Exclude
     var currentDeviceId: String = "" // DeviceID of current user
     var campId: String = "" // Buffer for campsite ID
-    var notificationCount: Int = 0 // Tracker for total notification count
 
     // Top collections
     private val usersRef by lazy { db.collection("users") } // admin, owner, and entrants
@@ -149,24 +148,6 @@ open class Model: ModelUpdater<View>{
                     onResult(null)
                 }
             }
-    }
-
-    /**
-     * gets how many notifications the current user has and keeps it in [notificationCount]
-     *
-     * @param onResult gets the count or 0 if the user doesnt exist
-     */
-    fun setNotifCount(onResult: (Int) -> Unit){
-        usersRef.document(currentDeviceId).get().addOnSuccessListener { snapshot ->
-            if (snapshot.exists()) {
-                val user = snapshot.toObject(User::class.java)
-                // users now hold a list of notification ids instead of a count
-                notificationCount = user?.notifications?.size ?: 0
-                onResult(notificationCount)
-            } else {
-                onResult(0)
-            }
-        }
     }
 
 
@@ -851,7 +832,6 @@ open class Model: ModelUpdater<View>{
             doc.set(newNotification).addOnSuccessListener {
                 // arrayUnion adds just the id so we dont overwrite the whole user document
                 usersRef.document(currentDeviceId).update("notifications", FieldValue.arrayUnion(doc.id))
-                notificationCount = user.notifications.size + 1
                 notifyViews()
             }
         }
@@ -862,12 +842,11 @@ open class Model: ModelUpdater<View>{
      *
      * @param onResult gets the notifications oldest first or an empty list if it failed
      */
-    fun getNotifications(onResult: (List<Notification>) -> Unit){
-        notificationRef.whereEqualTo("entrantId", currentDeviceId).get()
+    fun getNotifications(userId: String=currentDeviceId, onResult: (List<Notification>) -> Unit){
+        notificationRef.whereEqualTo("entrantId", userId).get()
             .addOnSuccessListener { documents ->
                 val notifications = documents.toObjects(Notification::class.java)
                     .sortedBy { it.timestamp }
-                notificationCount = notifications.size
                 onResult(notifications)
                 notifyViews()
             }
