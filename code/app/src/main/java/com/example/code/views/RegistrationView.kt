@@ -22,6 +22,8 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import com.example.code.model.Role
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -41,6 +43,10 @@ class RegistrationView(M:Model): View() {
         }
         var email by remember {
             mutableStateOf("")
+        }
+        // what's wrong with the form, shown under the buttons
+        var errorMessage by remember {
+            mutableStateOf<String?>(null)
         }
         Column() {
             Row() {
@@ -102,7 +108,8 @@ class RegistrationView(M:Model): View() {
                     Row() {
                         ElevatedButton(
                             onClick = {
-                                if (controller.register(name = name, email = email, phoneNumber = number)) {
+                                errorMessage = controller.register(name = name, email = email, phoneNumber = number)
+                                if (errorMessage == null) {
                                     goToHome(navController, Routes.ENTRANT_HOME)
                                 }
                             },
@@ -114,7 +121,8 @@ class RegistrationView(M:Model): View() {
                         }
                         ElevatedButton(
                             onClick = {
-                                if (controller.register(name = name, email = email, phoneNumber = number)) {
+                                errorMessage = controller.register(name = name, email = email, phoneNumber = number, role = Role.OWNER)
+                                if (errorMessage == null) {
                                     goToHome(navController, Routes.OWNER_HOME)
                                 }
                             },
@@ -125,6 +133,13 @@ class RegistrationView(M:Model): View() {
                         }
                     }
                     Spacer(modifier = Modifier.height(20.dp))
+                    errorMessage?.let {
+                        Text(
+                            text = it,
+                            color = Color(0xffb3261e),
+                            modifier = Modifier.padding(horizontal = 20.dp).testTag("registerError"),
+                        )
+                    }
                 }
             }
             Row() {
