@@ -57,7 +57,7 @@ class SearchResultsView(M:Model): View() {
                     verticalArrangement = Arrangement.spacedBy(25.dp)
                 ) {
                     itemsIndexed(CampsiteList) { index, campsite ->
-                        CampsiteCard(
+                        EntrantCampsiteCard(
                             campsite.name,
                             campsite.location,
                             campsite.maxOccupancy.toString(),

@@ -203,13 +203,77 @@ abstract class ViewCard(
  * @param colourTitleText   the text colour of the title and subtitle
  * @param colourActionText  the text colour of the `> Details` actionButton
  * */
+open class EntrantCampsiteCard(
+    title: String,
+    subtitle: String,
+    val maxOccupants: String,
+    val address: String,
+    rating: String,
+    val onDetail: () -> Unit,
+    colourPrimary: Color,
+    colourSecondary: Color,
+    colourTitleText: Color,
+    colourActionText: Color,
+    tag: String
+) : CampsiteCard(
+    title = title,
+    subtitle = subtitle,
+    rating = rating,
+    quickDetails = List<QuickDetail>(
+        size = 2,
+        init = {
+            if (it == 0){
+                QuickDetail(
+                    text = "Max Occupants: $maxOccupants",
+                    color = colourSecondary,
+                    tag = "maxOccupantsDetail"
+                )
+            } else {
+                QuickDetail(
+                    text = "Address: $address",
+                    color = colourSecondary,
+                    tag = "addressDetail"
+                )
+            }
+        }
+    ),
+    actionButtons = List<ActionButton>(
+        size = 1, init = {
+            ActionButton(
+                onPress = onDetail,
+                label = "> Details",
+                tag = "DetailButton"
+            )
+        }
+    ),
+    colourPrimary = colourPrimary,
+    colourSecondary = colourSecondary,
+    colourTitleText = colourTitleText,
+    colourActionText = colourActionText,
+    tag = tag
+)
+
+/**CampsiteCard
+ *
+ * Subclass of ViewCard, CampsiteCard simply draws a card for a campsite with only a details button,
+ * TODO: turn this into a general campsite card, then specialize for different views (including reserve for Lottery options and edit for owners etc.)
+ *
+ * @param title             the name of the campsite, text with testTag "title"
+ * @param subtitle          the park / area of the campsite, text with testTag "Subtitle"
+ * @param rating            the star rating of the campsite, text with testTag "Rating"
+ * @param quickDetails      list of QuickDetails for the middle section of the card, drawn in a row, testTags are defined by QuickDetail (input)
+ * @param actionButtons     list of ActionButtons on the lower half of the card, drawn in a row, testTags are defined by ActionButton (input)
+ * @param colourPrimary     the colour of the card's main background (the background of the upper part of the card)
+ * @param colourSecondary   the colour of the card's secondary background (quick details boxes, and the lower part of the card, were action buttons are)
+ * @param colourTitleText   the text colour of the title and subtitle
+ * @param colourActionText  the text colour of the `> Details` actionButton
+ * */
 open class CampsiteCard(
     title: String,
     val subtitle: String,
-    val maxOccupants: String,
-    val address: String,
     val rating: String,
-    val onDetail: () -> Unit,
+    val quickDetails: List<QuickDetail>,
+    val actionButtons: List<ActionButton>,
     colourPrimary: Color,
     colourSecondary: Color,
     val colourTitleText: Color,
@@ -248,16 +312,9 @@ open class CampsiteCard(
 
     @Composable
     override fun DrawQuickDetails() {
-        QuickDetail(
-            text = "Max Occupants: $maxOccupants",
-            color = colourSecondary,
-            tag = "maxOccupantsDetail"
-        ).Draw()
-        QuickDetail(
-            text = "Address: $address",
-            color = colourSecondary,
-            tag = "addressDetail"
-        ).Draw()
+        for (detail in quickDetails){
+            detail.Draw()
+        }
     }
 
     @Composable
@@ -268,13 +325,9 @@ open class CampsiteCard(
                 .padding(horizontal = 12.dp),
             horizontalArrangement = Arrangement.End
         ) {
-            ActionButton(
-                onPress = onDetail,
-                fillColour = colourSecondary,
-                textColor = colourActionText,
-                label = "> Details",
-                tag = "detailsButton"
-            ).Draw()
+            for (button in actionButtons){
+                button.Draw()
+            }
         }
     }
 
@@ -282,8 +335,7 @@ open class CampsiteCard(
     override fun DrawTopRightIcon() {
         ExtendedFloatingActionButton(
             modifier = Modifier
-                .height(35.dp)
-                .testTag("rating"),
+                .height(35.dp),
             onClick = { /* Not a button in practice */ },
             shape = CircleShape,
             containerColor = Color(0xfff7f2fa),
@@ -294,7 +346,9 @@ open class CampsiteCard(
                     contentDescription = "Star",
                 )
             },
-            text = { Text(rating) }
+            text = { Text(
+                text = rating,
+                modifier = Modifier.testTag("Rating")) }
         )
     }
 
