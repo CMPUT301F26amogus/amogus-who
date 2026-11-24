@@ -610,7 +610,7 @@ open class Model: ModelUpdater<View>{
 
         lotteryRef.document(lottery.id).get()
             .addOnSuccessListener { snapshot ->
-                if (!snapshot.exists()) {
+                if (!snapshot.exists()) { // if lottery doesnt exist
                     onResult(false)
                     return@addOnSuccessListener
                 }
@@ -639,7 +639,6 @@ open class Model: ModelUpdater<View>{
                                 val newEntry = WaitlistEntry(
                                     id = entryId,
                                     lotteryId = lottery.id,
-                                    deviceId = currentDeviceId,
                                     status = EntryStatus.WAITING
                                 )
 
