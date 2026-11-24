@@ -191,7 +191,7 @@ class ProfileSettingsView(M: Model): View() {
                 }
                 Spacer(modifier = Modifier.height(10.dp))
                 ElevatedButton(
-                    onClick = {controller.deleteProfile()},
+                    onClick = {controller.deleteProfile(navController)},
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xfffad2cc)),
                     modifier = Modifier.width(140.dp),
                 ) {

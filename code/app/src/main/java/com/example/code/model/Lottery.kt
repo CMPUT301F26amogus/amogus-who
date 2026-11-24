@@ -24,7 +24,7 @@ package com.example.code.model
 class Lottery(
     val id: String = "",
     val ownerId: String = "",
-    var campsites: List<Campsite> = emptyList(),
+    var campsiteIds: List<String> = emptyList(),
     registrationStart: String = "",
     registrationEnd: String = "",
     bookingStart: String = "",
