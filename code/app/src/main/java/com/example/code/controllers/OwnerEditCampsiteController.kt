@@ -1,4 +1,4 @@
-package com.example.code.controllers
+package com.example.code.Controllers
 import Model
 import androidx.navigation.NavController
 import com.example.code.model.Campsite
@@ -10,6 +10,11 @@ class OwnerEditCampsiteController (
         navController.popBackStack()
     }
 
+    /**
+     * saves changes to a campsite
+     *
+     * @return true if saved, false if the name, occupancy or price isnt valid
+     */
     fun onEditCampsite(navController: NavController, old: Campsite, updates: Map<String, Any>, onResult: (Boolean, String?) -> Unit) {
         model.updateCampsite(
             old.id,
@@ -22,10 +27,6 @@ class OwnerEditCampsiteController (
         navController.navigate("owner_home")
     }
 
-    /* Gemini 3.6 Flash
-     * "There are build errors in RegistrationView.kt and OwnerEditCampsiteController.kt, can you find them and apply some fixes to them?"
-     * 2026-11-11
-     */
     fun onAddCampsite (navController: NavController,campName: String, location: String, desc: String, maxOcc: Int,
                        price: Double, onResult: (Boolean) -> Unit) {
         model.createCampsite(campName, location, desc, maxOcc, price) { success ->

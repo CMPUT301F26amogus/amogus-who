@@ -1,21 +1,3 @@
-/*
-* LotteriesView.kt : the view for details of a entrant's lottery information
-* Copyright (C) 2026 Cash Popik (cpopik@ualberta.ca)
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published
-* by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <https://www.gnu.org/licenses/>.
-* */
-
 package com.example.code.views
 
 import androidx.navigation.NavController
@@ -58,12 +40,12 @@ class LotteriesView(M: Model): View() {
     var currentLotteries = emptyList<Lottery>()
     var previousLotteries = emptyList<Reservation>()
     override fun update(model: Model) {
-        model.getCancelledReservations(entrantId = model.currentDeviceId){
+        model.getCancelledReservations(){
             result -> previousLotteries = result
         }
-        model.getWaitlist(){
-                result -> currentLotteries = result
-        }
+        //model.getWaitlist(){ TODO: this function call is stopping the program from running, how do you expect to get waitlist without passing in the lotteryId?
+        //        result -> currentLotteries = result
+        //}
     }
     val controller = EntrantLotteriesController(M)
     val bgColor = secondaryGreenColor
@@ -113,13 +95,14 @@ class LotteriesView(M: Model): View() {
                     LazyColumn(
                         modifier = Modifier.fillMaxSize()
                     ) {
+                        /*TODO: this doesnt work anymore
                         itemsIndexed(previousLotteries) { index, reservation ->
                             PreviousCampsiteLotteryRow(
                                 lottery = reservation.campsite!!.lottery,
                                 campsite = reservation.campsite,
                                 navController = navController
                             )
-                        }
+                        }*/
                     }
                 }
             }

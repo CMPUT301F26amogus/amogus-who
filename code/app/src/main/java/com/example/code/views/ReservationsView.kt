@@ -1,21 +1,3 @@
-/*
-* CampsiteDetailsView.kt : the view for details of active and past reservations
-* Copyright (C) 2026 Cash Popik (cpopik@ualberta.ca)
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published
-* by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <https://www.gnu.org/licenses/>.
-* */
-
 package com.example.code.views
 
 import Model
@@ -56,10 +38,10 @@ class ReservationsView(model: Model): View() {
     var previousReservations = emptyList<Reservation>()
     var controller = EntrantReservationsController(model)
     override fun update(model: Model) {
-        model.getCancelledReservations(entrantId = model.currentDeviceId){
+        model.getCancelledReservations(){
                 result -> previousReservations = result
         }
-        model.getActiveReservations(entrantId = model.currentDeviceId){
+        model.getActiveReservations(){
                 result -> currentReservations = result
         }
     }
@@ -134,10 +116,12 @@ class ReservationsView(model: Model): View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text(reservation.campsite!!.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            //TODO: Fix this
+                            //Text(reservation.campsite!!.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                         Row() {
-                            Text(reservation.campsite!!.location)
+                            // TODO: fix this
+                            //Text(reservation.campsite!!.location)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth()) {
@@ -147,11 +131,13 @@ class ReservationsView(model: Model): View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text(reservation.campsite!!.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            //TODO: fix this
+                            //Text(reservation.campsite!!.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
-                            Text("^: ${reservation.guests}", fontWeight = FontWeight.Bold)
+                            //TODO: Fix This
+                            //Text("^: ${reservation.guests}", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -168,8 +154,9 @@ class ReservationsView(model: Model): View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { controller.viewCampsite(reservation.campsite!!.id, navController = navController) },
+                        fontWeight = FontWeight.Bold
+                        //TODO: Fix this
+                        //modifier = Modifier.clickable { controller.viewCampsite(reservation.campsite!!.id, navController = navController) },
                     )
                 }
             }
@@ -185,10 +172,12 @@ class ReservationsView(model: Model): View() {
                 ) {
                     Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
                         Row() {
-                            Text(reservation.campsite!!.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
+                            //TODO: Fix this
+                            //Text(reservation.campsite!!.name, fontWeight = FontWeight.Bold, fontSize = 20.sp)
                         }
                         Row() {
-                            Text(reservation.campsite!!.location)
+                            //TODO: fix this
+                            //Text(reservation.campsite!!.location)
                         }
                         Spacer(modifier = Modifier.height(15.dp))
                         Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth()) {
@@ -198,11 +187,13 @@ class ReservationsView(model: Model): View() {
                     Column(modifier = Modifier.width(50.dp)){
                         Spacer(modifier = Modifier.height(15.dp))
                         Row() {
-                            Text(reservation.campsite!!.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
+                            //TODO: fix this
+                            //Text(reservation.campsite!!.averageRating.toString(), fontWeight = FontWeight.Bold, fontSize = 15.sp)
                         }
                         Spacer(modifier = Modifier.height(25.dp))
                         Row() {
-                            Text("^: ${reservation.guests}", fontWeight = FontWeight.Bold)
+                            //TODO: fix this
+                            //Text("^: ${reservation.guests}", fontWeight = FontWeight.Bold)
                         }
                     }
                 }
@@ -211,8 +202,9 @@ class ReservationsView(model: Model): View() {
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { controller.viewCampsite(reservation.campsite!!.id, navController = navController) },
+                        fontWeight = FontWeight.Bold
+                        //TODO: fix this
+                        //modifier = Modifier.clickable { controller.viewCampsite(reservation.campsite!!.id, navController = navController) },
                     )
                 }
             }

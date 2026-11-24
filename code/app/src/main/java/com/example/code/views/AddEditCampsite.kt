@@ -27,7 +27,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.code.controllers.OwnerEditCampsiteController
+import com.example.code.Controllers.OwnerEditCampsiteController
 import com.example.code.model.Campsite
 import com.example.code.ui.theme.CodeTheme
 

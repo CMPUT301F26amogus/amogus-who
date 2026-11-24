@@ -1,21 +1,3 @@
-/*
-* CampsiteDetailsView.kt : the view for updating profile settings
-* Copyright (C) 2026 Cash Popik (cpopik@ualberta.ca)
-*
-* This program is free software: you can redistribute it and/or modify
-* it under the terms of the GNU Affero General Public License as published
-* by the Free Software Foundation, either version 3 of the License, or
-* (at your option) any later version.
-*
-* This program is distributed in the hope that it will be useful,
-* but WITHOUT ANY WARRANTY; without even the implied warranty of
-* MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-* GNU Affero General Public License for more details.
-*
-* You should have received a copy of the GNU Affero General Public License
-* along with this program.  If not, see <https://www.gnu.org/licenses/>.
-* */
-
 package com.example.code.views
 
 import androidx.navigation.NavController
@@ -39,6 +21,8 @@ import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.platform.testTag
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -62,6 +46,10 @@ class ProfileSettingsView(M: Model): View() {
         var email by remember { mutableStateOf("") }
         var number by remember { mutableStateOf("") }
         var notifications by remember { mutableStateOf(true) }
+        // start the toggle at the user's saved setting
+        LaunchedEffect(Unit) {
+            controller.loadNotificationsEnabled { notifications = it }
+        }
         Column() {
             Row() {
                 Header(
@@ -97,7 +85,6 @@ class ProfileSettingsView(M: Model): View() {
                     Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
                         enabled = true,
                         onClick = {
-                            notifications = false
                             controller.updateProfile(name = name, email = email, number = number)
                         }), color = textColor)
                 }
@@ -117,7 +104,6 @@ class ProfileSettingsView(M: Model): View() {
                     Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
                         enabled = true,
                         onClick = {
-                            notifications = false
                             controller.updateProfile(name = name, email = email, number = number)
                         }), color = textColor)
                 }
@@ -137,7 +123,6 @@ class ProfileSettingsView(M: Model): View() {
                     Text("Confirm",modifier = Modifier.padding(vertical = 15.dp, horizontal = 5.dp).clickable(
                         enabled = true,
                         onClick = {
-                            notifications = false
                             controller.updateProfile(name = name, email = email, number = number)
                         }), color = textColor)
                 }
@@ -149,11 +134,11 @@ class ProfileSettingsView(M: Model): View() {
                     if (notifications) {
                         Text(
                             "No",
-                            modifier = Modifier.clickable(
+                            modifier = Modifier.testTag("notificationsNo").clickable(
                                 enabled = true,
                                 onClick = {
                                     notifications = false
-                                    controller.updateProfile(name = name, email = email, number = number)
+                                    controller.setNotificationsEnabled(false)
                                 })
                             ,
                             color = textColor,
@@ -193,11 +178,11 @@ class ProfileSettingsView(M: Model): View() {
                             fontSize = 25.sp)
                         Text(
                             "Yes",
-                            modifier = Modifier.clickable(
+                            modifier = Modifier.testTag("notificationsYes").clickable(
                                 enabled = true,
                                 onClick = {
                                     notifications = true
-                                    controller.updateProfile(name = name, email = email, number = number)
+                                    controller.setNotificationsEnabled(true)
                                 }),
                             color = textColor,
                             fontSize = 17.sp

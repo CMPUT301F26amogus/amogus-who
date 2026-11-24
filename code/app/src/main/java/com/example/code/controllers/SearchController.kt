@@ -1,4 +1,4 @@
-package com.example.code.controllers
+package com.example.code.Controllers
 
 import Model
 import androidx.navigation.NavController
@@ -12,6 +12,8 @@ class SearchController(
      * Searches for campsites
      */
     public fun search(name: String, navController: NavController){
+        // searchCampsite is async so the results are only here inside the callback,
+        // save them and navigate in there or the results screen opens with an old list
         var tempResult: ArrayList<Campsite>? = null
         model.searchCampsite(name){
                 result ->

@@ -13,19 +13,18 @@ package com.example.code.model
  * @param name shown on their profile and cant be blank
  * @param email optional and checked if given
  * @param phone optional and checked if given
- * @param roles starting roles and must not be empty
+ * @param role starting roles and must not be empty
  * @throws IllegalArgumentException if any field is invalid
  */
-class User(
-    var deviceId: String="", // The constructor needs to contain default values for every param
-    name: String="",        // in order for us to be able to put an object in the database.
+open class User(
+    var deviceId: String="",
+    name: String="",
     email: String? = null,
     phone: String? = null,
     var profileImageUrl: String? = null,
     var notificationsEnabled: Boolean = true,
-    var notificationCount: Int = 0,
+    var notifications: ArrayList<String> = arrayListOf(), // holds a array of notification Id's
     role: Role = Role.ENTRANT,
-    var lotteries: ArrayList<Lottery>?=null,
 ){
     /* Gemini 3.6 Flash
      * "There seem to be a ton of files in the test suite that also have build errors, please go through them and apply a fix."
