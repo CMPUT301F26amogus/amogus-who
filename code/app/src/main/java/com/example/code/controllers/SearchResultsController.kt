@@ -11,7 +11,12 @@ class SearchResultsController(
      * Sets the active campsite to view
      */
     public fun viewCampsite(cid: String, navController: NavController){
-        //set campsite to view
-        navController.navigate(Routes.CAMPSITE_DETAILS)
+        // the details screen reads the active campsite from the model, this never set it before
+        model.getCampsite(cid){ result ->
+            if (result != null) {
+                model.settTempCampsite(result)
+                navController.navigate(Routes.CAMPSITE_DETAILS)
+            }
+        }
     }
 }
