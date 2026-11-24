@@ -736,27 +736,59 @@ open class Model: ModelUpdater<View>{
     /**
      * lets an owner reject a booked reservation eg when a fire closes the campsite
      *
-     * only active reservations can be rejected
+     * only stays that are active and not over yet can be rejected
      *
      * @param reservationId id of the reservation to reject
      * @param onResult success once its rejected or a failure if it wasnt found wasnt active or saving failed
      */
     fun rejectReservation(reservationId: String, onResult: (Result<Unit>) -> Unit) {
+        endActiveReservation(reservationId, ReservationStatus.REJECTED, onResult)
+    }
+
+    /**
+     * lets an entrant cancel one of their reservations
+     *
+     * only stays that are active and not over yet can be cancelled
+     * cancelling frees the dates since booked dates only count active reservations
+     *
+     * @param reservation the reservation to cancel
+     * @param onResult success once its cancelled or a failure if it wasnt found wasnt active or saving failed
+     */
+    fun cancelReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
+        endActiveReservation(reservation.id, ReservationStatus.CANCELLED, onResult)
+    }
+
+    /**
+     * moves an active reservation to cancelled or rejected
+     *
+     * reads the saved reservation first since the one the view has might be out of date
+     *
+     * @param reservationId id of the reservation
+     * @param newStatus what to set it to
+     * @param onResult success once its saved or a failure if it wasnt found wasnt active or saving failed
+     */
+    private fun endActiveReservation(
+        reservationId: String,
+        newStatus: ReservationStatus,
+        onResult: (Result<Unit>) -> Unit,
+    ) {
         val reservationDoc = reservationRef.document(reservationId)
 
         reservationDoc.get()
             .addOnSuccessListener { document ->
-                if (!document.exists()) {
+                val saved = document.toObject(Reservation::class.java)
+                if (saved == null) {
                     onResult(Result.failure(Exception("Reservation not found")))
                     return@addOnSuccessListener
                 }
 
-                if (document.getString("status") != ReservationStatus.ACTIVE.name) {
+                // a stay thats already over cant be cancelled or rejected even if its still saved as active
+                if (!runCatching { saved.isActive() }.getOrDefault(false)) {
                     onResult(Result.failure(Exception("Reservation is not active")))
                     return@addOnSuccessListener
                 }
 
-                reservationDoc.update("status", ReservationStatus.REJECTED.name)
+                reservationDoc.update("status", newStatus.name)
                     .addOnSuccessListener {
                         onResult(Result.success(Unit))
                         notifyViews()
@@ -764,21 +796,6 @@ open class Model: ModelUpdater<View>{
                     .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
             }
             .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
-    }
-
-    // models need a way to cancel reservation, I guess a canceled reservation is
-    // one where the lottery winner's havent been decided yet?
-
-    /**
-     * Cancels the user's reservation
-     *
-     * @param reservation The reservation object
-     */
-    fun cancelReservation(reservation: Reservation){
-        reservationRef.document(reservation.id).update(
-            "status", ReservationStatus.CANCELLED
-        )
-        notifyViews()
     }
 
     /**
@@ -941,6 +958,70 @@ open class Model: ModelUpdater<View>{
     fun getOwnerCancelledReservations(ownerId: String, onResult: (List<OwnerReservation>) -> Unit) {
         getOwnerReservations(ownerId) { all ->
             onResult(all.filter { it.reservation.isCancelled() }.sortedBy { it.reservation.checkIn })
+        }
+    }
+
+    /**
+     * gets every reservation an entrant made with the campsite for each card
+     *
+     * reservations only keep the campsite id so this looks the campsites up after
+     * whereIn takes at most 30 values so the ids are asked for in chunks
+     *
+     * @param entrantId device id of the entrant
+     * @param onResult gets the reservations or an empty list if anything failed
+     */
+    private fun getEntrantReservations(entrantId: String, onResult: (List<EntrantReservation>) -> Unit) {
+        reservationRef.whereEqualTo("entrantId", entrantId).get()
+            .addOnSuccessListener { reservationDocs ->
+                val reservations = reservationDocs.toObjects(Reservation::class.java)
+                val campsiteIds = reservations.map { it.campsiteId }.filter { it.isNotBlank() }.distinct()
+
+                // campsite docs are keyed by campsite id so look them up by document id
+                val campsiteQueries = campsiteIds.chunked(30).map {
+                    campsiteRef.whereIn(FieldPath.documentId(), it).get()
+                }
+                Tasks.whenAllSuccess<QuerySnapshot>(campsiteQueries)
+                    .addOnSuccessListener { campsiteSnaps ->
+                        val campsites = campsiteSnaps.flatMap { it.toObjects(Campsite::class.java) }
+                            .associateBy { it.id }
+                        onResult(reservations.map { EntrantReservation(it, campsites[it.campsiteId]) })
+                    }
+                    .addOnFailureListener { onResult(emptyList()) }
+            }
+            .addOnFailureListener { onResult(emptyList()) }
+    }
+
+    /**
+     * gets an entrants reservations that are coming up or happening now
+     *
+     * stays whose check out has passed are left out even though theyre still saved as active
+     *
+     * @param entrantId device id of the entrant
+     * @param onResult gets the reservations sorted by check in or an empty list if it failed
+     */
+    fun getEntrantActiveReservations(entrantId: String, onResult: (List<EntrantReservation>) -> Unit) {
+        getEntrantReservations(entrantId) { all ->
+            val today = LocalDate.now()
+            // skip any reservation saved with bad dates instead of crashing
+            onResult(all.filter { runCatching { it.reservation.isActive(today) }.getOrDefault(false) }
+                .sortedBy { it.reservation.checkIn })
+        }
+    }
+
+    /**
+     * gets an entrants reservations that are over
+     *
+     * nothing sets PAST yet so finished stays still saved as active count too
+     *
+     * @param entrantId device id of the entrant
+     * @param onResult gets the reservations newest first or an empty list if it failed
+     */
+    fun getEntrantPastReservations(entrantId: String, onResult: (List<EntrantReservation>) -> Unit) {
+        getEntrantReservations(entrantId) { all ->
+            val today = LocalDate.now()
+            // skip any reservation saved with bad dates instead of crashing
+            onResult(all.filter { runCatching { it.reservation.isPast(today) }.getOrDefault(false) }
+                .sortedByDescending { it.reservation.checkIn })
         }
     }
     //endregion
