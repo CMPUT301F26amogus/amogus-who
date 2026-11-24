@@ -8,6 +8,9 @@ import com.google.firebase.firestore.firestore
 import kotlin.String
 
 import com.example.code.model.*
+import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.Query
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -240,12 +243,32 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
-     * delete a profile (any role)
+     * delete a profile (any role) and everything that belongs to it
      *
+     * removes, in this order:
+     *  - the lotteries the user owns, with their waitlists
+     *  - the campsites the user owns, active reservations other people had on them get rejected
+     *    and those people get a notification
+     *  - the users own waitlist entries, reservations and notifications
+     *  - the user profile itself, last
+     *
+     * the profile goes last on purpose, if a step fails the profile still exists
+     * and this can just be run again, every step is safe to repeat
+     *
+     * @param onResult true if everything was deleted, false if a step failed
      */
-    fun deleteProfile(){
-        usersRef.document(currentDeviceId).delete()
-            .addOnSuccessListener {notifyViews()}
+    fun deleteProfile(onResult: (Boolean) -> Unit = {}){
+        deleteOwnedLotteries()
+            .onSuccessTask { deleteOwnedCampsites() }
+            .onSuccessTask { deleteMyWaitlistEntries() }
+            .onSuccessTask { deleteMyReservations() }
+            .onSuccessTask { deleteMyNotifications() }
+            .onSuccessTask { usersRef.document(currentDeviceId).delete() }
+            .addOnSuccessListener {
+                onResult(true)
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(false) }
     }
     //endregion
 
@@ -818,6 +841,7 @@ open class Model: ModelUpdater<View>{
      * does nothing if the user turned notifications off
      *
      * @param content The notification message
+     * @param userId The user to send the notification to
      */
     fun notifyUser(content: String, userId: String) {
         // getUserObj is async so everything that needs the user has to happen inside the callback
@@ -827,7 +851,7 @@ open class Model: ModelUpdater<View>{
             val doc = notificationRef.document()
             val newNotification = Notification(
                 id = doc.id,
-                entrantId = currentDeviceId,
+                entrantId = userId,
                 content = content,
                 // format YYYY-MM-DDTHH:MM:SS, truncated so the seconds always show
                 timestamp = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
@@ -836,7 +860,7 @@ open class Model: ModelUpdater<View>{
 
             doc.set(newNotification).addOnSuccessListener {
                 // arrayUnion adds just the id so we dont overwrite the whole user document
-                usersRef.document(currentDeviceId).update("notifications", FieldValue.arrayUnion(doc.id))
+                usersRef.document(userId).update("notifications", FieldValue.arrayUnion(doc.id))
                 notifyViews()
             }
         }
@@ -859,6 +883,93 @@ open class Model: ModelUpdater<View>{
                 onResult(emptyList())
             }
     }
+    //endregion
+
+    //region Deleting data
+    // these return a Task so deleteProfile can chain them, onSuccessTask stops the chain at the first failure
+
+    // firestore batches hold at most 500 writes so big lists get split up
+    private fun deleteDocs(refs: List<DocumentReference>): Task<Void> =
+        Tasks.whenAll(refs.chunked(500).map { chunk ->
+            val batch = db.batch()
+            chunk.forEach { batch.delete(it) }
+            batch.commit()
+        })
+
+    // deletes every document a query finds
+    private fun deleteQuery(query: Query): Task<Void> =
+        query.get().onSuccessTask { snapshot -> deleteDocs(snapshot.documents.map { it.reference }) }
+
+    private fun Task<Void>.reportTo(onResult: (Boolean) -> Unit) {
+        addOnSuccessListener {
+            onResult(true)
+            notifyViews()
+        }
+        addOnFailureListener { onResult(false) }
+    }
+
+    private fun deleteMyNotifications(): Task<Void> =
+        deleteQuery(notificationRef.whereEqualTo("entrantId", currentDeviceId))
+
+    // every waitlist entry of the user in every lottery, whatever its status
+    // this uses the same collection group index as getLotteriesIn
+    private fun deleteMyWaitlistEntries(): Task<Void> =
+        deleteQuery(db.collectionGroup("entrants").whereEqualTo("deviceId", currentDeviceId))
+
+    // deleting a reservation also frees its dates since getBookedDates only looks at reservations
+    private fun deleteMyReservations(): Task<Void> =
+        deleteQuery(reservationRef.whereEqualTo("entrantId", currentDeviceId))
+
+    /**
+     * removes the current user from every waitlist they are on, even lotteries they already lost
+     *
+     * @param onResult true if they were removed, false if it failed
+     */
+    fun deleteWaitlistEntries(onResult: (Boolean) -> Unit = {}) {
+        deleteMyWaitlistEntries().reportTo(onResult)
+    }
+
+    /**
+     * deletes every reservation the current user made
+     *
+     * @param onResult true if they were deleted, false if it failed
+     */
+    fun deleteReservations(onResult: (Boolean) -> Unit = {}) {
+        deleteMyReservations().reportTo(onResult)
+    }
+
+    // lotteries the user runs, the entrants subcollection isnt deleted with its parent so it goes first
+    private fun deleteOwnedLotteries(): Task<Void> =
+        lotteryRef.whereEqualTo("ownerId", currentDeviceId).get().onSuccessTask { snapshot ->
+            val lotteries = snapshot.documents
+            Tasks.whenAll(lotteries.map { deleteQuery(it.reference.collection("entrants")) })
+                .onSuccessTask { deleteDocs(lotteries.map { it.reference }) }
+        }
+
+    // campsites the user owns
+    private fun deleteOwnedCampsites(): Task<Void> =
+        campsiteRef.whereEqualTo("ownerId", currentDeviceId).get().onSuccessTask { snapshot ->
+            val campsites = snapshot.documents
+            Tasks.whenAll(campsites.map { rejectActiveReservationsAt(it.id) })
+                .onSuccessTask { Tasks.whenAll(campsites.map { deleteQuery(availabilityRef(it.id)) }) }
+                .onSuccessTask { deleteDocs(campsites.map { it.reference }) }
+        }
+
+    // other people booked these stays so reject them and tell them instead of just deleting
+    private fun rejectActiveReservationsAt(campsiteId: String): Task<Void> =
+        reservationRef.whereEqualTo("campsiteId", campsiteId)
+            .whereEqualTo("status", ReservationStatus.ACTIVE.name).get()
+            .onSuccessTask { snapshot ->
+                val batch = db.batch()
+                snapshot.documents.forEach {
+                    batch.update(it.reference, "status", ReservationStatus.REJECTED.name)
+                }
+                snapshot.documents.mapNotNull { it.getString("entrantId") }.distinct().forEach {
+                    notifyUser("Your reservation was cancelled because the owner removed their campsite", it)
+                }
+                batch.commit()
+            }
+
     //endregion
 
 }

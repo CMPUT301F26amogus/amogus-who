@@ -1,7 +1,9 @@
 package com.example.code.controllers
 
 import Model
+import androidx.navigation.NavController
 import com.example.code.model.User
+import com.example.code.Routes
 
 class ProfileSettingsController(
     private val model : Model
@@ -50,7 +52,12 @@ class ProfileSettingsController(
     /**
      * Deletes the active users profile
      */
-    public fun deleteProfile(){
-        model.deleteProfile()
+    public fun deleteProfile(navController: NavController){
+
+        model.deleteProfile(){
+            result -> if(result){
+                navController.navigate(Routes.REGISTRATION)
+            }
+        }
     }
 }
