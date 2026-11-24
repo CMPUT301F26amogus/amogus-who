@@ -1,3 +1,5 @@
+import android.util.Log
+import android.util.Log.e
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.firestore
@@ -12,6 +14,7 @@ import com.example.code.model.ReservationStatus
 import com.example.code.model.Role
 import com.example.code.model.User
 import com.example.code.model.WaitlistEntry
+import com.google.firebase.firestore.QuerySnapshot
 import kotlin.String
 
 interface ModelUpdater<V>{
@@ -45,7 +48,12 @@ open class Model: ModelUpdater<View> {
         dataRef.document(currentDeviceId).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
-                    val user = snapshot.toObject(User::class.java)
+                    val user = try {
+                        snapshot.toObject(User::class.java)
+                    } catch (e: RuntimeException) {
+                        Log.e("Model", "Could not read user ${snapshot.id}", e)
+                        null
+                    }
                     onResult(user) // we have to use a callback because getting the data
                     // from the server is slow and so we need to
                 } else {
@@ -58,7 +66,7 @@ open class Model: ModelUpdater<View> {
         dataRef.document(currentDeviceId).get().addOnSuccessListener { snapshot ->
             if (snapshot.exists()) {
                 val user = snapshot.toObject(User::class.java)
-                notificationCount = user!!.notificationCount
+                notificationCount = user?.notificationCount?:0
                 onResult(notificationCount)
             } else {
                 onResult(0)
@@ -168,19 +176,29 @@ open class Model: ModelUpdater<View> {
         price: Double,
         onResult: (Boolean) -> Unit
     ) {
+        if (currentDeviceId.isBlank()) {
+            onResult(false)
+            return
+        }
         val campsiteId = campsiteRef.document().id
-        val campsite: Campsite = Campsite(
-            id = campsiteId, name = campName, location = location,
-            description = desc, maxOccupancy = maxOcc, pricePerNight = price
-        )
-
-        campsiteRef.document(campsiteId).set(campsite)
-            .addOnSuccessListener {
-                onResult(true)
-            }
-            .addOnFailureListener {
-                onResult(false)
-            }
+        val campsite = try {
+            Campsite(
+                id = campsiteId, ownerId = currentDeviceId, name = campName, location = location,
+                description = desc, maxOccupancy = maxOcc, pricePerNight = price
+            )
+        } catch (e: IllegalArgumentException) {
+            Log.w("Model", "Invalid campsite: ${e.message}")
+            onResult(false)
+            return
+        }
+        try {
+            campsiteRef.document(campsiteId).set(campsite)
+                .addOnSuccessListener { onResult(true) }
+                .addOnFailureListener { onResult(false) }
+        } catch (e: RuntimeException) {
+            Log.e("Model", "Could not save campsite", e)
+            onResult(false)
+        }
     }
     //fun createCampsite(campsite: Campsite, onResult: (Boolean) -> Unit) {
 
@@ -287,10 +305,10 @@ open class Model: ModelUpdater<View> {
 
         // Validates tags
         if (updates.containsKey("tags")) {
-            val tags = updates["tags"] as? Set<*>
+            val tags = updates["tags"] as? Collection<*>
 
             if (tags == null || tags.any { it !is String }) {
-                return "Tags must be a set of strings"
+                return "Tags must be a collection of strings"
             }
         }
 
@@ -304,7 +322,7 @@ open class Model: ModelUpdater<View> {
         onResult: (Boolean, String?) -> Unit
     ) {
         // Check that the campsite ID is valid
-        if (campId.isBlank()) {
+        if (campsiteId.isBlank()) {
             onResult(false, "Invalid campsite ID.")
             return
         }
@@ -350,13 +368,12 @@ open class Model: ModelUpdater<View> {
 
         // Clean tags and convert Set to List for Firestore
         if (firestoreUpdates.containsKey("tags")) {
-            val tags = firestoreUpdates["tags"] as Set<String>
+            val tags = firestoreUpdates["tags"] as Collection<*>
 
-            firestoreUpdates["tags"] = tags
-                .map { it.trim().lowercase() }
+            firestoreUpdates["tagList"] = tags
+                .map { (it as String).trim().lowercase() }
                 .filter { it.isNotEmpty() }
-                .toSet()
-                .toList()
+                .distinct()
         }
 
         // Convert price to Double
@@ -466,7 +483,12 @@ open class Model: ModelUpdater<View> {
             campsiteRef.document(campId).get()
                 .addOnSuccessListener { document ->
                     if (document.exists()) {
-                        val campsite = document.toObject(Campsite::class.java)
+                        val campsite = try {
+                            document.toObject(Campsite::class.java)
+                        } catch (e: RuntimeException) {
+                            Log.e("Model", "Could not read campsite ${document.id}", e)
+                            null
+                        }
                         onResult(campsite)
                     } else {
                         onResult(null)
@@ -480,7 +502,7 @@ open class Model: ModelUpdater<View> {
         fun getCampsiteByOwner(ownerId: String, onResult: (List<Campsite>) -> Unit) {
             campsiteRef.whereEqualTo("ownerId", ownerId).get()
                 .addOnSuccessListener { documents ->
-                    val campsites = documents.toObjects(Campsite::class.java)
+                    val campsites = documents.toCampsites()
                     onResult(campsites)
                 }
                 .addOnFailureListener {
@@ -491,7 +513,7 @@ open class Model: ModelUpdater<View> {
         fun getAllCampsites(onResult: (List<Campsite>) -> Unit) {
             campsiteRef.get()
                 .addOnSuccessListener { documents ->
-                    val campsites = documents.toObjects(Campsite::class.java)
+                    val campsites = documents.toCampsites()
                     onResult(campsites)
                 }
                 .addOnFailureListener {
@@ -502,14 +524,14 @@ open class Model: ModelUpdater<View> {
         fun searchCampsite(query: String, onResult: (List<Campsite>) -> Unit) {
             campsiteRef.get()
                 .addOnSuccessListener { documents ->
-                    val campsite = documents.toObjects(Campsite::class.java)
+                    val campsite = documents.toCampsites()
 
                     val filter = campsite.filter {
                         it.name.contains(query, ignoreCase = true) ||
                                 it.location.contains(query, ignoreCase = true) ||
                                 it.description.contains(query, ignoreCase = true)
                     }
-                    onResult(campsite)
+                    onResult(filter)
                 }
                 .addOnFailureListener {
                     onResult(emptyList())
@@ -518,6 +540,15 @@ open class Model: ModelUpdater<View> {
 
     fun filterCampsite() {
 
+    }
+
+    private fun QuerySnapshot.toCampsites(): List<Campsite> = documents.mapNotNull { d ->
+        try {
+            d.toObject(Campsite::class.java)
+        } catch (e: RuntimeException) {
+            Log.e("Model", "Skipping unreadable campsite ${d.id}", e)
+            null
+        }
     }
 
     fun getUserByDevice(deviceId: String, onResult: (User?) -> Unit) {
@@ -790,10 +821,10 @@ open class Model: ModelUpdater<View> {
         }
 
         fun getCampId(campName: String, onResult: (String) -> Unit) {
-            campsiteRef.whereEqualTo("campName", campName).get()
+            campsiteRef.whereEqualTo("name", campName).get()
                 .addOnSuccessListener { documents ->
-                    val campsite = documents.toObjects(Campsite::class.java)
-                    onResult(campsite[0].id)
+                    val campsite = documents.toCampsites()
+                    onResult(campsite.firstOrNull()?.id ?: "")
                 }
         }
 
@@ -979,6 +1010,16 @@ open class Model: ModelUpdater<View> {
             email: String = "",
             phoneNumber: String = ""
         ) {
+            try {
+                val probe = User(deviceId = currentDeviceId, name = "probe")
+                if (name != "") probe.name = name
+                if (email != "") probe.email = email
+                if (phoneNumber != "") probe.phone = phoneNumber
+            } catch (e: IllegalArgumentException) {
+                Log.w("Model", "Profile not saved: ${e.message}")
+                return
+            }
+
             if (name != "") {
                 dataRef.document(currentDeviceId).update(
                     "name", name

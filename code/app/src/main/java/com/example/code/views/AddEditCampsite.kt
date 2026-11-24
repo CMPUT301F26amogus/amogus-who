@@ -2,6 +2,7 @@ package com.example.code.views
 
 import Model
 import View
+import android.widget.Toast
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -10,11 +11,18 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -41,7 +49,10 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
         .background(color = creamBG)
         .padding(15.dp).width(135.dp)
 
-    var oldCampsite : Campsite? = null
+    var oldCampsite by mutableStateOf<Campsite?>(null)
+        private set
+
+
     var campsiteName : String = ""
     var parkName : String = ""
 
@@ -80,6 +91,8 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
     @Composable
     public fun ShowScreen(navController: NavController) {
 
+        val context = LocalContext.current
+
         val campsiteNameState = TextFieldState(campsiteName)
         val parkNameState = TextFieldState(parkName)
         val campDescriptionState = TextFieldState(campDescription)
@@ -101,6 +114,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
                 Modifier
                 .fillMaxWidth()
                 .weight(1f).background(secondaryGreenColor)
+                    .verticalScroll(rememberScrollState())
             ) {
                 // Campsite name input field
                 Row(
@@ -202,7 +216,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
                 Row() {
                     Button(
                         onClick = {
-                            clear()
+                            controller.onCancel(navController)
                         },
                         modifier = Modifier
                             .padding(horizontal = 20.dp)
@@ -212,31 +226,52 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
                     }
                     Button(
                         onClick = {
+                            val name = campsiteNameState.text.toString().trim()
+                            val description = campDescriptionState.text.toString().trim()
+                            val location = addressState.text.toString().trim()
+                                .ifBlank { parkNameState.text.toString().trim() }
 
-                            if ( oldCampsite != null) {  //  we are editing a campsite
-                                //  call Controller to call editCampsite()
+                            val maxOccupancy = maxGuestsState.text.toString().toIntOrNull()
+                            val pricePerNight = pricePerNightState.text.toString().toDoubleOrNull()
+
+                            if (name.isBlank()) {
+                                Toast.makeText(context, "Campsite name is required", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            if (maxOccupancy == null || maxOccupancy <= 0) {
+                                Toast.makeText(context, "Max guests must be at least 1", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+                            if (pricePerNight == null || pricePerNight < 0) {
+                                Toast.makeText(context, "Enter a valid price per night", Toast.LENGTH_SHORT).show()
+                                return@Button
+                            }
+
+                            if (oldCampsite != null) {
                                 controller.onEditCampsite(
                                     navController,
                                     oldCampsite!!,
-                                    newName = campsiteNameState.text.toString(),
-                                    newLocation = addressState.text.toString(),
-                                    newDescription = campDescriptionState.text.toString(),
-                                    newMaxOccupants = maxGuestsState.text.toString().toInt(),
-                                    newPrice = pricePerNightState.text.toString().toDouble()
+                                    updates = mapOf(
+                                        "name" to name,
+                                        "location" to location,
+                                        "description" to description,
+                                        "maxOccupancy" to maxOccupancy,
+                                        "pricePerNight" to pricePerNight
                                     )
-                            }
-                            else {  //  we are registering a brand-new campsite
-                                //  call Controller to call newCampsite()
-                                val newCampsite = Campsite(
-                                    id = "",
-                                    ownerId = "",
-                                    name = campsiteNameState.text.toString(),
-                                    location = addressState.text.toString(),
-                                    description = campDescriptionState.text.toString(),
-                                    maxOccupancy = maxGuestsState.text.toString().toInt(),
-                                    pricePerNight = pricePerNightState.text.toString().toDouble(),
-                                    )
-                                controller.onAddCampsite(navController, newCampsite)
+                                ) { success, error ->
+                                    if (success) {
+                                        Toast.makeText(context, "Campsite Updated", Toast.LENGTH_SHORT).show()
+                                    } else {
+                                        Toast.makeText(context, error ?: "Update failed", Toast.LENGTH_SHORT).show()
+                                    }
+                                }
+                            } else {
+                                controller.onAddCampsite(
+                                    navController, name, location, description, maxOccupancy, pricePerNight
+                                ) { success ->
+                                    val message = if (success) "Campsite registered" else "Could not register the campsite"
+                                    Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
+                                }
                             }
                             // call Controller to navController to pop
                         },
@@ -259,6 +294,9 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
             }
         }
     }
+
+    private fun priceText(price: Double): String =
+        if (price % 1.0 == 0.0) price.toLong().toString() else price.toString()
 
     fun clear() {
         campsiteName = ""

@@ -7,18 +7,18 @@ class OwnerEditCampsiteController (
     private val model : Model
 ) {
     fun onCancel(navController: NavController){
-        navController.navigate("owner_home")
+        navController.popBackStack()
     }
 
-    fun onEditCampsite(navController: NavController, old: Campsite, newName: String, newLocation: String, newDescription: String, newMaxOccupants: Int, newPrice: Double) {
+    fun onEditCampsite(navController: NavController, old: Campsite, updates: Map<String, Any>, onResult: (Boolean, String?) -> Unit) {
         model.updateCampsite(
-            old,
-            newName,
-            newLocation,
-            newDescription,
-            newMaxOccupants,
-            newPrice
-        )
+            old.id,
+            model.currentDeviceId,
+            updates
+        ) { success, error ->
+            onResult(success,error)
+            if (success) navController.popBackStack()
+        }
         navController.navigate("owner_home")
     }
 
@@ -26,10 +26,12 @@ class OwnerEditCampsiteController (
      * "There are build errors in RegistrationView.kt and OwnerEditCampsiteController.kt, can you find them and apply some fixes to them?"
      * 2026-11-11
      */
-    fun onAddCampsite (navController: NavController, new : Campsite) {
-        model.createCampsite(new) { success ->
+    fun onAddCampsite (navController: NavController,campName: String, location: String, desc: String, maxOcc: Int,
+                       price: Double, onResult: (Boolean) -> Unit) {
+        model.createCampsite(campName, location, desc, maxOcc, price) { success ->
+            onResult(success)
             if (success) {
-                navController.navigate("owner_home")
+                navController.popBackStack()
             }
         }
     }

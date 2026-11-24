@@ -13,13 +13,10 @@ class SearchController(
      */
     public fun search(name: String, navController: NavController){
         var tempResult: ArrayList<Campsite>? = null
-        model.searchCampsite(campName = name){
+        model.searchCampsite(name){
                 result ->
-            if (tempResult != null) {
-                tempResult = result as ArrayList<Campsite>?
-            }
+            model.settCampsiteList(ArrayList(result))
+            navController.navigate(Routes.SEARCH_RESULTS)
         }
-        model.settCampsiteList(tempResult)
-        navController.navigate(Routes.SEARCH_RESULTS)
     }
 }
