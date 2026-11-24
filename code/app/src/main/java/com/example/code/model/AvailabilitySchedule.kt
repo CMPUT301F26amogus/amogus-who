@@ -15,8 +15,8 @@ import java.util.TreeSet
  */
 //TODO: This whole class needs fixes, changing it from localDates messed some stuff up :(
 class AvailabilitySchedule(
-    val openNights: Collection<String> = emptyList(),
-    val bookings: Collection<DateRange> = emptyList(),
+    val openNights: List<String> = emptyList(), // a list since firestore cant load collections
+    val bookings: List<DateRange> = emptyList(),
 ) {
 
 

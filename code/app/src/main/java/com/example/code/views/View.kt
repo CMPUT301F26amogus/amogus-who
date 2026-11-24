@@ -11,10 +11,13 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
@@ -23,7 +26,9 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
@@ -192,6 +197,54 @@ abstract class View: ViewObserver<Model>{
             }
         }
     }
+
+    /**
+     * Component to display information and actions about a certain object
+     * Super useful for lists of things, such as reservations and lotteries
+     *
+     * @param primaryColor background color of the upper half of the card
+     * @param accentColor background color of the lower half of the card
+     * @param primaryContent content in the upper half of the card
+     * @param secondaryContent content in the lower half of the card, typically a few functions
+     *
+     */
+    @Composable
+    protected fun DuotoneCard(
+        primaryColor: Color = cardPrimary,
+        accentColor: Color = cardAccent,
+        primaryContent: () -> Unit = {},
+        secondaryContent: () -> Unit = {},
+    ) {
+        Column(
+            modifier = Modifier
+                .clip(shape = RoundedCornerShape(12.dp))
+                .background(color = primaryColor)
+                .fillMaxWidth()
+                .heightIn(min = 150.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp)
+                    .weight(1f),
+            ) {
+                primaryContent()
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)  // hard height constraint by design
+                    .background(color = accentColor)
+                    .padding(10.dp),
+            ) {
+                secondaryContent()
+            }
+        }
+
+    }
+
     @Composable
     protected fun TabManager(tabs:List<Tab>, state:String){
         Column(modifier = Modifier.height(50.dp)) {
