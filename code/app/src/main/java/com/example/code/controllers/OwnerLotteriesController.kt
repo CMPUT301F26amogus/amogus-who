@@ -10,7 +10,7 @@ class OwnerLotteriesController(
     /**
      * Navigates to the owner lottery screen.
      */
-    fun navigateToOwnerLottery() {
+    fun onEditLottery() {
 
     }
 
@@ -22,5 +22,17 @@ class OwnerLotteriesController(
             model.drawLotteryWinner(lottery.id) { }
 
         }
+    }
+
+    fun onDrawLottery() {
+
+    }
+
+    fun onViewWinners() {
+
+    }
+
+    fun onWaitlist() {
+
     }
 }
