@@ -266,12 +266,8 @@ open class Model: ModelUpdater<View>{
      * @param onResult true if everything was deleted, false if a step failed
      */
     fun deleteProfile(onResult: (Boolean) -> Unit = {}){
-        deleteOwnedLotteries()
-            .onSuccessTask { deleteOwnedCampsites() }
-            .onSuccessTask { deleteMyWaitlistEntries() }
-            .onSuccessTask { deleteMyReservations() }
-            .onSuccessTask { deleteMyNotifications() }
-            .onSuccessTask { usersRef.document(currentDeviceId).delete() }
+
+            usersRef.document(currentDeviceId).delete()
             .addOnSuccessListener {
                 onResult(true)
                 notifyViews()
