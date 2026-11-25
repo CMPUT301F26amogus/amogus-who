@@ -12,6 +12,7 @@ class OwnerEditLottery (
         navController.navigate("owner_home")
     }
 
+
     fun onEditLottery() {
 
     }

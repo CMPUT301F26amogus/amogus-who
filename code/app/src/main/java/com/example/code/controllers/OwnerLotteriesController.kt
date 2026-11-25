@@ -24,14 +24,16 @@ class OwnerLotteriesController(
         }
     }
 
+    // TODO: should auto draw, we need to still figure it out
     fun onDrawLottery() {
 
     }
 
+    //Navigates the owner to a view that contains the winners of the lottery
     fun onViewWinners() {
 
     }
-
+    // Navigates the owner to a view that contains the entrants in the waitlist of the lottery
     fun onWaitlist() {
 
     }
