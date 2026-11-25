@@ -11,6 +11,8 @@ import com.example.code.model.*
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentReference
 import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.FieldPath
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -86,7 +88,13 @@ open class Model: ModelUpdater<View>{
         views.remove(v)
     }
 
-    /** tells every registered view this model changed so they can redraw */
+    /**
+     * tells every registered view this model changed so they can redraw
+     *
+     * only call this from functions that CHANGE data, never from get functions.
+     * some views fetch data in update(), so a get function that calls this starts
+     * an endless loop of queries that crashes the app (out of memory)
+     */
     protected fun notifyViews(){
         views.forEach { it.update(this) }
     }
@@ -312,7 +320,6 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { document ->
                 val campsite = document.toObject(Campsite::class.java)
                 onResult(campsite)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(null)
@@ -329,11 +336,9 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsites = documents.toObjects(Campsite::class.java)
                 onResult(campsites)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
-                notifyViews()
             }
     }
 
@@ -342,11 +347,9 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsites = documents.toObjects(Campsite::class.java)
                 onResult(campsites)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
-                notifyViews()
             }
     }
 
@@ -356,11 +359,9 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsite = documents.toObjects(Campsite::class.java)
                 onResult(campsite)
-                notifyViews()
             }
             .addOnFailureListener {
                 onResult(emptyList())
-                notifyViews()
             }
     }
 
@@ -369,7 +370,6 @@ open class Model: ModelUpdater<View>{
             .addOnSuccessListener { documents ->
                 val campsite = documents.toObjects(Campsite::class.java)
                 onResult(campsite[0].id)
-                notifyViews()
             }
     }
     //endregion
@@ -510,7 +510,6 @@ open class Model: ModelUpdater<View>{
 
                     if (lotteryIds.isEmpty()) {
                         onResult(emptyList())
-                        notifyViews()
                         return@addOnSuccessListener
                     }
 
@@ -519,7 +518,6 @@ open class Model: ModelUpdater<View>{
                     })
                         .addOnSuccessListener { snapshots ->
                             onResult(snapshots.mapNotNull { it.toObject(Lottery::class.java) })
-                            notifyViews()
                         }
                         .addOnFailureListener { onResult(emptyList()) }
                 }
@@ -766,7 +764,6 @@ open class Model: ModelUpdater<View>{
                     val entries = documents.toObjects(WaitlistEntry::class.java)
 
                     onResult(Result.success(entries))
-                    notifyViews()
                 }
                 .addOnFailureListener { exception ->
                     onResult(Result.failure(exception))
@@ -850,7 +847,6 @@ open class Model: ModelUpdater<View>{
                     }
 
                     onResult(Result.success(statuses))
-                    notifyViews()
                 }
                 .addOnFailureListener { exception ->
                     onResult(Result.failure(exception))
@@ -868,7 +864,6 @@ open class Model: ModelUpdater<View>{
                 .addOnSuccessListener { documents ->
                     val reservations = documents.toObjects(Reservation::class.java)
                     onResult(reservations)
-                    notifyViews()
                 }
                 .addOnFailureListener {
                     onResult(emptyList())
@@ -886,11 +881,115 @@ open class Model: ModelUpdater<View>{
                 .addOnSuccessListener { documents ->
                     val reservations = documents.toObjects(Reservation::class.java)
                     onResult(reservations)
-                    notifyViews()
                 }
                 .addOnFailureListener {
                     onResult(emptyList())
                 }
+        }
+
+        // Avery's owner reservation functions (#194), brought back after the dev merge dropped them.
+        // Changed to match this branch: they use the current user instead of an ownerId parameter
+        // (like getCampsiteByOwner) and don't call notifyViews since they only read data
+
+        /**
+         * removes user from reservation, this allows user to decline reservation
+         *
+         * saved as cancelled since rejected is only for the owner rejecting the entrant
+         *
+         * @param reservation the Reservation object that the user is declining
+         */
+        fun declineReservation(reservation: Reservation) {
+            reservationRef.document(reservation.id).update(
+                "status", ReservationStatus.CANCELLED.name
+            ).addOnSuccessListener { notifyViews() }
+        }
+
+        /**
+         * gets every reservation at the current owners campsites with the campsite and entrant name for each card
+         *
+         * reservations only keep ids so this finds the owners campsites first then their reservations
+         * then the entrants names
+         * whereIn takes at most 30 values so the ids are asked for in chunks
+         *
+         * @param onResult gets the reservations or an empty list if anything failed
+         */
+        private fun getOwnerReservations(onResult: (List<OwnerReservation>) -> Unit) {
+            campsiteRef.whereEqualTo("ownerId", currentDeviceId).get()
+                .addOnSuccessListener { campDocs ->
+                    val campsites = campDocs.toObjects(Campsite::class.java).associateBy { it.id }
+                    if (campsites.isEmpty()) {
+                        onResult(emptyList())
+                        return@addOnSuccessListener
+                    }
+
+                    val reservationQueries = campsites.keys.chunked(30).map {
+                        reservationRef.whereIn("campsiteId", it).get()
+                    }
+                    Tasks.whenAllSuccess<QuerySnapshot>(reservationQueries)
+                        .addOnSuccessListener { reservationSnaps ->
+                            val reservations = reservationSnaps.flatMap { it.toObjects(Reservation::class.java) }
+                            val entrantIds = reservations.map { it.entrantId }.filter { it.isNotBlank() }.distinct()
+                            if (entrantIds.isEmpty()) {
+                                onResult(reservations.map { OwnerReservation(it, campsites[it.campsiteId], "") })
+                                return@addOnSuccessListener
+                            }
+
+                            // user docs are keyed by device id so look them up by document id
+                            val userQueries = entrantIds.chunked(30).map {
+                                usersRef.whereIn(FieldPath.documentId(), it).get()
+                            }
+                            Tasks.whenAllSuccess<QuerySnapshot>(userQueries)
+                                .addOnSuccessListener { userSnaps ->
+                                    val names = userSnaps.flatMap { it.documents }
+                                        .associate { it.id to (it.getString("name") ?: "") }
+                                    onResult(reservations.map {
+                                        OwnerReservation(it, campsites[it.campsiteId], names[it.entrantId] ?: "")
+                                    })
+                                }
+                                .addOnFailureListener { onResult(emptyList()) }
+                        }
+                        .addOnFailureListener { onResult(emptyList()) }
+                }
+                .addOnFailureListener { onResult(emptyList()) }
+        }
+
+        /**
+         * gets the active reservations at all of the current owners campsites
+         *
+         * @param onResult gets the reservations sorted by check in or an empty list if it failed
+         */
+        fun getOwnerActiveReservations(onResult: (List<OwnerReservation>) -> Unit) {
+            getOwnerReservations { all ->
+                val today = LocalDate.now()
+                // skip any reservation saved with bad dates instead of crashing
+                onResult(all.filter { runCatching { it.reservation.isActive(today) }.getOrDefault(false) }
+                    .sortedBy { it.reservation.checkIn })
+            }
+        }
+
+        /**
+         * gets the past reservations at all of the current owners campsites
+         *
+         * @param onResult gets the reservations newest first or an empty list if it failed
+         */
+        fun getOwnerPastReservations(onResult: (List<OwnerReservation>) -> Unit) {
+            getOwnerReservations { all ->
+                val today = LocalDate.now()
+                // skip any reservation saved with bad dates instead of crashing
+                onResult(all.filter { runCatching { it.reservation.isPast(today) }.getOrDefault(false) }
+                    .sortedByDescending { it.reservation.checkIn })
+            }
+        }
+
+        /**
+         * gets the cancelled reservations at all of the current owners campsites
+         *
+         * @param onResult gets the reservations sorted by check in or an empty list if it failed
+         */
+        fun getOwnerCancelledReservations(onResult: (List<OwnerReservation>) -> Unit) {
+            getOwnerReservations { all ->
+                onResult(all.filter { it.reservation.isCancelled() }.sortedBy { it.reservation.checkIn })
+            }
         }
 
         /**
@@ -911,7 +1010,6 @@ open class Model: ModelUpdater<View>{
                         .map { DateRange(it.checkIn, it.checkOut) }
                         .sortedBy { it.start }
                     onResult(stays)
-                    notifyViews()
                 }
                 .addOnFailureListener {
                     onResult(emptyList())
@@ -967,7 +1065,6 @@ open class Model: ModelUpdater<View>{
                     val notifications = documents.toObjects(Notification::class.java)
                         .sortedBy { it.timestamp }
                     onResult(notifications)
-                    notifyViews()
                 }
                 .addOnFailureListener {
                     onResult(emptyList())
