@@ -205,7 +205,7 @@ class OwnerLotteriesView(model : Model) : View() {
                     .padding(10.dp),
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { controller.navigateToOwnerLottery() },
+                    onClick = { controller.onEditLottery() },
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
