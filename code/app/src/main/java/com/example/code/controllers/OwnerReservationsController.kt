@@ -12,7 +12,7 @@ class OwnerReservationsController(
      * @param onResult gets the reservations sorted by check in or an empty list if it failed
      */
     fun onActiveReservations(onResult: (List<OwnerReservation>) -> Unit) {
-        model.getOwnerActiveReservations(model.currentDeviceId, onResult)
+        model.getOwnerActiveReservations(onResult)
     }
 
     /**
@@ -21,7 +21,7 @@ class OwnerReservationsController(
      * @param onResult gets the reservations newest first or an empty list if it failed
      */
     fun onPastReservations(onResult: (List<OwnerReservation>) -> Unit) {
-        model.getOwnerPastReservations(model.currentDeviceId, onResult)
+        model.getOwnerPastReservations(onResult)
     }
 
     /**
@@ -30,7 +30,7 @@ class OwnerReservationsController(
      * @param onResult gets the reservations sorted by check in or an empty list if it failed
      */
     fun onCancelledReservations(onResult: (List<OwnerReservation>) -> Unit) {
-        model.getOwnerCancelledReservations(model.currentDeviceId, onResult)
+        model.getOwnerCancelledReservations(onResult)
     }
 
     fun onReservationReject() {
