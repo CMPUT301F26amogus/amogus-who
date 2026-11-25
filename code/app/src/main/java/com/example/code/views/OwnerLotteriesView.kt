@@ -19,7 +19,9 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Edit
+import androidx.compose.material.icons.outlined.List
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -31,10 +33,12 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.controllers.OwnerLotteriesController
+import com.example.code.model.LotteryStatus
 
 class DummyLottery(
     val campsiteName: String,
@@ -42,7 +46,7 @@ class DummyLottery(
     val entrants: Int,
     val winners: Int,
     val drawDate: String,
-    val state: String,
+    val status: LotteryStatus,
 ) {}
 
 /**
@@ -51,7 +55,8 @@ class DummyLottery(
  */
 class OwnerLotteriesView(model : Model) : View() {
 
-
+    val openStatusColor = Color(0xff9bfa8f)
+    val drawnStatusColor = Color(0xffe2dde6)
     val controller by lazy { OwnerLotteriesController(model = model) }
 
     // modify to pull real lotteries from model
@@ -62,7 +67,7 @@ class OwnerLotteriesView(model : Model) : View() {
             entrants = 54,
             winners = 3,
             drawDate = "Dec 10, 2026",
-            state = "Open",
+            status = LotteryStatus.OPEN,
         ),
         DummyLottery(
             campsiteName = "Site Beta",
@@ -70,7 +75,7 @@ class OwnerLotteriesView(model : Model) : View() {
             entrants = 105,
             winners = 5,
             drawDate = "Oct 24, 2026",
-            state = "Drawn",
+            status = LotteryStatus.DRAWN,
         ),
     )
 
@@ -93,6 +98,7 @@ class OwnerLotteriesView(model : Model) : View() {
                 Text(
                     text = data,
                     fontSize = 12.sp,
+                    fontWeight = FontWeight.Bold,
                     color = primaryTextColor,
                 )
             }
@@ -106,9 +112,9 @@ class OwnerLotteriesView(model : Model) : View() {
         entrants: Int,
         winners: Int,
         drawDate: String,
-        state: String,
+        status: LotteryStatus,
     ) {
-        val action = if (state == "Open") "Draw now" else "View winners"
+        val action = if (status == LotteryStatus.OPEN) "Draw" else "Winners"
 
         Column(
             modifier = Modifier
@@ -150,21 +156,24 @@ class OwnerLotteriesView(model : Model) : View() {
                     )
 
                     Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
                         modifier = Modifier
-                            .width(90.dp)
-                    ) {
-                        Button(
-                            onClick = {/* Not a button in practice */},
-                            modifier = Modifier
-                                .height(35.dp),
-                            colors = ButtonDefaults.buttonColors(
-                                containerColor =
-                                    if (state == "Open") Color(0xff9bfa8f) else Color(0xffe2dde6),
-                                contentColor = primaryGreenTextColor,
+                            .clip(shape = RoundedCornerShape(12.dp))
+                            .background(
+                                color =
+                                    if (status == LotteryStatus.OPEN) openStatusColor
+                                    else drawnStatusColor
                             )
-                        ) {
-                            Text(state)
-                        }
+                            .width(90.dp)
+                            .height(30.dp)
+                            .padding(7.dp)
+                    ) {
+                        Text(
+                            text = status.toString(),
+                            color = primaryGreenTextColor,
+                            fontWeight = FontWeight.Bold,
+                        )
+
                     }
                 }
                 Row(
@@ -218,12 +227,28 @@ class OwnerLotteriesView(model : Model) : View() {
                     text = { Text("Edit") }
                 )
 
-                Spacer(
-                    modifier = Modifier.weight(1f)
+                ExtendedFloatingActionButton(
+                    onClick = { controller.onWaitlist() },
+                    shape = CircleShape,
+                    containerColor = cardAccent,
+                    contentColor = primaryTextColor,
+                    icon = {
+                        Icon(
+                            imageVector = Icons.Outlined.AccountCircle,
+                            contentDescription = "Waitlist",
+                        )
+                    },
+                    text = { Text("Waitlist") }
                 )
 
                 ExtendedFloatingActionButton(
-                    onClick = { /* controller.onLotteryActionClick() */ },
+                    onClick = {
+                        if (status == LotteryStatus.OPEN) {
+                            controller.onDrawLottery()
+                        } else if (status == LotteryStatus.DRAWN) {
+                            controller.onViewWinners()
+                        }
+                    },
                     shape = CircleShape,
                     containerColor = primaryPurple,
                     contentColor = secondaryPurple,
@@ -254,7 +279,7 @@ class OwnerLotteriesView(model : Model) : View() {
                     entrants = lotteries[lottery].entrants,
                     winners = lotteries[lottery].winners,
                     drawDate = lotteries[lottery].drawDate,
-                    state = lotteries[lottery].state,
+                    status = lotteries[lottery].status,
                 )
                 if (lottery != lotteries.size - 1) {
                     Spacer(
