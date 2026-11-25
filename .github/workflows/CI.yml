@@ -20,6 +20,9 @@ jobs:
         run: chmod +x gradlew
         working-directory: ./code
       - name: Build and test with Gradle
-        run: ./gradlew build --configuration-cache
+        # tries a second time if the first build fails, since a network blip downloading
+        # Gradle plugins (eg foojay-resolver-convention) can fail the build before it compiles.
+        # a real error fails both times, so it still fails the check
+        run: ./gradlew build --configuration-cache || (echo "Build failed, retrying once in 15s" && sleep 15 && ./gradlew build --configuration-cache)
         working-directory: ./code
   #source: Lab-08 Repo
