@@ -190,7 +190,6 @@ abstract class ViewCard(
 /**CampsiteCard
  *
  * Subclass of ViewCard, CampsiteCard simply draws a card for a campsite with only a details button,
- * TODO: turn this into a general campsite card, then specialize for different views (including reserve for Lottery options and edit for owners etc.)
  *
  * @param title             the name of the campsite
  * @param subtitle          the park / area of the campsite
@@ -252,6 +251,62 @@ open class EntrantCampsiteCard(
     colourActionText = colourActionText,
     tag = tag
 )
+
+/**CampsiteCard
+ *
+ * Subclass of ViewCard, CampsiteCard simply draws a card for an owner's campsite with edit and details button,
+ *
+ * @param title             the name of the campsite
+ * @param subtitle          the park / area of the campsite
+ * @param rating            the star rating of the campsite
+ * @param onDetail          what happens when the `> Details` button is pressed, place some controller call here
+ * @param colourPrimary     the colour of the card's main background (the background of the upper part of the card)
+ * @param colourSecondary   the colour of the card's secondary background (quick details boxes, and the lower part of the card, were action buttons are)
+ * @param colourTitleText   the text colour of the title and subtitle
+ * @param colourActionText  the text colour of the `> Details` actionButton
+ * */
+open class OwnerCampsiteCard(
+    title: String,
+    subtitle: String,
+    rating: String,
+    val onDetail: () -> Unit,
+    val onEdit: () -> Unit,
+    colourPrimary: Color,
+    colourSecondary: Color,
+    colourTitleText: Color,
+    colourActionText: Color,
+    tag: String
+) : CampsiteCard(
+    title = title,
+    subtitle = subtitle,
+    rating = rating,
+    quickDetails = emptyList(),
+    actionButtons = List<ActionButton>(
+        size = 2, init = {
+            if (it == 0) {
+                ActionButton(
+                    onPress = onEdit,
+                    label = "/ Edit",
+                    tag = "EditButton"
+                )
+            }
+            else {
+                ActionButton(
+                    onPress = onDetail,
+                    label = "> Details",
+                    tag = "DetailButton"
+                )
+            }
+        }
+    ),
+    colourPrimary = colourPrimary,
+    colourSecondary = colourSecondary,
+    colourTitleText = colourTitleText,
+    colourActionText = colourActionText,
+    tag = tag
+)
+
+
 
 /**CampsiteCard
  *

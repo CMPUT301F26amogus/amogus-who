@@ -1,10 +1,12 @@
 package com.example.code.views
 
+import Model
 import com.example.code.Routes
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -15,6 +17,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -32,66 +35,52 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.controllers.OwnerCampsiteListController
+import com.example.code.model.Campsite
 
-class DummyCampsite(
-    val campsiteName: String,
-    val location: String,
-    val upcoming: Int,
-    val requests: Int,
-    val lotteryStatus: String,
-    val rating: Double,
-) {}
 
 /**
  *  OwnerCampsiteListView: the view for the owner to see their campsites
  *
  */
-class OwnerCampsiteListView : View() {
-//   val controller by lazy { OwnerCampsiteListController(model = M) }
+class OwnerCampsiteListView(model: Model) : View() {
+   val controller = OwnerCampsiteListController(model)
     // modify to pull real list from model
-    val campsites = mutableListOf(
-        DummyCampsite(
-            campsiteName = "Lodge A",
-            location = "Tunnel Mountain",
-            upcoming = 5,
-            requests = 2,
-            lotteryStatus = "Open",
-            rating = 4.0,
-        ),
-        DummyCampsite(
-            campsiteName = "Lodge B",
-            location = "Tunnel Mountain",
-            upcoming = 5,
-            requests = 2,
-            lotteryStatus = "Closed",
-            rating = 4.6,
-        )
-    )
 
-    @Composable
-    private fun SiteInfoBox(info: String, data: String) {
-        Box(
-            modifier = Modifier
-                .clip(shape = RoundedCornerShape(8.dp))
-                .background(color = cardAccent),
-        ) {
-            Row(
-                modifier = Modifier
-                    .padding(10.dp),
-            ) {
-                Text(
-                    text = "$info: ",
-                    fontSize = 12.sp,
-                    color = primaryGreenTextColor,
-                )
-                Text(
-                    text = data,
-                    fontSize = 12.sp,
-                    color = primaryTextColor,
-                )
+    var campsites : List<Campsite> = emptyList()
+    override fun update(model: Model) {
+        val myID = model.currentDeviceId
+        model.getCampsiteByOwner(
+            onResult = { result ->
+                campsites = result
             }
-        }
+        )
     }
+
+//    @Composable
+//    private fun SiteInfoBox(info: String, data: String) {
+//        Box(
+//            modifier = Modifier
+//                .clip(shape = RoundedCornerShape(8.dp))
+//                .background(color = cardAccent),
+//        ) {
+//            Row(
+//                modifier = Modifier
+//                    .padding(10.dp),
+//            ) {
+//                Text(
+//                    text = "$info: ",
+//                    fontSize = 12.sp,
+//                    color = primaryGreenTextColor,
+//                )
+//                Text(
+//                    text = data,
+//                    fontSize = 12.sp,
+//                    color = primaryTextColor,
+//                )
+//            }
+//        }
+//    }
 
 //    @Composable
 //    private fun CampsiteCard(
@@ -243,22 +232,7 @@ class OwnerCampsiteListView : View() {
                 .fillMaxSize(),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            items(count = campsites.size) { campsite ->
-//                CampsiteCard(
-//                    campsiteName = campsites[campsite].campsiteName,
-//                    location = campsites[campsite].location,
-//                    upcoming = campsites[campsite].upcoming,
-//                    requests = campsites[campsite].requests,
-//                    lotteryStatus = campsites[campsite].lotteryStatus,
-//                    rating = campsites[campsite].rating,
-//                    onClickEdit = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
-//                    onClickDetails = { navController.navigate(Routes.CAMPSITE_DETAILS) },
-//                )
-                Spacer(
-                    modifier = Modifier
-                        .height(20.dp)
-                )
-            }
+
 
             item {
                 ExtendedFloatingActionButton(
@@ -304,22 +278,55 @@ class OwnerCampsiteListView : View() {
                     .weight(1f)
                     .background(primaryGreenColor),
             ) {
-                Column(
+                LazyColumn(
                     modifier = Modifier
-                        .fillMaxSize()
-                        .padding(20.dp),
+                        .padding(vertical = 20.dp)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(25.dp)
                 ) {
-                    Content(navController)
+                    itemsIndexed(campsites) { index, c ->
+                        OwnerCampsiteCard(
+                            title = c.name,
+                            subtitle = c.location,
+                            rating = if (c.averageRating != null) {
+                                c.averageRating.toString()
+                            } else {
+                                "0.00"
+                            },
+                            onDetail = { controller.onCampsiteDetails(navController, c.id) },
+                            onEdit = { controller.onEditCampsite(navController, c.id) },
+                            colourPrimary = gray,
+                            colourSecondary = light,
+                            colourTitleText = primaryGreenTextColor,
+                            colourActionText = secondaryPurple,
+                            tag = "Card"
+                        )
+                    }
+                    item {
+                        ExtendedFloatingActionButton(
+                            onClick = { controller.onRegisterCampsite(navController)},
+                            shape = CircleShape,
+                            containerColor = primaryPurple,
+                            contentColor = primaryTextColor,
+                            icon = {
+                                Icon(
+                                    imageVector = Icons.Filled.Add,
+                                    contentDescription = "Register campsite"
+                                )
+                            },
+                            text = { Text("Register Campsite") },
+                        )
+                    }
                 }
+
+                Footer(
+
+                    navController = navController,
+                    backgroundColor = ownerFooterBackgroundColor,
+                    textColor = ownerFooterTextColor,
+                    buttonColor = ownerFooterButtonColor,
+                )
             }
-
-            Footer(
-
-                navController = navController,
-                backgroundColor = ownerFooterBackgroundColor,
-                textColor = ownerFooterTextColor,
-                buttonColor = ownerFooterButtonColor,
-            )
         }
     }
 
@@ -328,6 +335,6 @@ class OwnerCampsiteListView : View() {
 @Preview(showBackground = true)
 @Composable
 fun OwnerCampsiteListViewPreview() {
-    val listView = OwnerCampsiteListView()
+    val listView = OwnerCampsiteListView(Model())
     listView.ShowScreen(rememberNavController())
 }
