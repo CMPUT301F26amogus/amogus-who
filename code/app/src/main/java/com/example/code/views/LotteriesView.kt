@@ -19,7 +19,9 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
@@ -37,17 +39,26 @@ import com.example.code.model.Reservation
 import com.example.code.ui.theme.CodeTheme
 
 class LotteriesView(M: Model): View() {
-    var currentLotteries = emptyList<Lottery>()
+    // state list so the screen redraws when the lotteries load
+    val currentLotteries = mutableStateListOf<Lottery>()
     var previousLotteries = emptyList<Reservation>()
+
+    /** update
+     * gets the lotteries this user joined (UML: views only call model get-functions here)
+     *
+     * @param model the model, passed in when it notifies its views
+     */
     override fun update(model: Model) {
         model.getCancelledReservations(){
             result -> previousLotteries = result
         }
-        //model.getWaitlist(){ TODO: this function call is stopping the program from running, how do you expect to get waitlist without passing in the lotteryId?
-        //        result -> currentLotteries = result
-        //}
+        model.getLotteriesIn { lotteries ->
+            currentLotteries.clear()
+            currentLotteries.addAll(lotteries)
+        }
     }
     val controller = EntrantLotteriesController(M)
+    private val model = M
     val bgColor = secondaryGreenColor
     val headerbgColor = entrantHeaderBackgroundColor
     val headerTextColor = entrantHeaderTextColor
@@ -57,6 +68,9 @@ class LotteriesView(M: Model): View() {
     @Composable
     public fun ShowScreen(navController: NavController) {
         var state by remember {mutableStateOf("Current")}
+        // update() only runs when data changes, so also run it once when the screen opens
+        // (small break from the UML so the list isn't empty on first open)
+        LaunchedEffect(Unit) { update(model) }
         val tabs = mutableListOf<Tab>(
             Tab(name = "Current", color = entrantFooterBackgroundColor, option = {state="Current"}),
             Tab(name = "Previous", color = secondaryGreenColor, option = {state="Previous"}),
@@ -78,15 +92,13 @@ class LotteriesView(M: Model): View() {
                         modifier = Modifier.fillMaxSize()
                     ) {
                         itemsIndexed(currentLotteries) { index, lottery ->
-                            for (campsite in lottery.campsites)
-                                when (campsite) {
-                                    campsite ->
-                                    CurrentCampsiteLotteryRow(
-                                        lottery = lottery,
-                                        campsite = campsite,
-                                        navController = navController
-                                    )
-                                }
+                            for (campsite in lottery.campsites) {
+                                CurrentCampsiteLotteryRow(
+                                    lottery = lottery,
+                                    campsite = campsite,
+                                    navController = navController
+                                )
+                            }
                         }
                     }
                 }
