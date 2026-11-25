@@ -435,10 +435,10 @@ open class Model: ModelUpdater<View>{
             status = LotteryStatus.OPEN
         )
 
-        // one batch so the lottery and the copy on the campsite are saved together or not at all
+        // one batch so the lottery and the campsite pointing at it are saved together or not at all
         val batch = db.batch()
         batch.set(doc, lottery)
-        batch.update(campsiteRef.document(campsiteId), "lottery", lottery)
+        batch.update(campsiteRef.document(campsiteId), "lotteryId", doc.id)
 
         batch.commit()
             .addOnSuccessListener {
@@ -448,9 +448,20 @@ open class Model: ModelUpdater<View>{
             .addOnFailureListener { onResult(Result.failure(it)) }
     }
 
-        fun deleteLottery(lottery: Lottery) {
-            lotteryRef.document(lottery.id).delete()
-        }
+    fun deleteLottery(lottery: Lottery, onResult: (Boolean) -> Unit = {}) {
+        deleteQuery(waitlistRef(lottery.id))
+            .onSuccessTask {
+                val batch = db.batch()
+                batch.delete(lotteryRef.document(lottery.id))
+                lottery.campsiteIds.forEach { batch.update(campsiteRef.document(it), "lotteryId", "") }
+                batch.commit()
+            }
+            .addOnSuccessListener {
+                onResult(true)
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(false) }
+    }
         // TODO: this doesnt work, still need to fix this.
         fun updateLottery(lottery: Lottery, onResult: (Result<Unit>) -> Unit) {
             val updates = mapOf(
@@ -521,15 +532,21 @@ open class Model: ModelUpdater<View>{
          * @param campsiteId id of the campsite
          */
         fun getLottery(campsiteId: String, onResult: (Lottery?) -> Unit) {
-            campsiteRef.document(campsiteId).get().addOnSuccessListener { snapshot ->
-                if (snapshot.exists()) {
-                    val campsite = snapshot.toObject(Campsite::class.java)
-                    onResult(campsite?.lottery)
-                    notifyViews()
-                } else {
-                    onResult(null)
+            campsiteRef.document(campsiteId).get()
+                .addOnSuccessListener { snapshot ->
+                    val lotteryId = snapshot.getString("lotteryId")
+                    if (lotteryId.isNullOrBlank()) {
+                        onResult(null)
+                        return@addOnSuccessListener
+                    }
+                    lotteryRef.document(lotteryId).get()
+                        .addOnSuccessListener { lotterySnapshot ->
+                            onResult(lotterySnapshot.toObject(Lottery::class.java))
+                            notifyViews()
+                        }
+                        .addOnFailureListener { onResult(null) }
                 }
-            }
+                .addOnFailureListener { onResult(null) }
         }
 
         /**
@@ -788,7 +805,7 @@ open class Model: ModelUpdater<View>{
                 numGuests = guests,
                 status = ReservationStatus.ACTIVE,
                 rulesAccepted = rulesAccepted,
-                lotteryId = campsite.lottery.id
+                lotteryId = campsite.lotteryId
             )
             doc.set(newReservation).addOnSuccessListener { notifyViews() }
         }
