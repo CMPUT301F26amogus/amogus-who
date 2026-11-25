@@ -498,13 +498,13 @@ open class Model: ModelUpdater<View>{
          *
          *@param onResult gets the lotteries or an empty list if it failed
          */
-        fun getLotteriesIn(onResult: (List<Lottery>) -> Unit) {
+        fun getLotteriesIn(status: EntryStatus = EntryStatus.DECLINED, onResult: (List<Lottery>) -> Unit) {
             db.collectionGroup("entrants")
                 .whereEqualTo("deviceId", currentDeviceId)
                 .get()
                 .addOnSuccessListener { documents ->
                     val lotteryIds = documents.toObjects(WaitlistEntry::class.java)
-                        .filter { it.status != EntryStatus.DECLINED }
+                        .filter { it.status == status }
                         .map { it.lotteryId }
                         .distinct()
 
