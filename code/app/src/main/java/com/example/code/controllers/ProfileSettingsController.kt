@@ -53,7 +53,6 @@ class ProfileSettingsController(
      * Deletes the active users profile
      */
     public fun deleteProfile(navController: NavController){
-
         model.deleteProfile(){
             result -> if(result){
                 navController.navigate(Routes.REGISTRATION)

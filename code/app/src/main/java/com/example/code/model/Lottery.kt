@@ -14,7 +14,7 @@ import java.time.format.DateTimeParseException
  * they are turned into LocalDate only to be checked and compared
  * a blank date means not set yet, and a period needs both its start and its end or neither
  * end days are exclusive like [DateRange]
- *
+ *@property name name of the lottery
  * @property id unique id for this lottery
  * @property ownerId device id of the owner running it
  * @property campsiteIds ids of the campsites this lottery is for
@@ -30,6 +30,7 @@ import java.time.format.DateTimeParseException
  * or registration doesnt end before booking starts
  */
 class Lottery(
+    var name: String = "",
     val id: String = "",
     val ownerId: String = "",
     var campsiteIds: List<String> = emptyList(),
@@ -40,7 +41,7 @@ class Lottery(
     var numWinners: Int = 0,
     var waitlistCapacity: Int = 0,
     var status: LotteryStatus = LotteryStatus.OPEN,
-    waitlist: List<WaitlistEntry> = emptyList(),
+    val waitlist: List<WaitlistEntry> = emptyList()
 ) {
     //Methods are created using Claude Sonnet 5.5
     // Prompt: "I think we need functions to do the syntax checking on the temporary constructor variables? I think they should all be dates in the format: YYYY-MM-DD, which is of type LocalDate, maybe use the LocalDate type to do operations and checks on them but turn them back into strings for storage because firebase doesnt support LocalDate"
