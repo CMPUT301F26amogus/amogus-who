@@ -160,7 +160,10 @@ class RegistrationView(M:Model): View() {
      */
     private fun goToHome(navController: NavController, homeRoute: String) {
         navController.navigate(homeRoute) {
-            popUpTo(Routes.REGISTRATION) { inclusive = true }
+            // clear every screen before this, not just Register, so the new home is the only one left.
+            // otherwise after Delete Profile -> Register, the old home stays underneath and the
+            // footer's Home button (which goes to the first screen) takes an owner to the entrant home
+            popUpTo(navController.graph.id) { inclusive = true }
         }
     }
 
