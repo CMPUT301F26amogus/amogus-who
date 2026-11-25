@@ -60,7 +60,7 @@ class OwnerLotteriesView(model : Model) : View() {
     val controller by lazy { OwnerLotteriesController(model = model) }
 
     // modify to pull real lotteries from model
-    val lotteries = mutableListOf(
+    val lotteries = mutableListOf(  // TODO: when Update() is written 'lotteries' will need to become a var
         DummyLottery(
             campsiteName = "Site Alpha",
             location = "Downtown Edmonton",
@@ -78,6 +78,8 @@ class OwnerLotteriesView(model : Model) : View() {
             status = LotteryStatus.DRAWN,
         ),
     )
+
+    // TODO: add update() function which updates the lotteries list with values from model
 
     @Composable
     private fun SiteInfoBox(info: String, data: String) {
@@ -113,6 +115,7 @@ class OwnerLotteriesView(model : Model) : View() {
         winners: Int,
         drawDate: String,
         status: LotteryStatus,
+        navController: NavController
     ) {
         val action = if (status == LotteryStatus.OPEN) "Draw" else "Winners"
 
@@ -214,7 +217,7 @@ class OwnerLotteriesView(model : Model) : View() {
                     .padding(10.dp),
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { controller.onEditLottery() },
+                    onClick = { controller.onEditLottery(navController) },
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
@@ -266,7 +269,7 @@ class OwnerLotteriesView(model : Model) : View() {
     }
 
     @Composable
-    private fun Content() {
+    private fun Content(navController: NavController) {
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize(),
@@ -280,6 +283,7 @@ class OwnerLotteriesView(model : Model) : View() {
                     winners = lotteries[lottery].winners,
                     drawDate = lotteries[lottery].drawDate,
                     status = lotteries[lottery].status,
+                    navController = navController
                 )
                 if (lottery != lotteries.size - 1) {
                     Spacer(
@@ -330,7 +334,7 @@ class OwnerLotteriesView(model : Model) : View() {
                         .fillMaxSize()
                         .padding(20.dp),
                 ) {
-                    Content()
+                    Content(navController)
                 }
             }
 
