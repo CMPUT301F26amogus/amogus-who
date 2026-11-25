@@ -551,111 +551,42 @@ open class Model: ModelUpdater<View>{
         ) {
             val lotteryDocument = lotteryRef.document(lotId)
 
-            // First, retrieve the lottery.
-            lotteryDocument.get()
-                .addOnSuccessListener { lotteryDoc ->
+            db.runTransaction<List<String>> { transaction ->
+                val snapshot = transaction.get(lotteryDocument)
+                val lottery = snapshot.toObject(Lottery::class.java)
+                if (!snapshot.exists() || lottery == null) throw Exception("Lottery not found")
 
-                    if (!lotteryDoc.exists()) {
-                        onResult(Result.failure(Exception("Lottery not found")))
-                        return@addOnSuccessListener
-                    }
-
-                    // Check whether registration has ended.
-                    // registrationEnd is saved as a string like 2027-05-01 and the end day is exclusive
-                    // if it was never set there is nothing to wait for
-                    val regEnd = lotteryDoc.getString("registrationEnd")
-                        ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-
-                    if (regEnd != null && LocalDate.now().isBefore(regEnd)) {
-                        onResult(Result.failure(Exception("Registration has not ended")))
-                        return@addOnSuccessListener
-                    }
-
-                    // Check whether the lottery has already been drawn.
-                    val status = lotteryDoc.getString("status")
-
-                    if (status != null && status != LotteryStatus.OPEN.name) {
-                        onResult(Result.failure(Exception("Lottery has already been drawn")))
-                        return@addOnSuccessListener
-                    }
-
-                    val winnerCount = lotteryDoc.getLong("numWinners")?.toInt() ?: 0
-
-                    if (winnerCount <= 0) {
-                        onResult(Result.failure(Exception("Invalid winner count")))
-                        return@addOnSuccessListener
-                    }
-
-                    // Retrieve all entrants who are still waiting.
-                    // the waitlist is already inside this lottery so no need to filter by lottery id
-                    waitlistRef(lotId)
-                        .whereEqualTo("status", EntryStatus.WAITING.name)
-                        .get()
-                        .addOnSuccessListener { documents ->
-
-                            val entries = documents.documents
-
-                            if (entries.size < winnerCount) {
-                                onResult(
-                                    Result.failure(Exception("Not enough eligible entrants"))
-                                )
-                                return@addOnSuccessListener
-                            }
-
-                            // Randomly select winners.
-                            val winners = entries.shuffled().take(winnerCount)
-                            // WaitlistEntry stores the entrants device id as "deviceId"
-                            val winnerIds = winners.mapNotNull {
-                                it.getString("deviceId")
-                            }
-
-                            val winnerEntryIds = winners.map { it.id }.toSet()
-
-                            // Update all waitlist entries and the lottery.
-                            val batch = db.batch()
-
-                            for (entry in entries) {
-                                val newStatus =
-                                    if (entry.id in winnerEntryIds) {
-                                        EntryStatus.SELECTED
-                                    } else {
-                                        EntryStatus.NOT_SELECTED
-                                    }
-
-                                batch.update(
-                                    entry.reference,
-                                    "status",
-                                    newStatus.name
-                                )
-                            }
-
-                            batch.update(
-                                lotteryDocument,
-                                "status",
-                                LotteryStatus.DRAWN.name
-                            )
-
-                            batch.update(
-                                lotteryDocument,
-                                "winnerIds",
-                                winnerIds
-                            )
-
-                            batch.commit()
-                                .addOnSuccessListener {
-                                    onResult(Result.success(winnerIds))
-                                }
-                                .addOnFailureListener { exception ->
-                                    onResult(Result.failure(exception))
-                                }
-                        }
-                        .addOnFailureListener { exception ->
-                            onResult(Result.failure(exception))
-                        }
+                // registrationEnd is a string like 2027-05-01 and the end day is exclusive
+                // if it was never set there is nothing to wait for
+                val regEnd = lottery.registrationEnd.takeIf { it.isNotBlank() }
+                    ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+                if (regEnd != null && LocalDate.now().isBefore(regEnd)) {
+                    throw Exception("Registration has not ended")
                 }
-                .addOnFailureListener { exception ->
-                    onResult(Result.failure(exception))
+
+                if (lottery.status != LotteryStatus.OPEN) throw Exception("Lottery has already been drawn")
+                if (lottery.numWinners <= 0) throw Exception("Invalid winner count")
+
+                val waiting = lottery.waitlist.filter { it.status == EntryStatus.WAITING }
+                if (waiting.size < lottery.numWinners) throw Exception("Not enough eligible entrants")
+
+                // an entrys id is the entrants device id
+                val winnerIds = waiting.shuffled().take(lottery.numWinners).map { it.id }
+                val winnerSet = winnerIds.toSet()
+                waiting.forEach {
+                    it.status = if (it.id in winnerSet) EntryStatus.SELECTED else EntryStatus.NOT_SELECTED
                 }
+
+                transaction.update(
+                    lotteryDocument,
+                    "waitlist", lottery.waitlist,
+                    "status", LotteryStatus.DRAWN.name,
+                    "winnerIds", winnerIds
+                )
+                winnerIds
+            }
+                .addOnSuccessListener { onResult(Result.success(it)) }
+                .addOnFailureListener { onResult(Result.failure(it)) }
         }
         //endregion
 
@@ -1116,13 +1047,9 @@ open class Model: ModelUpdater<View>{
             deleteMyReservations().reportTo(onResult)
         }
 
-        // lotteries the user runs, the entrants subcollection isnt deleted with its parent so it goes first
-        fun deleteOwnedLotteries(): Task<Void> =
-            lotteryRef.whereEqualTo("ownerId", currentDeviceId).get().onSuccessTask { snapshot ->
-                val lotteries = snapshot.documents
-                Tasks.whenAll(lotteries.map { deleteQuery(it.reference.collection("entrants")) })
-                    .onSuccessTask { deleteDocs(lotteries.map { it.reference }) }
-            }
+    // lotteries the user runs, their waitlists are inside them so they go too
+    fun deleteOwnedLotteries(): Task<Void> =
+        deleteQuery(lotteryRef.whereEqualTo("ownerId", currentDeviceId))
 
         // campsites the user owns
         fun deleteOwnedCampsites(): Task<Void> =
