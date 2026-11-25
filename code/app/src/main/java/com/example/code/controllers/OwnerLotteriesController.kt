@@ -1,6 +1,8 @@
 package com.example.code.controllers
 
 import Model
+import androidx.navigation.NavController
+import com.example.code.Routes.ADD_EDIT_LOTTERY
 import com.example.code.model.Lottery
 import com.example.code.model.LotteryStatus
 
@@ -10,8 +12,9 @@ class OwnerLotteriesController(
     /**
      * Navigates to the owner lottery screen.
      */
-    fun navigateToOwnerLottery() {
-
+    fun onEditLottery(navController: NavController, lotteryToDisplay: Lottery? = null) {  // Needs to take a NavController and Lottery object
+        model.settTheLottery(lotteryToDisplay)
+        navController.navigate(ADD_EDIT_LOTTERY)
     }
 
     /**
@@ -24,16 +27,14 @@ class OwnerLotteriesController(
         }
     }
 
-    // TODO: should auto draw, we need to still figure it out
     fun onDrawLottery() {
 
     }
 
-    //Navigates the owner to a view that contains the winners of the lottery
     fun onViewWinners() {
 
     }
-    // Navigates the owner to a view that contains the entrants in the waitlist of the lottery
+
     fun onWaitlist() {
 
     }
