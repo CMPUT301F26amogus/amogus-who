@@ -542,7 +542,6 @@ open class Model: ModelUpdater<View>{
                     lotteryRef.document(lotteryId).get()
                         .addOnSuccessListener { lotterySnapshot ->
                             onResult(lotterySnapshot.toObject(Lottery::class.java))
-                            notifyViews()
                         }
                         .addOnFailureListener { onResult(null) }
                 }
