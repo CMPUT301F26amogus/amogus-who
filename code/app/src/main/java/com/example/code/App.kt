@@ -115,7 +115,7 @@ fun App(id: String, model: Model) {
     val lotteriesView = remember { LotteriesView(model) }
     val searchView = remember { SearchView(model) }
     val searchResultsView = remember { SearchResultsView(model) }
-    val ownerCampsitesView = remember { OwnerCampsiteListView() }
+    val ownerCampsitesView = remember { OwnerCampsiteListView(model) }
     val ownerReservationsView = remember { OwnerReservationsView(model) }
     val ownerLotteriesView = remember { OwnerLotteriesView(model) }
     val addEditCampsiteView = remember { AddEditCampsite(model) }
