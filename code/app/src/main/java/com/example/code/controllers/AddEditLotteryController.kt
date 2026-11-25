@@ -1,14 +1,16 @@
 package com.example.code.controllers
 
 import Model
+import androidx.navigation.NavController
 import com.example.code.model.Lottery
 import com.example.code.model.LotteryStatus
+import com.example.code.Routes
 
 class AddEditLotteryController(
     private val model: Model
 ) {
 
-    /*
+    /**
      * A campsite owner presses the save button and creates/updates a lottery
      * 
      * @param campsites a list of campsite IDs
@@ -21,27 +23,31 @@ class AddEditLotteryController(
      * 
      */
     fun onSaveLottery(
-        campsites: List<String>,
-        numWinners: Int,
+        campsites: List<String>, // is this how the view will work? Will you have access to a list of campsiteId's?
+        numWinners: Int,            // I assumed you would only have one id, and you edit the lottery to add more campsites
         waitlistCapacity: Int,
         registrationStart: String,
         registrationEnd: String,
         bookingStart: String,
         bookingEnd: String,
     ) {
-        // TODO: add this lottery to the database
-        // TODO: throw an exception when one of these args are invalid
-        // if you're not sure about this part, leave it and we can work on 
-        // exception handling later
+
+        model.createLottery(campsites[1], registrationStart, registrationEnd, bookingStart, bookingEnd, numWinners, waitlistCapacity) {
+            result ->
+            result.onSuccess { print("success") }
+            result.onFailure { e-> print(e.message) } // The exception is caught in the model, this is error message if the exception is thrown.
+        }
+
+
     }
 
-    /*
+    /**
      * Cancel lottery creation/update
      * 
     */
-    fun onCancel() {
-        // some navigation: go back to the lotteries page, 
-        // or just steal the "back" navigation function
+    fun onCancel(navController: NavController) {
+        navController.navigate(Routes.LOTTERIES) // TODO: this should be lotteries page, I think this is right, need double check
+
     }
     
 }
