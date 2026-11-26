@@ -88,7 +88,7 @@ class Campsite(
 
     var tagList: List<String>
         get() = tags.toList()
-        set(value) { tags = value.toSet() }
+        set(value) { tags = value}
 
     // one rating per user keyed by user id
     private val _ratings = mutableMapOf<String, Rating>()
