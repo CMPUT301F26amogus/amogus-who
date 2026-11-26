@@ -1,4 +1,4 @@
-package com.example.code.Controllers
+package com.example.code.controllers
 import Model
 import androidx.navigation.NavController
 import com.example.code.model.Campsite

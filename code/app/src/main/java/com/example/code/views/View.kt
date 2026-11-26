@@ -3,7 +3,6 @@ import com.example.code.Routes
 import com.example.code.goHome
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -24,10 +23,6 @@ import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -57,6 +52,7 @@ abstract class View: ViewObserver<Model>{
     protected val primaryPurple = Color(0xffe8def8)
     protected val secondaryPurple = Color(0xFF6750A4)
     protected val tertiaryPurple = Color(0xfff7f2fa)
+    protected val dangerousActionColor = Color(0xfffad2cc)
     protected val entrantHeaderBackgroundColor = Color(0xff28b019)
     protected val entrantHeaderTextColor = Color(0xffffffff)
     protected val entrantFooterBackgroundColor = primaryGreenColor
