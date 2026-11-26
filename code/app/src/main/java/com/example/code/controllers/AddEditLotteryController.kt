@@ -22,7 +22,7 @@ class AddEditLotteryController(
      * @param bookingEnd the start date of the booking period
      * 
      */
-    fun onSaveLottery(
+    fun onSave(
         campsites: List<String>,
         numWinners: Int,
         waitlistCapacity: Int,
@@ -43,10 +43,20 @@ class AddEditLotteryController(
 
     /**
      * Cancel lottery creation/update
-     * @param navController NavController to switch out of this page
+     * @param navController to switch out of this page
      */
     fun onCancel(navController: NavController) {
         navController.navigate(Routes.LOTTERIES) // TODO: this should be lotteries page, I think this is right, need double check
+    }
+
+    /**
+     * Delete the lottery being edited
+     * @param lottery to be deleted
+     * @param navController to switch out of this page once deleted
+     */
+    fun onDelete(navController: NavController) {
+        // TODO: delete the lottery from the database
+        navController.navigate(Routes.LOTTERIES)
     }
     
 }
