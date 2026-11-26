@@ -298,6 +298,7 @@ open class Model: ModelUpdater<View>{
         desc: String,
         maxOcc: Int,
         price: Double,
+        availability: AvailabilitySchedule,
         onResult: (Boolean) -> Unit
     ) {
         if (currentDeviceId.isBlank()) {
@@ -308,7 +309,7 @@ open class Model: ModelUpdater<View>{
         val campsite = try {
             Campsite(
                 id = campsiteId, ownerId = currentDeviceId, name = campName, location = location,
-                description = desc, maxOccupancy = maxOcc, pricePerNight = price
+                description = desc, maxOccupancy = maxOcc, pricePerNight = price, availability = availability
             )
         } catch (e: IllegalArgumentException) {
             Log.e("Model", "Invalid campsite: ${e.message}")
@@ -662,8 +663,25 @@ open class Model: ModelUpdater<View>{
                 }
         }
 
-    fun filterCampsite() {
+    fun filterCampsite(filter: Campsite, onResult: (List<Campsite>) -> Unit) {
+        campsiteRef.get()
+            .addOnSuccessListener { result ->
+                val campsites = result.toCampsites()
 
+                val filtered = campsites.filter { campsite ->
+
+                    val matchesLocation = filter.location.isBlank() ||
+                            campsite.location.contains(filter.location, ignoreCase = true)
+
+                    val matchesGuest = campsite.maxOccupancy >= filter.maxOccupancy
+
+                    matchesLocation && matchesGuest
+                }
+                onResult(filtered)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
     }
 
     private fun QuerySnapshot.toCampsites(): List<Campsite> = documents.mapNotNull { d ->
@@ -696,6 +714,7 @@ open class Model: ModelUpdater<View>{
                     onResult(campsite[0].id)
                 }
         }
+    }
         //endregion
 
 
@@ -1210,5 +1229,4 @@ open class Model: ModelUpdater<View>{
                 }
         }
         //endregion
-    }
 }
