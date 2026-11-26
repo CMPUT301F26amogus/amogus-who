@@ -20,6 +20,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.ExtendedFloatingActionButton
@@ -238,7 +239,7 @@ class OwnerLotteriesView(model : Model) : View() {
                         contentColor = secondaryPurple,
                         icon = {
                             Icon(
-                                imageVector = Icons.Filled.PlayArrow,
+                                imageVector = Icons.Filled.Star,
                                 contentDescription = "View winners",
                             )
                         },
@@ -359,6 +360,7 @@ fun OwnerLotteriesViewPreview() {
             waitlist = waitlistAlpha,
             registrationStart = "2026-10-01",
             registrationEnd = "2026-10-24",
+            status = LotteryStatus.INACTIVE
         ),
         Lottery(
             id = "id_beta2",
