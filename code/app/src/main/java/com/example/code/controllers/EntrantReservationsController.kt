@@ -16,7 +16,7 @@ class EntrantReservationsController(
      * @param onResult gets the reservations sorted by check in or an empty list if it failed
      */
     fun onActiveReservations(onResult: (List<EntrantReservation>) -> Unit) {
-        model.getEntrantActiveReservations(model.currentDeviceId, onResult)
+//        model.getEntrantActiveReservations(model.currentDeviceId, onResult)
     }
 
     /**
@@ -25,7 +25,7 @@ class EntrantReservationsController(
      * @param onResult gets the reservations newest first or an empty list if it failed
      */
     fun onPastReservations(onResult: (List<EntrantReservation>) -> Unit) {
-        model.getEntrantPastReservations(model.currentDeviceId, onResult)
+//        model.getCancelledReservations(onResult)
     }
 
     /**
@@ -35,7 +35,7 @@ class EntrantReservationsController(
      * @param onResult success once its cancelled or a failure saying why it couldnt be
      */
     public fun cancelReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
-        model.cancelReservation(reservation, onResult)
+//        model.cancelReservation(reservation)
     }
 
     /**
