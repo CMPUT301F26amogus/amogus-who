@@ -51,7 +51,7 @@ class OwnerCampsiteListView(model: Model) : View() {
     var campsites : List<Campsite> = emptyList()
     override fun update(model: Model) {
         val myID = model.currentDeviceId
-        model.getCampsiteByOwner(
+        model.getCampsiteByOwner(myID,
             onResult = { result ->
                 campsites = result
             }
