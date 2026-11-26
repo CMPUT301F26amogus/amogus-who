@@ -859,7 +859,7 @@ open class Model: ModelUpdater<View>{
          *
          * @param lotteryId id of the campsite
          */
-        fun getLottery(lotteryId: String, onResult: (Lottery?) -> Unit) {
+        fun getLotteryById(lotteryId: String, onResult: (Lottery?) -> Unit) {
 
             lotteryRef.document(lotteryId).get()
                 .addOnSuccessListener { lotterySnapshot ->
