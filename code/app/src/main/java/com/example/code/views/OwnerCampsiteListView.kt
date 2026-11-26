@@ -244,16 +244,16 @@ class OwnerCampsiteListView : View() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(count = campsites.size) { campsite ->
-//                CampsiteCard(
-//                    campsiteName = campsites[campsite].campsiteName,
-//                    location = campsites[campsite].location,
-//                    upcoming = campsites[campsite].upcoming,
-//                    requests = campsites[campsite].requests,
-//                    lotteryStatus = campsites[campsite].lotteryStatus,
-//                    rating = campsites[campsite].rating,
-//                    onClickEdit = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
-//                    onClickDetails = { navController.navigate(Routes.CAMPSITE_DETAILS) },
-//                )
+                CampsiteCard(
+                    title = campsites[campsite].campsiteName,
+                    subtitle = campsites[campsite].location,
+                    upcoming = campsites[campsite].upcoming,
+                    requests = campsites[campsite].requests,
+                    lotteryStatus = campsites[campsite].lotteryStatus,
+                    rating = campsites[campsite].rating,
+                    onClickEdit = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
+                    onClickDetails = { navController.navigate(Routes.CAMPSITE_DETAILS) },
+                )
                 Spacer(
                     modifier = Modifier
                         .height(20.dp)
