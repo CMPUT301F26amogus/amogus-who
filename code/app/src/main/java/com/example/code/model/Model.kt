@@ -700,7 +700,7 @@ open class Model: ModelUpdater<View>{
             }
     }
         //endregion
-        
+
     /** Register to hold a specific lottery to be displayed, for the purposes of edit lottery
      * Ideally this is a lottery ID, which getLottery() would use to query the thing on the spot */
     var theLottery: Lottery? = null  //  "the" suggests a singular specific item I also didn't want to possibly interfere with leaveWaitlist
