@@ -133,7 +133,7 @@ class OwnerCampsiteListView(model: Model) : View() {
                         }
                     }
                 }
-
+            }
                 Footer(
 
                     navController = navController,
@@ -141,7 +141,7 @@ class OwnerCampsiteListView(model: Model) : View() {
                     textColor = ownerFooterTextColor,
                     buttonColor = ownerFooterButtonColor,
                 )
-            }
+
         }
     }
 
