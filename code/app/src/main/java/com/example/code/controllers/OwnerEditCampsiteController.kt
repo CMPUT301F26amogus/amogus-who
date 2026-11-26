@@ -1,4 +1,4 @@
-package com.example.code.Controllers
+package com.example.code.controllers
 import Model
 import androidx.navigation.NavController
 import com.example.code.model.Campsite
@@ -29,14 +29,15 @@ class OwnerEditCampsiteController (
         } catch (e: IllegalArgumentException) {
             return false
         }
-        navController.navigate("owner_home") // TODO: Is this the right screen to go to after editing? idk
+        navController.popBackStack() // TODO: Is this the right screen to go to after editing? idk
         return true
     }
 
     fun onAddCampsite (navController: NavController, new : Campsite) {
         // createCampsite needs a callback now, only leave the screen once its saved
         model.createCampsite(new) { saved ->
-            if (saved) navController.navigate("owner_home")
+            if (saved) navController.popBackStack()
         }
     }
 }
+
