@@ -150,7 +150,7 @@ interface InputFieldFunctions {
         )
     }
 
-    fun textStateToFloat(s: TextFieldState): Float {
+    fun textStateToDouble(s: TextFieldState): Double {
         val old = s.text.toString()
         var out = "0.00"
         if (old.length == 1) {
@@ -162,7 +162,7 @@ interface InputFieldFunctions {
         else if (old.length > 2) {
             out = "%s.%s".format(old.substring(0, (old.length - 3)), old.substring(old.length - 2, old.length-1))
         }
-        return out.toFloat()
+        return out.toDouble()
     }
 
 

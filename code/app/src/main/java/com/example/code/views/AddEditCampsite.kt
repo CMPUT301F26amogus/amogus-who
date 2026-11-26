@@ -223,7 +223,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
                                     newLocation = addressState.text.toString(),
                                     newDescription = campDescriptionState.text.toString(),
                                     newMaxOccupants = maxGuestsState.text.toString().toInt(),
-                                    newPrice = pricePerNightState.text.toString().toDouble()
+                                    newPrice = textStateToDouble(pricePerNightState)
                                     )
                             }
                             else {  //  we are registering a brand-new campsite
@@ -234,7 +234,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
                                     location = addressState.text.toString(),
                                     desc = campDescriptionState.text.toString(),
                                     maxOcc = maxGuestsState.text.toString(),
-                                    price = pricePerNightState.text.toString(),
+                                    price = textStateToDouble(pricePerNightState).toString(),
                                     )
                             }
                             // call Controller to navController to pop
