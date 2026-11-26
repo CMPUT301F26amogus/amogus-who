@@ -1,6 +1,7 @@
 package com.example.code.Controllers
 import Model
 import androidx.navigation.NavController
+import com.example.code.model.AvailabilitySchedule
 import com.example.code.model.Campsite
 
 class OwnerEditCampsiteController (
@@ -28,8 +29,8 @@ class OwnerEditCampsiteController (
     }
 
     fun onAddCampsite (navController: NavController,campName: String, location: String, desc: String, maxOcc: Int,
-                       price: Double, onResult: (Boolean) -> Unit) {
-        model.createCampsite(campName, location, desc, maxOcc, price) { success ->
+                       price: Double, availability: AvailabilitySchedule, onResult: (Boolean) -> Unit) {
+        model.createCampsite(campName, location, desc, maxOcc, price, availability) { success ->
             onResult(success)
             if (success) {
                 navController.popBackStack()

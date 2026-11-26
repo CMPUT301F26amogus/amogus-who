@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.code.Controllers.OwnerEditCampsiteController
+import com.example.code.model.AvailabilitySchedule
 import com.example.code.model.Campsite
 import com.example.code.ui.theme.CodeTheme
 
@@ -63,6 +64,8 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
     var maxGuests : String = ""
 
     var pricePerNight : String = ""
+
+    var availability: AvailabilitySchedule = AvailabilitySchedule(emptyList(), emptyList())
 
     var bookingPeriodStart : String = ""
 
@@ -267,7 +270,8 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
                                 }
                             } else {
                                 controller.onAddCampsite(
-                                    navController, name, location, description, maxOccupancy, pricePerNight
+                                    navController, name, location, description, maxOccupancy, pricePerNight,
+                                    AvailabilitySchedule(listOf(bookingPeriodStart,bookingPeriodEnd), emptyList())
                                 ) { success ->
                                     val message = if (success) "Campsite registered" else "Could not register the campsite"
                                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
