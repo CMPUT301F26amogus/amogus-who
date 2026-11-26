@@ -12,6 +12,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
@@ -40,10 +41,6 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
 
     val controller = AddEditLotteryController(model)
 
-    val fieldModifier = Modifier
-        .background(color = creamBG)
-        .padding(10.dp)
-        .clip(shape = RoundedCornerShape(6.dp))
     var headerName = if (isEdit) { "Edit Lottery" } else { "Add Lottery" }
 
 
@@ -83,6 +80,79 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
         else { clear() }
     }
 
+    @Composable
+    private fun CampsiteSelect() {
+        TextField(
+            value = "Selected Campsite(s)*", // required field
+            onValueChange = {},
+            modifier = Modifier
+                .fillMaxWidth()
+        )
+    }
+
+    @Composable
+    private fun WinnersAndWaitlistCaps() {
+        Row {
+            TextField(
+                value = "Max winners*", // required field
+                onValueChange = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            TextField(
+                value = "Waitlist",
+                onValueChange = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+        }
+    }
+
+    @Composable
+    private fun RegistrationPeriod() {
+        Row {
+            TextField(
+                value = "Start Date*", // required field
+                onValueChange = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            TextField(
+                value = "End Date*", // required field
+                onValueChange = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+        }
+    }
+
+    @Composable
+    private fun BookingPeriod() {
+        Row {
+            TextField(
+                value = "Start Date*", // required field
+                onValueChange = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+            Spacer(modifier = Modifier.width(10.dp))
+            TextField(
+                value = "End Date*", // required field
+                onValueChange = {},
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .weight(1f)
+            )
+        }
+    }
+
     /**
      *  This function renders this page
      *
@@ -90,13 +160,6 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      */
     @Composable
     fun ShowScreen(navController: NavController) {
-        val lotteryCampsiteIDState = rememberTextFieldState(lotteryCampsiteID.toString())
-        val waitListCapacityState =
-            if (waitListCapacity == null) { rememberTextFieldState("0") }
-            else  { rememberTextFieldState(waitListCapacity.toString()) }
-        val drawDateState = rememberTextFieldState(drawDate)
-        val numberOfWinnersState = rememberTextFieldState(numberOfWinners.toString())
-
 
         Column(
             modifier = Modifier
@@ -107,7 +170,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                 textColor = ownerHeaderTextColor,
             )
 
-            Column(  //  body of screen
+            Column(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 modifier = Modifier.fillMaxWidth()
                     .weight(1f)
@@ -115,126 +178,87 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                     .fillMaxHeight()
                     .padding(20.dp),
             ) {
-                // campsite input field, by campsite ID
-                Row(
-                    modifier = Modifier
-                        .clip(shape = RoundedCornerShape(6.dp))
-                        .background(light)
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                ) {
-                    Text(
-                        text = "TODO: campsites dropdown menu",
-                        color = primaryTextColor
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // winners and waitlist caps set here
-                Row(
-                    modifier = Modifier
-                        .clip(shape = RoundedCornerShape(6.dp))
-                        .background(light)
-                        .fillMaxWidth()
-                        .padding(10.dp)
-                ) {
-                    TextField(
-                        value = "",
-                        onValueChange = {},
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
-                    Spacer(modifier = Modifier.width(10.dp))
-                    TextField(
-                        value = "",
-                        onValueChange = {},
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .weight(1f)
-                    )
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // registration period
-                Column(
-                    modifier = Modifier
-                        .clip(shape = RoundedCornerShape(6.dp))
-                        .background(light)
-                        .fillMaxWidth()
-                        .padding(10.dp)) {
-
-                    Text(
-                        text = "Registration Period",
-                        modifier = Modifier.padding(bottom = 5.dp),
-                        color = primaryTextColor
-                    )
-
-                    Row(
-                        modifier = Modifier
-                    ) {
-                        TextField(
-                            value = "",
-                            onValueChange = {},
+                LazyColumn {
+                    item {
+                        Row(
                             modifier = Modifier
+                                .clip(shape = RoundedCornerShape(6.dp))
+                                .background(light)
                                 .fillMaxWidth()
-                                .weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        TextField(
-                            value = "",
-                            onValueChange = {},
+                                .padding(10.dp)
+                        ) {
+                            CampsiteSelect()
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+                    item {
+                        Row(
                             modifier = Modifier
+                                .clip(shape = RoundedCornerShape(6.dp))
+                                .background(light)
                                 .fillMaxWidth()
-                                .weight(1f)
-                        )
+                                .padding(10.dp)
+                        ) {
+                            WinnersAndWaitlistCaps()
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
 
-                }
-
-                Spacer(modifier = Modifier.height(10.dp))
-
-                // booking period
-                Column(
-                    modifier = Modifier
-                        .clip(shape = RoundedCornerShape(6.dp))
-                        .background(light)
-                        .fillMaxWidth()
-                        .padding(10.dp)) {
-
-                    Text(
-                        text = "Booking Period",
-                        modifier = Modifier.padding(bottom = 5.dp),
-                        color = primaryTextColor
-                    )
-
-                    Row(
-                        modifier = Modifier
-                    ) {
-                        TextField(
-                            value = "",
-                            onValueChange = {},
+                    item {
+                        Column(
                             modifier = Modifier
+                                .clip(shape = RoundedCornerShape(6.dp))
+                                .background(light)
                                 .fillMaxWidth()
-                                .weight(1f)
-                        )
-                        Spacer(modifier = Modifier.width(10.dp))
-                        TextField(
-                            value = "",
-                            onValueChange = {},
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .weight(1f)
-                        )
+                                .padding(10.dp)) {
+
+                            Text(
+                                text = "Registration Period",
+                                modifier = Modifier.padding(bottom = 5.dp),
+                                color = primaryTextColor
+                            )
+
+                            Row(
+                                modifier = Modifier
+                            ) {
+                                RegistrationPeriod()
+                            }
+
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
                     }
 
+                    item {
+                        Column(
+                            modifier = Modifier
+                                .clip(shape = RoundedCornerShape(6.dp))
+                                .background(light)
+                                .fillMaxWidth()
+                                .padding(10.dp)) {
+
+                            Text(
+                                text = "Booking Period",
+                                modifier = Modifier.padding(bottom = 5.dp),
+                                color = primaryTextColor
+                            )
+
+                            Row(
+                                modifier = Modifier
+                            ) {
+                                BookingPeriod()
+                            }
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
                 }
 
+                // place the buttons at the bottom of the screen
                 Spacer(modifier = Modifier.weight(1f))
 
-                //  buttons for cancelling or saving changes
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -266,12 +290,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         contentColor = primaryTextColor,
                         shape = CircleShape,
                         onClick = {
-//                            controller.onSave()
+                            controller.onDelete(navController)
                         },
                         content = {
                             Icon(
                                 imageVector = Icons.Filled.Delete,
-                                contentDescription = "Register Lottery",
+                                contentDescription = "Delete Lottery",
                             )
                         },
                     )
@@ -283,7 +307,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         contentColor = primaryGreenTextColor,
                         shape = CircleShape,
                         onClick = {
-//                            controller.onSave()
+                            // controller.onSave()
                         },
                         icon = {
                             Icon(
@@ -299,7 +323,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         },
                     )
                 }
-            }  //  end of body of screen
+            }
 
             Footer(
                 textColor = ownerFooterTextColor,

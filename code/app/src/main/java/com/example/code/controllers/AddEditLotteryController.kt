@@ -46,7 +46,7 @@ class AddEditLotteryController(
      * @param navController to switch out of this page
      */
     fun onCancel(navController: NavController) {
-        navController.navigate(Routes.LOTTERIES) // TODO: this should be lotteries page, I think this is right, need double check
+        navController.popBackStack()
     }
 
     /**
@@ -56,7 +56,7 @@ class AddEditLotteryController(
      */
     fun onDelete(navController: NavController) {
         // TODO: delete the lottery from the database
-        navController.navigate(Routes.LOTTERIES)
+        navController.popBackStack()
     }
     
 }
