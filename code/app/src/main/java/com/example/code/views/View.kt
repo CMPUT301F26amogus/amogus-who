@@ -4,6 +4,7 @@ import com.example.code.goHome
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -11,10 +12,14 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
 import androidx.compose.material3.Text
@@ -23,10 +28,13 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -192,28 +200,96 @@ abstract class View: ViewObserver<Model>{
             }
         }
     }
+
+    /**
+     * Component to display information and actions about a certain object
+     * Super useful for lists of things, such as reservations and lotteries
+     *
+     * @param primaryColor background color of the upper half of the card
+     * @param accentColor background color of the lower half of the card
+     * @param primaryContent content in the upper half of the card
+     * @param secondaryContent content in the lower half of the card, typically a few functions
+     *
+     */
     @Composable
-    protected fun TabManager(tabs:List<Tab>, state:String){
-        Column(modifier = Modifier.height(50.dp)) {
-            LazyRow(modifier = Modifier.height(50.dp)) {
-                itemsIndexed(tabs) { index,tab: Tab ->
-                    TabCol(tab = tab, state)
+    protected fun DuotoneCard(
+        primaryColor: Color = cardPrimary,
+        accentColor: Color = cardAccent,
+        primaryContent: () -> Unit = {},
+        secondaryContent: () -> Unit = {},
+    ) {
+        Column(
+            modifier = Modifier
+                .clip(shape = RoundedCornerShape(12.dp))
+                .background(color = primaryColor)
+                .fillMaxWidth()
+                .heightIn(min = 150.dp),
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(10.dp)
+                    .weight(1f),
+            ) {
+                primaryContent()
+            }
+
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .height(50.dp)  // hard height constraint by design
+                    .background(color = accentColor)
+                    .padding(10.dp),
+            ) {
+                secondaryContent()
+            }
+        }
+
+    }
+
+    @Composable
+    protected fun TabManager(tabs: List<Tab>, state: String) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .height(50.dp)
+                .fillMaxWidth()
+        ) {
+            /*
+            * The following value was defined by Gemini 3.6 Flash
+            * "I want the tab column in TabCol in View.kt to have a minimum width of 120.dp,
+            *  but also have each tab be equally sized to fill the max width of the screen."
+            * 2026-11-22
+            * */
+            val tabWidth = if (tabs.isNotEmpty()) {
+                maxOf(120.dp, maxWidth / tabs.size)
+            } else {
+                120.dp
+            }
+            LazyRow(
+                modifier = Modifier
+                    .height(50.dp)
+                    .fillMaxWidth()
+            ) {
+                itemsIndexed(tabs) { index, tab: Tab ->
+                    TabCol(tab = tab, state = state, modifier = Modifier.width(tabWidth))
                 }
             }
         }
     }
     @Composable
-    private fun TabCol(tab: Tab, state: String) {
+    private fun TabCol(tab: Tab, state: String, modifier: Modifier = Modifier) {
         Column(
-            modifier = Modifier
-                .height(60.dp)
+            modifier = modifier
+                .fillMaxHeight()
+                .widthIn(min = 120.dp)
                 .clickable(enabled = true, onClick = { tab.option(state) })
         ) {
             Row(
                 modifier = Modifier
                     .background(tab.color)
-                    .width(120.dp)
-                    .fillMaxHeight()
+                    .fillMaxSize()
+                    .weight(1f)
             ) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Column(Modifier.fillMaxSize()) {
@@ -223,6 +299,7 @@ abstract class View: ViewObserver<Model>{
                         fontSize = 25.sp,
                         color = primaryGreenTextColor,
                         fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(15.dp))
                 }

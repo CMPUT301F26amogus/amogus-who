@@ -19,6 +19,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.code.model.Role
 import com.example.code.model.User
 import com.example.code.views.AddEditCampsite
+import com.example.code.views.AddEditLottery
 import com.example.code.views.AdminHomeView
 import com.example.code.views.CampsiteDetailsView
 import com.example.code.views.CampsiteOwnerHomeView
@@ -64,6 +65,9 @@ object Routes {
     const val OWNER_RESERVATIONS = "owner_reservations"
     const val OWNER_LOTTERIES = "owner_lotteries"
     const val ADD_EDIT_CAMPSITE = "add_edit_campsite"
+
+    const val ADD_EDIT_LOTTERY = "add_edit_lottery"
+
 }
 
 /**
@@ -115,6 +119,7 @@ fun App(id: String, model: Model) {
     val ownerReservationsView = remember { OwnerReservationsView(model) }
     val ownerLotteriesView = remember { OwnerLotteriesView(model) }
     val addEditCampsiteView = remember { AddEditCampsite(model) }
+    val addEditLotteryView = remember { AddEditLottery(model) }
 
     LaunchedEffect(Unit) {
         model.getUserObj { user -> startDestination = startRouteFor(user) }
@@ -179,6 +184,8 @@ fun App(id: String, model: Model) {
         model.addView(addEditCampsiteView)
         composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen(navController) }
 
+        model.addView(addEditLotteryView)
+        composable(Routes.ADD_EDIT_LOTTERY) { addEditLotteryView.ShowScreen(navController) }
 
     }
 }

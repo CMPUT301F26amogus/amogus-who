@@ -6,6 +6,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -44,15 +45,34 @@ class SearchResultsView(M:Model): View() {
                     textColor = entrantHeaderTextColor,
                 )
             }
-            Row(modifier = Modifier.weight(1f)){
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .background(color = secondaryGreenColor),
+            ){
                 LazyColumn(
-                    modifier = Modifier.fillMaxSize()
+                    modifier = Modifier
+                        .padding(vertical = 20.dp)
+                        .fillMaxSize(),
+                    verticalArrangement = Arrangement.spacedBy(25.dp)
                 ) {
                     itemsIndexed(CampsiteList) { index, campsite ->
-                        CampsiteRow(
-                            campsite = campsite,
-                            navController = navController
-                        )
+                        EntrantCampsiteCard(
+                            campsite.name,
+                            campsite.location,
+                            campsite.maxOccupancy.toString(),
+                            campsite.location,
+                            if (campsite.averageRating != null)
+                                {campsite.averageRating.toString()}
+                            else
+                                {"0.00"},
+                            {controller.viewCampsite(campsite.id, navController)},
+                            primaryGreenTextColor,
+                            light,
+                            light,
+                            secondaryPurple,
+                            tag = campsite.name + "Card"
+                        ).Draw()
                     }
                 }
             }
@@ -111,10 +131,22 @@ class SearchResultsView(M:Model): View() {
     }
 }
 
+fun exampleCampsite(i : Int) : Campsite {
+    return Campsite(
+        location = "Banff $i"
+    )
+}
+
 @Preview(showBackground = true)
 @Composable
 fun searchResultsViewPreview() {
     val mp = SearchResultsView(Model())
+    mp.CampsiteList = List(2) {
+        Campsite(
+            name = "Site - $it",
+            location = "Banff $it"
+        )
+    }
     CodeTheme {
         (
             mp.ShowScreen(rememberNavController())
