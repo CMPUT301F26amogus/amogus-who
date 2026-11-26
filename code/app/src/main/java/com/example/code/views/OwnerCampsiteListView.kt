@@ -88,7 +88,7 @@ class OwnerCampsiteListView(model: Model) : View() {
                 LazyColumn(
                     modifier = Modifier
                         .padding(vertical = 20.dp)
-                        .fillMaxSize(),
+                        .fillMaxWidth(),
                     verticalArrangement = Arrangement.spacedBy(25.dp)
                 ) {
                     itemsIndexed(campsites) { index, c ->
@@ -134,7 +134,7 @@ class OwnerCampsiteListView(model: Model) : View() {
                         }
                     }
                 }
-
+            }
                 Footer(
 
                     navController = navController,
@@ -142,7 +142,7 @@ class OwnerCampsiteListView(model: Model) : View() {
                     textColor = ownerFooterTextColor,
                     buttonColor = ownerFooterButtonColor,
                 )
-            }
+
         }
     }
 
