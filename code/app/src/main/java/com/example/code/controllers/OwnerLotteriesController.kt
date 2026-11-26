@@ -17,6 +17,10 @@ class OwnerLotteriesController(
         navController.navigate(ADD_EDIT_LOTTERY)
     }
 
+    fun onNewLottery(navController: NavController) {
+        onEditLottery(navController, null)
+    }
+
     /**
      * Draw winner for a lottery
      */
