@@ -70,7 +70,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
             campDescription = tempCampsite.description
             parkName = tempCampsite.location
             maxGuests = tempCampsite.maxOccupancy.toString()
-            pricePerNight = tempCampsite.pricePerNight.toString()
+            pricePerNight = tempCampsite.pricePerNight.toString().replace(".", "")
             headerName = "Edit Campsite"
         }
         else {
