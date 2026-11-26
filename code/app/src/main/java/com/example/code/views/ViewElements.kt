@@ -15,6 +15,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
@@ -39,6 +40,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.PurpleGrey40
+import com.example.code.ui.theme.PurpleGrey80
 
 /** Element
  *
@@ -184,10 +186,10 @@ abstract class ViewCard(
     /**Hook for card action buttons*/
     @Composable
     protected open fun DrawActionButtons() {}
-}
+}  //  end of ViewCard
 
 
-/**CampsiteCard
+/**EntrantCampsiteCard
  *
  * Subclass of ViewCard, CampsiteCard simply draws a card for a campsite with only a details button,
  *
@@ -240,6 +242,7 @@ open class EntrantCampsiteCard(
         size = 1, init = {
             ActionButton(
                 onPress = onDetail,
+                fillColour = colourSecondary,
                 label = "> Details",
                 tag = "DetailButton"
             )
@@ -250,9 +253,9 @@ open class EntrantCampsiteCard(
     colourTitleText = colourTitleText,
     colourActionText = colourActionText,
     tag = tag
-)
+)  //  end of entrant campsite card
 
-/**CampsiteCard
+/**OwnerCampsiteCard
  *
  * Subclass of ViewCard, CampsiteCard simply draws a card for an owner's campsite with edit and details button,
  *
@@ -286,6 +289,7 @@ open class OwnerCampsiteCard(
             if (it == 0) {
                 ActionButton(
                     onPress = onEdit,
+                    fillColour = colourSecondary,
                     label = "/ Edit",
                     tag = "EditButton"
                 )
@@ -293,6 +297,7 @@ open class OwnerCampsiteCard(
             else {
                 ActionButton(
                     onPress = onDetail,
+                    fillColour = colourSecondary,
                     label = "> Details",
                     tag = "DetailButton"
                 )
@@ -304,14 +309,13 @@ open class OwnerCampsiteCard(
     colourTitleText = colourTitleText,
     colourActionText = colourActionText,
     tag = tag
-)
+)  //  end of owner campsite card
 
 
 
 /**CampsiteCard
  *
  * Subclass of ViewCard, CampsiteCard simply draws a card for a campsite with only a details button,
- * TODO: turn this into a general campsite card, then specialize for different views (including reserve for Lottery options and edit for owners etc.)
  *
  * @param title             the name of the campsite, text with testTag "title"
  * @param subtitle          the park / area of the campsite, text with testTag "Subtitle"
@@ -378,9 +382,10 @@ open class CampsiteCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .padding(horizontal = 12.dp),
-            horizontalArrangement = Arrangement.End
+            horizontalArrangement = Arrangement.SpaceBetween
         ) {
             for (button in actionButtons){
+                button.textColor = colourActionText
                 button.Draw()
             }
         }
@@ -443,7 +448,7 @@ open class CampsiteCard(
 open class ActionButton(
     val onPress: () -> Unit,
     val fillColour: Color? = null,
-    val textColor: Color = Color.Unspecified,
+    var textColor: Color = Color.Unspecified,
     val label: String,
     val tag: String
 ): Element {
@@ -459,20 +464,59 @@ open class ActionButton(
                     if (fillColour != null)
                         {(ButtonDefaults.buttonColors(containerColor = fillColour))}
                     else
-                        {(ButtonDefaults.buttonColors())},
+                        {(ButtonDefaults.buttonColors(PurpleGrey80))},
                 modifier = Modifier
                     .testTag(tag),
             ){
-                Row() {
-                    Text(
-                        text =label,
-                        color = textColor
-                    )
-                }
+
+                Content()
             }
         }
     }
 
+    @Composable
+    open fun Content() {
+        Row() {
+            Text(
+                text =label,
+                color = textColor
+            )
+        }
+    }
+
+}
+
+/**IconButton
+ *
+ * subclass of ActionButton which also makes use of Icons prefixed to the text
+ *
+ * */
+class IconButton(
+    onPress: () -> Unit,
+    fillColour: Color? = null,
+    textColor: Color = Color.Unspecified,
+    label: String,
+    val icon: @Composable () -> Unit,
+    tag: String
+) : ActionButton(
+    onPress = onPress,
+    fillColour = fillColour,
+    textColor = textColor,
+    label = label,
+    tag = tag
+){
+    @Composable
+    override fun Content() {
+        Row(
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            icon()
+            Text(
+                text =label,
+                color = textColor
+            )
+        }
+    }
 }
 
 
@@ -486,6 +530,10 @@ open class ActionButton(
  * Their tags are `tag`, `tag confirmation`, and `tag cancellation` respectively
  *
  * `Are You Sure?` and `No` are drawn as a row with a 20.dp space between the two buttons
+ *
+ * @param onPress       the action performed when the button is pressed
+ * @param subject       the name of the subject to be deleted, displayed in the text of the button with the format: 'DELETE `subject`'
+ * @param tag           the testTag of the button
  * */
 class DeleteButton(
     onPress: () -> Unit,

@@ -32,6 +32,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -55,201 +56,6 @@ class OwnerCampsiteListView(model: Model) : View() {
                 campsites = result
             }
         )
-    }
-
-//    @Composable
-//    private fun SiteInfoBox(info: String, data: String) {
-//        Box(
-//            modifier = Modifier
-//                .clip(shape = RoundedCornerShape(8.dp))
-//                .background(color = cardAccent),
-//        ) {
-//            Row(
-//                modifier = Modifier
-//                    .padding(10.dp),
-//            ) {
-//                Text(
-//                    text = "$info: ",
-//                    fontSize = 12.sp,
-//                    color = primaryGreenTextColor,
-//                )
-//                Text(
-//                    text = data,
-//                    fontSize = 12.sp,
-//                    color = primaryTextColor,
-//                )
-//            }
-//        }
-//    }
-
-//    @Composable
-//    private fun CampsiteCard(
-//        campsiteName: String,
-//        location: String,
-//        upcoming: Int,
-//        requests: Int,
-//        lotteryStatus: String,
-//        rating: Double,
-//        onClickEdit: () -> Unit,
-//        onClickDetails: () -> Unit,
-//    ) {
-//        Column(
-//            modifier = Modifier
-//                .clip(shape = RoundedCornerShape(12.dp))
-//                .background(color = cardPrimary)
-//                .fillMaxWidth()
-//                .height(150.dp)
-//        ) {
-//            Column(
-//                modifier = Modifier
-//                    .fillMaxSize()
-//                    .padding(10.dp)
-//                    .weight(1f),
-//            ) {
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                        .weight(1f),
-//                ) {
-//                    Column(
-//                        modifier = Modifier,
-//                    ) {
-//                        Text(
-//                            text = campsiteName,
-//                            fontSize = 20.sp,
-//                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-//                            color = primaryGreenTextColor,
-//                        )
-//                        Text(
-//                            text = location,
-//                            fontSize = 12.sp,
-//                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-//                            color = primaryGreenTextColor,
-//                        )
-//                    }
-//
-//                    Spacer(
-//                        modifier = Modifier.weight(1f)
-//                    )
-//
-//                    Column(
-//                        modifier = Modifier
-//                            .width(95.dp)
-//                            .height(35.dp)
-//                    ) {
-//                        ExtendedFloatingActionButton(
-//                            onClick = { /* Not a button in practice */ },
-//                            shape = CircleShape,
-//                            containerColor = tertiaryPurple,
-//                            contentColor = secondaryPurple,
-//                            icon = {
-//                                Icon(
-//                                    imageVector = Icons.Outlined.Star,
-//                                    contentDescription = "Edit",
-//                                )
-//                            },
-//                            text = { Text(rating.toString()) }
-//                        )
-//                    }
-//                }
-//                Row(
-//                    modifier = Modifier
-//                        .fillMaxWidth()
-//                ) {
-//                    SiteInfoBox(
-//                        info = "Upcoming",
-//                        data = upcoming.toString(),
-//                    )
-//
-//                    Spacer(
-//                        modifier = Modifier.width(8.dp)
-//                    )
-//
-//                    SiteInfoBox(
-//                        info = "Requests",
-//                        data = requests.toString(),
-//                    )
-//
-//                    Spacer(
-//                        modifier = Modifier.width(8.dp)
-//                    )
-//
-//                    SiteInfoBox(
-//                        info = "Lottery",
-//                        data = lotteryStatus,
-//                    )
-//                }
-//            }
-//
-//            Row(
-//                verticalAlignment = Alignment.CenterVertically,
-//                modifier = Modifier
-//                    .fillMaxWidth()
-//                    .height(50.dp)
-//                    .background(color = cardAccent)
-//                    .padding(10.dp),
-//            ) {
-//                ExtendedFloatingActionButton(
-//                    onClick = onClickEdit,
-//                    shape = CircleShape,
-//                    containerColor = cardAccent,
-//                    contentColor = primaryTextColor,
-//                    icon = {
-//                        Icon(
-//                            imageVector = Icons.Outlined.Edit,
-//                            contentDescription = "Edit",
-//                        )
-//                    },
-//                    text = { Text("Edit") }
-//                )
-//
-//                Spacer(
-//                    modifier = Modifier.weight(1f)
-//                )
-//
-//                ExtendedFloatingActionButton(
-//                    onClick = onClickDetails,
-//                    shape = CircleShape,
-//                    containerColor = cardAccent,
-//                    contentColor = primaryTextColor,
-//                    icon = {
-//                        Icon(
-//                            imageVector = Icons.Filled.PlayArrow,
-//                            contentDescription = "Details",
-//                        )
-//                    },
-//                    text = { Text("Details") }
-//                )
-//            }
-//        }
-//
-//    }
-
-    @Composable
-    private fun Content(navController: NavController) {
-        LazyColumn(
-            modifier = Modifier
-                .fillMaxSize(),
-            horizontalAlignment = Alignment.CenterHorizontally
-        ) {
-
-
-            item {
-                ExtendedFloatingActionButton(
-                    onClick = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
-                    shape = CircleShape,
-                    containerColor = primaryPurple,
-                    contentColor = primaryTextColor,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = "Register campsite"
-                        )
-                           },
-                    text = { Text("Register Campsite") },
-                )
-            }
-        }
     }
 
     /**
@@ -295,27 +101,36 @@ class OwnerCampsiteListView(model: Model) : View() {
                             },
                             onDetail = { controller.onCampsiteDetails(navController, c.id) },
                             onEdit = { controller.onEditCampsite(navController, c.id) },
-                            colourPrimary = gray,
-                            colourSecondary = light,
+                            colourPrimary = cardPrimary,
+                            colourSecondary = cardAccent,
                             colourTitleText = primaryGreenTextColor,
                             colourActionText = secondaryPurple,
                             tag = "Card"
-                        )
+                        ).Draw()
                     }
                     item {
-                        ExtendedFloatingActionButton(
-                            onClick = { controller.onRegisterCampsite(navController)},
-                            shape = CircleShape,
-                            containerColor = primaryPurple,
-                            contentColor = primaryTextColor,
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Filled.Add,
-                                    contentDescription = "Register campsite"
-                                )
-                            },
-                            text = { Text("Register Campsite") },
-                        )
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth(),
+                            horizontalArrangement = Arrangement.Center
+                        ) {
+                            ExtendedFloatingActionButton(
+                                onClick = { controller.onRegisterCampsite(navController) },
+                                shape = CircleShape,
+                                containerColor = primaryPurple,
+                                contentColor = primaryTextColor,
+                                icon = {
+                                    Icon(
+                                        imageVector = Icons.Filled.Add,
+                                        contentDescription = "Add Button"
+                                    )
+                                },
+                                text = { Text("Register Campsite") },
+                                modifier = Modifier
+                                    .testTag("RegisterCampsiteButton")
+                                    .padding(horizontal = 12.dp),
+                            )
+                        }
                     }
                 }
 
@@ -336,5 +151,11 @@ class OwnerCampsiteListView(model: Model) : View() {
 @Composable
 fun OwnerCampsiteListViewPreview() {
     val listView = OwnerCampsiteListView(Model())
+    listView.campsites = List(2) {
+        Campsite(
+            name = "Site - $it",
+            location = "Banff $it"
+        )
+    }
     listView.ShowScreen(rememberNavController())
 }
