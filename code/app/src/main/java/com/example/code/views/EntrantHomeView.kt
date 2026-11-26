@@ -20,6 +20,7 @@ import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
@@ -46,7 +47,8 @@ class EntrantHomeView : HomeView() {
         Button(
             onClick = onClick,
             modifier = modifier
-                .fillMaxHeight(),
+                .fillMaxHeight()
+                .testTag("Search"),
             colors = ButtonDefaults.buttonColors(
                 containerColor = primaryPurple,
                 contentColor = primaryTextColor,

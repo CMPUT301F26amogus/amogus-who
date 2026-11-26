@@ -27,6 +27,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -40,16 +41,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.controllers.OwnerReservationsController
-
-class DummyReservation(
-    val name: String,
-    val campsiteName: String,
-    val location: String,
-    val startDate: String,
-    val endDate: String,
-    val guests: Int,
-    val nights: Int,
-) {}
+import com.example.code.model.OwnerReservation
 
 /**
  *  OwnerReservationsView: the view for the owner to see reservations at their campsites
@@ -57,30 +49,20 @@ class DummyReservation(
  */
 class OwnerReservationsView(model : Model) : View() {
 
-
     val controller by lazy { OwnerReservationsController(model = model) }
-    // change to access real reservations
-    val reservations = mutableStateListOf(
-        DummyReservation(
-            name = "John Doe",
-            campsiteName = "Campsite 1",
-            location = "Bland Park",
-            startDate = "May 10, 2027",
-            endDate = "May 15, 2027",
-            guests = 2,
-            nights = 5,
-        ),
-        DummyReservation(
-            name = "Jane Doe",
-            campsiteName = "Campsite 2",
-            location = "Lame Park",
-            startDate = "May 14, 2022",
-            endDate = "May 15, 2022",
-            guests = 3,
-            nights = 1
-        )
-    )
+    // one list per tab so each tab only shows its own reservations
+    val activeReservations = mutableStateListOf<OwnerReservation>()
+    val pastReservations = mutableStateListOf<OwnerReservation>()
+    val cancelledReservations = mutableStateListOf<OwnerReservation>()
 
+    // swaps a lists contents with what firestore sent back
+    private fun replaceWith(list: MutableList<OwnerReservation>, result: List<OwnerReservation>) {
+        list.clear()
+        list.addAll(result)
+    }
+
+    // This component is to be used in each reservation card
+    // It stores the dates of a given reservation
     @Composable
     private fun DateInfoBox(startDate: String, endDate: String) {
         Box(
@@ -112,6 +94,10 @@ class OwnerReservationsView(model : Model) : View() {
         }
     }
 
+    // Another component used in each reservation card
+    // It can store any relevant information in the format:
+    // "Info: Data"
+    // e.g. "Guests: 4", "Nights: 2"
     @Composable
     private fun SiteInfoBox(info: String, data: String) {
         Box(
@@ -137,6 +123,10 @@ class OwnerReservationsView(model : Model) : View() {
         }
     }
 
+    // This is the card that holds all the information needed to display for one
+    // reservation
+    //
+    // One card per reservation in a given list will display in a lazy column
     @Composable
     private fun CampsiteCard(
         name: String,
@@ -220,9 +210,9 @@ class OwnerReservationsView(model : Model) : View() {
                     .background(color = cardAccent)
                     .padding(10.dp),
             ) {
-                if (state == "Pending") {
+                if (state == "ACTIVE") {
                     ExtendedFloatingActionButton(
-                        onClick = { /* controller.onReservationReject() */ },
+                        onClick = { controller.onReservationReject() },
                         shape = CircleShape,
                         containerColor = cardAccent,
                         contentColor = primaryTextColor,
@@ -238,7 +228,7 @@ class OwnerReservationsView(model : Model) : View() {
                         modifier = Modifier.weight(1f)
                     )
                     ExtendedFloatingActionButton(
-                        onClick = { /* controller.onReservationAccept() */ },
+                        onClick = { controller.onReservationAccept() },
                         shape = CircleShape,
                         containerColor = cardAccent,
                         contentColor = primaryTextColor,
@@ -258,8 +248,14 @@ class OwnerReservationsView(model : Model) : View() {
 
     }
 
+    // This component is sandwiched between the tab manager and footer
     @Composable
     private fun Content(state: String) {
+        val reservations = when (state) {
+            "Active" -> activeReservations
+            "Past" -> pastReservations
+            else -> cancelledReservations
+        }
 
         LazyColumn(
             modifier = Modifier
@@ -267,14 +263,16 @@ class OwnerReservationsView(model : Model) : View() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(reservations.size) { reservation ->
+                val row = reservations[reservation]
                 CampsiteCard(
-                    name = reservations[reservation].name,
-                    campsiteName = reservations[reservation].campsiteName,
-                    location = reservations[reservation].location,
-                    startDate = reservations[reservation].startDate,
-                    endDate = reservations[reservation].endDate,
-                    guests = reservations[reservation].guests,
-                    nights = reservations[reservation].nights,
+                    name = row.entrantName.ifBlank { "<unnamed camper>" },
+                    campsiteName = row.campsite?.name ?: "<unnamed campsite>",
+                    location = row.campsite?.location ?: "<unnamed location>",
+                    startDate = row.reservation.checkIn,
+                    endDate = row.reservation.checkOut,
+                    guests = row.reservation.numGuests,
+                    // 0 if the dates were saved wrong instead of crashing
+                    nights = runCatching { row.reservation.nights().toInt() }.getOrDefault(0),
                     state = state,
                 )
                 if (reservation != reservations.size - 1) {
@@ -288,35 +286,38 @@ class OwnerReservationsView(model : Model) : View() {
     }
 
     /**
-     *  ShowScreen: render the page
+     *  Renders the page of an owner's reservations
+     *  @param navController the navigation controller to use
      *
      */
     @Composable
     fun ShowScreen(navController: NavController) {
-        var state by remember { mutableStateOf("Present") }
-        val pendingColor = if (state == "Pending") primaryGreenColor else secondaryGreenColor
-        val upcomingColor = if (state == "Upcoming") primaryGreenColor else secondaryGreenColor
+        var state by remember { mutableStateOf("Active") }
+        val activeColor = if (state == "Active") primaryGreenColor else secondaryGreenColor
         val pastColor = if (state == "Past") primaryGreenColor else secondaryGreenColor
+        val cancelledColor = if (state == "Cancelled") primaryGreenColor else secondaryGreenColor
         val tabs = remember {
             mutableStateListOf(
-                Tab(name = "Pending", color = pendingColor, option = {state = "Pending"}),
-                Tab(name = "Upcoming", color = upcomingColor, option = {state = "Upcoming"}),
+                Tab(name = "Active", color = activeColor, option = {state = "Active"}),
                 Tab(name = "Past", color = pastColor, option = {state = "Past"}),
+                Tab(name = "Cancelled", color = cancelledColor, option = {state = "Cancelled"}),
             )
+        }
+        // load every tab when the screen opens since nothing calls update for reservations
+        LaunchedEffect(Unit) {
+            controller.onActiveReservations { replaceWith(activeReservations, it) }
+            controller.onPastReservations { replaceWith(pastReservations, it) }
+            controller.onCancelledReservations { replaceWith(cancelledReservations, it) }
         }
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-            ) {
-                Header(
-                    backgroundColor = ownerHeaderBackgroundColor,
-                    textColor = ownerHeaderTextColor,
-                    headerText = "Reservations",
-                )
+            Header(
+                backgroundColor = ownerHeaderBackgroundColor,
+                textColor = ownerHeaderTextColor,
+                headerText = "Reservations",
+            )
 
-            }
             Column(
                 modifier = Modifier
                     .fillMaxWidth()
@@ -337,7 +338,6 @@ class OwnerReservationsView(model : Model) : View() {
             }
 
             Footer(
-
                 navController = navController,
                 backgroundColor = ownerFooterBackgroundColor,
                 textColor = ownerFooterTextColor,

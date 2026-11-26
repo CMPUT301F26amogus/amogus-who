@@ -11,10 +11,6 @@ enum class LotteryStatus {
 
     /** registration is over and winners are being drawn */
     DRAWN,
-
-    /** winners pick their dates first come first served */
-    BOOKING,
-
-    /** booking period is over */
-    CLOSED,
+    /** no longer accepting new entries */
+    INACTIVE
 }

@@ -25,6 +25,9 @@ import com.example.code.ui.theme.CodeTheme
 
 class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), InputFieldFunctions{
 
+    /** View Values
+     *      the colors, values, and predefined Modifiers used in the drawing of the visual elements
+     * */
     val bgColor = secondaryGreenColor
     val headerBackgroundColor = ownerHeaderBackgroundColor
     val headerTextColor = ownerHeaderTextColor
@@ -38,9 +41,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     var headerName = if (isEdit) { "Edit Lottery" } else { "Add Lottery" }
 
 
+    /** Display variables
+     *      the variable versions of each field within Lottery creation
+     * */
     var oldLottery : Lottery? = null
-    var lotteryCampsiteID = 0
-    var waitListCapacity = 0  //  can be empty, its optional: US 02.04.07
+    var lotteryCampsiteID = listOf<String>("")
+    var waitListCapacity: Int? = 0  //  can be empty, its optional: US 02.04.07
     var drawDate = ""  // the day winners are decided
     var numberOfWinners = 0  // number of winners a lottery can have
 //    var registrationDuration = 0  // the period after winning entrants get to register their bookings?
@@ -48,13 +54,24 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     var registrationStart = ""
     var registrationEnd = ""
 
+    /** Update
+     *      If this view is an edit view then it will grab the values of the lottery to be edited,
+     *      otherwise it will clear the variables to be empty fields to act as an add view
+     * */
     override fun update(model: Model){
         if (isEdit){
-//            oldLottery = model.getLotteryToDisplay()
+            oldLottery = model.gettTheLottery()
             //  extract oldLottery variables
             if (oldLottery != null) {
+//                lotteryCampsiteID = oldLottery!!.campsiteIds
+//                waitListCapacity = oldLottery!!.waitlistCapacity
+                // TODO: Lotteries need some variable to represent the date in which it is automatically drawn
+//                drawDate = oldLottery!!.drawDate
                 registrationStart = oldLottery!!.registrationStart
                 registrationEnd = oldLottery!!.registrationEnd
+            }
+            else {
+                clear()
             }
         }
         else { clear() }
@@ -63,7 +80,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     @Composable
     public fun ShowScreen(navController: NavController) {
         val lotteryCampsiteIDState = rememberTextFieldState(lotteryCampsiteID.toString())
-        val waitListCapacityState = rememberTextFieldState(waitListCapacity.toString())
+        val waitListCapacityState =
+            if (waitListCapacity == null) { rememberTextFieldState("0") }
+            else  { rememberTextFieldState(waitListCapacity.toString()) }
         val drawDateState = rememberTextFieldState(drawDate)
         val numberOfWinnersState = rememberTextFieldState(numberOfWinners.toString())
 
@@ -141,16 +160,14 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                     }
                     Button(
                         onClick = {
-//                            val newCampsite = Campsite(
-//                                // all the variables (convert to Int and Floats as needed)
-//                            )
-//                            if ( oldCampsite != null) {  //  we are editing a campsite
-//                                //  call Controller to call editCampsite()
+//                            // TODO: Convert states into values used in createLottery or update lottery
+//                            if (oldLottery != null) {
+//                                // TODO: Call controller to EDIT a lottery
 //                            }
-//                            else {  //  we are registering a brand-new campsite
-//                                //  call Controller to call newCampsite()
+//                            else {
+//                                // TODO: Call controller to MAKE a lottery
 //                            }
-                            // call Controller to navController to pop
+
                         }
                     ){
                         Text("Save Changes")
@@ -177,7 +194,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             // extract old lottery fields
         }
         else {
-            lotteryCampsiteID = 0
+            lotteryCampsiteID = listOf("")
             waitListCapacity = 0
             drawDate = ""
             numberOfWinners = 0
