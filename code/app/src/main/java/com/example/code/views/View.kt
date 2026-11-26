@@ -4,6 +4,7 @@ import com.example.code.goHome
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -15,6 +16,7 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
@@ -32,6 +34,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 
@@ -246,27 +249,47 @@ abstract class View: ViewObserver<Model>{
     }
 
     @Composable
-    protected fun TabManager(tabs:List<Tab>, state:String){
-        Column(modifier = Modifier.height(50.dp)) {
-            LazyRow(modifier = Modifier.height(50.dp)) {
-                itemsIndexed(tabs) { index,tab: Tab ->
-                    TabCol(tab = tab, state)
+    protected fun TabManager(tabs: List<Tab>, state: String) {
+        BoxWithConstraints(
+            modifier = Modifier
+                .height(50.dp)
+                .fillMaxWidth()
+        ) {
+            /*
+            * The following value was defined by Gemini 3.6 Flash
+            * "I want the tab column in TabCol in View.kt to have a minimum width of 120.dp,
+            *  but also have each tab be equally sized to fill the max width of the screen."
+            * 2026-11-22
+            * */
+            val tabWidth = if (tabs.isNotEmpty()) {
+                maxOf(120.dp, maxWidth / tabs.size)
+            } else {
+                120.dp
+            }
+            LazyRow(
+                modifier = Modifier
+                    .height(50.dp)
+                    .fillMaxWidth()
+            ) {
+                itemsIndexed(tabs) { index, tab: Tab ->
+                    TabCol(tab = tab, state = state, modifier = Modifier.width(tabWidth))
                 }
             }
         }
     }
     @Composable
-    private fun TabCol(tab: Tab, state: String) {
+    private fun TabCol(tab: Tab, state: String, modifier: Modifier = Modifier) {
         Column(
-            modifier = Modifier
-                .height(60.dp)
+            modifier = modifier
+                .fillMaxHeight()
+                .widthIn(min = 120.dp)
                 .clickable(enabled = true, onClick = { tab.option(state) })
         ) {
             Row(
                 modifier = Modifier
                     .background(tab.color)
-                    .width(120.dp)
-                    .fillMaxHeight()
+                    .fillMaxSize()
+                    .weight(1f)
             ) {
                 Spacer(modifier = Modifier.width(10.dp))
                 Column(Modifier.fillMaxSize()) {
@@ -276,6 +299,7 @@ abstract class View: ViewObserver<Model>{
                         fontSize = 25.sp,
                         color = primaryGreenTextColor,
                         fontWeight = FontWeight.Bold,
+                        textAlign = TextAlign.Center
                     )
                     Spacer(modifier = Modifier.height(15.dp))
                 }
