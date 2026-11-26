@@ -116,6 +116,55 @@ interface InputFieldFunctions {
         )
     }
 
+    /**
+     * Helper function for taking in money based inputs.
+     * Restricts the user to inputting digits and displays the last two inputted digits
+     * as 10 and 1 cent values*/
+    @Composable
+    fun MoneyField(
+        s: TextFieldState,
+        labelText: String,
+        modifier: Modifier,
+        placeholder: String = ""
+    ) {
+        TextField(
+            state = s,
+            label = { Text(labelText) },
+            keyboardOptions = KeyboardOptions(
+                keyboardType = KeyboardType.Phone
+            ),
+            placeholder = {
+                Text(placeholder)
+            },
+            inputTransformation = InputTransformation.maxLength(8).then {
+                if (!asCharSequence().isDigitsOnly()) {
+                    revertAllChanges()
+                }
+            },
+            outputTransformation = OutputTransformation {
+                if (length == 1) {insert(0, "0.0")}
+                else if (length == 2) {insert(0, "0.")}
+                else if (length > 2) {insert(length-2, ".")}
+            },
+            modifier = modifier
+        )
+    }
+
+    fun textStateToFloat(s: TextFieldState): Float {
+        val old = s.text.toString()
+        var out = "0.00"
+        if (old.length == 1) {
+            out = "0.0%s".format(old)
+        }
+        else if (old.length == 2) {
+            out = "0.%s".format(old)
+        }
+        else if (old.length > 2) {
+            out = "%s.%s".format(old.substring(0, (old.length - 3)), old.substring(old.length - 2, old.length-1))
+        }
+        return out.toFloat()
+    }
+
 
     fun dateToTextState(s: String): Date {
         if (s.length == 8) {

@@ -167,10 +167,9 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
                     )
 
                 // price per night input field
-                    VariableDigitIntField(
+                    MoneyField(
                         pricePerNightState,
                         "Price Per Night",
-                        4,
                         fieldModifierDate
                     )
                 }
