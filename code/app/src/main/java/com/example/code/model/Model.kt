@@ -318,7 +318,10 @@ open class Model: ModelUpdater<View>{
         }
         try {
             campsiteRef.document(campsiteId).set(campsite)
-                .addOnSuccessListener { onResult(true) }
+                .addOnSuccessListener {
+                    onResult(true)
+                    notifyViews()
+                }
                 .addOnFailureListener { onResult(false) }
         } catch (e: RuntimeException) {
             Log.e("Model", "Could not save campsite", e)
