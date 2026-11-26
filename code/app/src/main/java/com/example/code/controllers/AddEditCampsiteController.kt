@@ -4,7 +4,7 @@ import androidx.navigation.NavController
 import com.example.code.model.AvailabilitySchedule
 import com.example.code.model.Campsite
 
-class OwnerEditCampsiteController (
+class AddEditCampsiteController (
     private val model : Model
 ) {
     fun onCancel(navController: NavController){

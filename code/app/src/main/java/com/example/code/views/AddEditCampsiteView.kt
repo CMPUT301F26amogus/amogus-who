@@ -23,14 +23,14 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
-import com.example.code.controllers.OwnerEditCampsiteController
+import com.example.code.controllers.AddEditCampsiteController
 import com.example.code.model.AvailabilitySchedule
 import com.example.code.model.Campsite
 import com.example.code.ui.theme.CodeTheme
 
-class AddEditCampsite (model: Model): View(), InputFieldFunctions {
+class AddEditCampsiteView (model: Model): View(), InputFieldFunctions {
 
-    val controller = OwnerEditCampsiteController(model)
+    val controller = AddEditCampsiteController(model)
 
     val bgColor = secondaryGreenColor
     val headerbgColor = ownerHeaderBackgroundColor
@@ -306,7 +306,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
 @Composable
 fun AddCampsiteViewPreview() {
     val m = Model()
-    val mp = AddEditCampsite(m)
+    val mp = AddEditCampsiteView(m)
     CodeTheme {
         (
                 mp.ShowScreen(rememberNavController())
