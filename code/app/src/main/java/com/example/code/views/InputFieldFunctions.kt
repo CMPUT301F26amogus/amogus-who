@@ -14,6 +14,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.core.text.isDigitsOnly
 import java.util.Date
+import kotlin.text.substring
 
 
 interface InputFieldFunctions {
@@ -30,11 +31,11 @@ interface InputFieldFunctions {
      * */
     @Composable
     fun VariableDigitIntField(
-        s : TextFieldState,
+        s: TextFieldState,
         labelText: String,
         inputLen: Int,
         modifier: Modifier,
-        placeholder : String = ""
+        placeholder: String = ""
     ) {
         TextField(
             state = s,
@@ -51,7 +52,7 @@ interface InputFieldFunctions {
             },
             modifier = modifier,
             placeholder = {
-                Text( placeholder )
+                Text(placeholder)
             }
         )
     }
@@ -73,11 +74,11 @@ interface InputFieldFunctions {
      * */
     @Composable
     fun DateField(
-        s : TextFieldState,
+        s: TextFieldState,
         labelText: String,
         modifier: Modifier,
-        placeholder: String = "Mo/Da/Year"
-    ){
+        placeholder: String = "Year/Mo/Da"
+    ) {
         TextField(
             state = s,
             label = { Text(labelText) },
@@ -85,7 +86,7 @@ interface InputFieldFunctions {
                 keyboardType = KeyboardType.Phone
             ),
             placeholder = {
-                Text( placeholder )
+                Text(placeholder)
             },
             inputTransformation = InputTransformation.maxLength(8).then {
                 if (!asCharSequence().isDigitsOnly()) {
@@ -93,8 +94,8 @@ interface InputFieldFunctions {
                 }
             },
             outputTransformation = OutputTransformation {
-                if (length > 2) insert(2, "/")
-                if (length > 5) insert(5, "/")
+                if (length > 2) insert(4, "/")
+                if (length > 5) insert(7, "/")
             },
             modifier = modifier
         )
@@ -102,10 +103,10 @@ interface InputFieldFunctions {
 
     @Composable
     fun StringField(
-        s : TextFieldState,
+        s: TextFieldState,
         labelText: String,
         modifier: Modifier,
-        placeholder : String = ""
+        placeholder: String = ""
     ) {
         TextField(
             state = s,
@@ -116,26 +117,34 @@ interface InputFieldFunctions {
     }
 
 
-    fun stringToDate(s: String) : Date{
+    fun dateToTextState(s: String): Date {
         if (s.length == 8) {
-            val mo : String  = s.substring(0, 1)
+            val mo: String = s.substring(0, 1)
             val da: String = s.substring(2, 3)
-            val year : String = s.substring(4, 7)
+            val year: String = s.substring(4, 7)
 
             val d = Date(year.toInt() + 1900, mo.toInt(), da.toInt())
             return d
         }
         return Date()
     }
-//
-    fun dateToString(d: Date) : String {
-        var s : String = "%02d%02d%04d"
-        val mo : String  = d.month.toString()
-        val da: String = d.date.toString()
-        val year : String = d.year.toString()
 
-        s = s.format(s, mo, da, year + 1900)
-        return s
+    /**
+     * Takes a textState, which presumably contains an 8 character long string of digits
+     * if it is 8 characters long then it will add dashes between the year, month, and date sections
+     * for input into the database
+     * */
+    fun textStateToDate(s: TextFieldState): String {
+        val old: String = s.text.toString()
+        if (old.length == 8) {
+            val year: String = old.substring(0, 3)
+            val mo: String = old.substring(4, 5)
+            val da: String = old.substring(6, 7)
+
+            return "%04d-%02d-%02d".format(year, mo, da)
+        }else {
+            return "0000-00-00"
+        }
     }
 }
 
