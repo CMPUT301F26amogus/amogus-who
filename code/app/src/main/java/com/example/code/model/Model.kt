@@ -677,6 +677,34 @@ open class Model: ModelUpdater<View>{
             }
     }
 
+    fun getCampsiteDetails(onResult: (List<Campsite>, String?) -> Unit) {
+        campsiteRef.get()
+            .addOnSuccessListener { result ->
+                val summaries = result.documents.mapNotNull { document ->
+                    val campsite = document.toObject(Campsite::class.java)
+
+                    campsite?.let {
+                        Campsite(
+                            name = it.name,
+                            location = it.location,
+                            maxOccupancy = it.maxOccupancy,
+                            pricePerNight = it.pricePerNight,
+                            description = it.description,
+                            rulesAndPolicy = it.rulesAndPolicy,
+                            imageUrl = it.imageUrl,
+                            amenities = it.amenities,
+                            availability = it.availability,
+                            ratings = it.ratings
+                        )
+                    }
+                }
+                onResult(summaries, null)
+            }
+            .addOnFailureListener { exception ->
+                onResult(emptyList(), exception.message?: "Failed to retrieve campsite details")
+            }
+    }
+
     private fun QuerySnapshot.toCampsites(): List<Campsite> = documents.mapNotNull { d ->
         try {
             d.toObject(Campsite::class.java)
