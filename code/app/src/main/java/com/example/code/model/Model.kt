@@ -1,10 +1,24 @@
 
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
+import android.util.Log.e
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentSnapshot
 import com.google.firebase.firestore.Exclude
 import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
+import com.example.code.model.Campsite
+import com.example.code.model.DateRange
+import com.example.code.model.EntryStatus
+import com.example.code.model.Lottery
+import com.example.code.model.LotteryStatus
+import com.example.code.model.Notification
+import com.example.code.model.Reservation
+import com.example.code.model.ReservationStatus
+import com.example.code.model.Role
+import com.example.code.model.User
+import com.example.code.model.WaitlistEntry
+import com.google.firebase.firestore.QuerySnapshot
 import kotlin.String
 
 import com.example.code.model.*
@@ -110,6 +124,8 @@ open class Model: ModelUpdater<View>{
         }
         notifyViews()
     }
+
+
     public var id: String = ""
         set(value) {
             field = value
@@ -278,99 +294,412 @@ open class Model: ModelUpdater<View>{
 
 
     //region Campsites
-    fun createCampsite(campsite: Campsite, onResult: (Boolean) -> Unit) {
+    fun createCampsite(
+        campName: String,
+        location: String,
+        desc: String,
+        maxOcc: Int,
+        price: Double,
+        onResult: (Boolean) -> Unit
+    ) {
+        if (currentDeviceId.isBlank()) {
+            onResult(false)
+            return
+        }
+        val campsiteId = campsiteRef.document().id
+        val campsite = try {
+            Campsite(
+                id = campsiteId, ownerId = currentDeviceId, name = campName, location = location,
+                description = desc, maxOccupancy = maxOcc, pricePerNight = price
+            )
+        } catch (e: IllegalArgumentException) {
+            Log.e("Model", "Invalid campsite: ${e.message}")
+            onResult(false)
+            return
+        }
+        try {
+            campsiteRef.document(campsiteId).set(campsite)
+                .addOnSuccessListener { onResult(true) }
+                .addOnFailureListener { onResult(false) }
+        } catch (e: RuntimeException) {
+            Log.e("Model", "Could not save campsite", e)
+            onResult(false)
+        }
+    }
+    //fun createCampsite(campsite: Campsite, onResult: (Boolean) -> Unit) {
 
-        val doc = campsiteRef.document()
-        campsite.id = doc.id
+    //    val doc = campsiteRef.document()
+    //        campsite.id = doc.id
 
-        doc.set(campsite)
-            .addOnSuccessListener {
-                onResult(true)
-                notifyViews()
+    //        doc.set(campsite)
+    //        .addOnSuccessListener {
+    //            onResult(true)
+    //        }
+    //}
+
+    //fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double, onResult: (Boolean) -> Unit) {
+    //    campsite.name = campName
+    //    campsite.location = location
+    //    campsite.description = desc
+    //    campsite.maxOccupancy = maxOcc
+    //    campsite.pricePerNight = price
+    //    campsiteRef.document(campsite.id).set(campsite)
+    //        .addOnSuccessListener {
+    //            onResult(true)
+    //        }
+    //        .addOnFailureListener {
+    //            onResult(false)
+    //        }
+    //    notifyViews()
+    //}
+
+    private fun validateCampsiteUpdate(updates: Map<String, Any>): String? {
+        if (updates.isEmpty()) {
+            return "No changes were provided"
+        }
+
+        val allowedValues = setOf(
+            "name", "location", "description", "rulesAndPolicy",
+            "maxOccupancy", "pricePerNight", "imageUrl", "amenities", "tags"
+        )
+
+        for (value in updates.keys) {
+            if (value !in allowedValues) {
+                return "You cannot update the field: $value"
             }
+        }
+
+        //Validate name
+        if (updates.containsKey("name")) {
+            val name = updates["name"] as? String
+
+            if (name.isNullOrBlank()) {
+                return "Campsite name cannot be blank"
+            }
+        }
+
+        //Validate description type
+        if (updates.containsKey("description") && updates["description"] !is String) {
+            return "Description must be text"
+        }
+
+        //Validate location type
+        if (updates.containsKey("location") && updates["location"] !is String) {
+            return "Location must be text"
+        }
+
+        //Validate rules and policy type
+        if (updates.containsKey("rulesAndPolicy") && updates["rulesAndPolicy"] !is String) {
+            return "Rules and Policy must be text"
+        }
+
+        //Validate max Occupancy
+        if (updates.containsKey("maxOccupancy")) {
+            val occupancy = updates["maxOccupancy"] as? Int
+
+            if (occupancy == null || occupancy <= 0) {
+                return "Max Occupancy must be greater than 0"
+            }
+        }
+
+        //Validate price
+        if (updates.containsKey("pricePerNight")) {
+            val price = updates["pricePerNight"] as? Number
+
+            if (price == null || !price.toDouble().isFinite() || price.toDouble() < 0) {
+                return "Price must be a finite number greater than or equal to 0"
+            }
+        }
+
+        //Validate image URL
+        if (updates.containsKey("imageUrl")) {
+            val imageUrl = updates["imageUrl"]
+
+            if (imageUrl != null && imageUrl !is String) {
+                return "Image URL must be a text or null"
+            }
+        }
+
+        //Validate amenities
+        if (updates.containsKey("amenities")) {
+            val amenities = updates["amenities"] as? List<*>
+
+            if (amenities == null || amenities.any { it !is String }) {
+                return "Amenities must be a list of strings"
+            }
+        }
+
+        // Validates tags
+        if (updates.containsKey("tags")) {
+            val tags = updates["tags"] as? Collection<*>
+
+            if (tags == null || tags.any { it !is String }) {
+                return "Tags must be a collection of strings"
+            }
+        }
+
+        return null
     }
 
-    fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double) {
-        campsite.name = campName
-        campsite.location = location
-        campsite.description = desc
-        campsite.maxOccupancy = maxOcc
-        campsite.pricePerNight = price
-        campsiteRef.document(campsite.id).set(campsite)
-        notifyViews()
+    fun updateCampsite(
+        campsiteId: String,
+        deviceId: String,
+        updates: Map<String, Any>,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        // Check that the campsite ID is valid
+        if (campsiteId.isBlank()) {
+            onResult(false, "Invalid campsite ID.")
+            return
+        }
+
+        // Check that the device ID is valid
+        if (deviceId.isBlank()) {
+            onResult(false, "Invalid device ID.")
+            return
+        }
+
+        // Validate the fields being updated
+        val validationError = validateCampsiteUpdate(updates)
+
+        if (validationError != null) {
+            onResult(false, validationError)
+            return
+        }
+
+        // Prepare the updates for Firestore
+        val firestoreUpdates = updates.toMutableMap()
+
+        // Trim the campsite name
+        if (firestoreUpdates.containsKey("name")) {
+            firestoreUpdates["name"] =
+                (firestoreUpdates["name"] as String).trim()
+        }
+
+        // Trim the location
+        if (firestoreUpdates.containsKey("location")) {
+            firestoreUpdates["location"] =
+                (firestoreUpdates["location"] as String).trim()
+        }
+
+        // Clean amenities
+        if (firestoreUpdates.containsKey("amenities")) {
+            val amenities = firestoreUpdates["amenities"] as List<String>
+
+            firestoreUpdates["amenities"] = amenities
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+        }
+
+        // Clean tags and convert Set to List for Firestore
+        if (firestoreUpdates.containsKey("tags")) {
+            val tags = firestoreUpdates["tags"] as Collection<*>
+
+            firestoreUpdates["tagList"] = tags
+                .map { (it as String).trim().lowercase() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+        }
+
+        // Convert price to Double
+        if (firestoreUpdates.containsKey("pricePerNight")) {
+            firestoreUpdates["pricePerNight"] =
+                (firestoreUpdates["pricePerNight"] as Number).toDouble()
+        }
+
+        // Check ownership and update in a transaction
+        db.runTransaction { transaction ->
+
+            // Retrieve the existing campsite
+            val document = transaction.get(campsiteRef.document(campsiteId))
+
+            // Check that the campsite exists
+            if (!document.exists()) {
+                throw Exception("Campsite does not exist.")
+            }
+
+            // Check that the user owns the campsite
+            val ownerId = document.getString("ownerId")
+
+            if (ownerId != deviceId) {
+                throw Exception("You do not own this campsite.")
+            }
+
+            // Apply each update
+            for ((field, value) in firestoreUpdates) {
+                transaction.update(campsiteRef.document(campsiteId), field, value)
+            }
+
+            null
+        }.addOnSuccessListener {
+            onResult(true, null)
+        }.addOnFailureListener { exception ->
+            onResult(false, exception.message ?: "Failed to update campsite")
+        }
+    }
+    
+    fun deleteCampsite(campId: String, deviceId: String, onResult: (Boolean, String?) -> Unit) {
+            //Check that the campsite ID is valid
+            if (campId.isBlank()) {
+                onResult(false, "Invalid campsite ID.")
+                return
+            }
+
+            //Check that the device ID is valid
+            if (deviceId.isBlank()) {
+                onResult(false, "Invalid device ID.")
+                return
+            }
+
+            //Check ownership and delete in a transaction
+            db.runTransaction { transaction ->
+
+                // Retrieve the campsite
+                val document = transaction.get(campsiteRef.document(campId))
+
+                //Check that the campsite exists
+                if (!document.exists()) {
+                    throw Exception("Campsite does not exist.")
+                }
+                    
+                    //Check that the user owns the campsite
+                val ownerId = document.getString("ownerId")
+
+                if (ownerId != deviceId) {
+                    throw Exception("You do not own this campsite.")
+                }
+                
+                // Check that the stored campsite ID matches
+                // the document ID
+                val storedId = document.getString("id")
+
+                if (storedId != campId) {
+                    throw Exception("Campsite ID does not match its document ID.")
+                }
+                
+                //Delete the campsite
+                transaction.delete(campsiteRef.document(campId))
+
+                null
+
+            }.addOnSuccessListener {
+
+                //Deletion successful
+                notifyViews()
+                onResult(true, null)
+
+            }.addOnFailureListener { exception ->
+
+                //Deletion failed
+                onResult(
+                    false,
+                    exception.message ?: "Failed to delete campsite."
+                )
+            }
+        }
+
+        /**
+         * gets all the details of a campsite
+         *
+         * @param campId id of the campsite
+         * @param onResult gets the campsite or null if it wasnt found
+         */
+        fun getCampsite(campId: String, onResult: (Campsite?) -> Unit) {
+            campsiteRef.document(campId).get()
+                .addOnSuccessListener { document ->
+                    if (document.exists()) {
+                        val campsite = try {
+                            document.toObject(Campsite::class.java)
+                        } catch (e: RuntimeException) {
+                            Log.e("Model", "Could not read campsite ${document.id}", e)
+                            null
+                        }
+                        onResult(campsite)
+                    } else {
+                        onResult(null)
+                    }
+                }
+                .addOnFailureListener {
+                    onResult(null)
+                }
+        }
+
+        fun getCampsiteByOwner(ownerId: String, onResult: (List<Campsite>) -> Unit) {
+            campsiteRef.whereEqualTo("ownerId", ownerId).get()
+                .addOnSuccessListener { documents ->
+                    val campsites = documents.toCampsites()
+                    onResult(campsites)
+                }
+                .addOnFailureListener {
+                    onResult(emptyList())
+                }
+        }
+
+        fun getAllCampsites(onResult: (List<Campsite>) -> Unit) {
+            campsiteRef.get()
+                .addOnSuccessListener { documents ->
+                    val campsites = documents.toCampsites()
+                    onResult(campsites)
+                }
+                .addOnFailureListener {
+                    onResult(emptyList())
+                }
+        }
+
+        fun searchCampsite(query: String, onResult: (List<Campsite>) -> Unit) {
+            campsiteRef.get()
+                .addOnSuccessListener { documents ->
+                    val campsite = documents.toCampsites()
+
+                    val filter = campsite.filter {
+                        it.name.contains(query, ignoreCase = true) ||
+                                it.location.contains(query, ignoreCase = true) ||
+                                it.description.contains(query, ignoreCase = true)
+                    }
+                    onResult(filter)
+                }
+                .addOnFailureListener {
+                    onResult(emptyList())
+                }
+        }
+
+    fun filterCampsite() {
+
     }
 
-    fun deleteCampsite(campsite: Campsite) {
-        campsiteRef.document(campsite.id).delete()
-        notifyViews()
+    private fun QuerySnapshot.toCampsites(): List<Campsite> = documents.mapNotNull { d ->
+        try {
+            d.toObject(Campsite::class.java)
+        } catch (e: RuntimeException) {
+            Log.e("Model", "Skipping unreadable campsite ${d.id}", e)
+            null
+        }
     }
 
-    /**
-     * gets all the details of a campsite
-     *
-     * @param campId id of the campsite
-     * @param onResult gets the campsite or null if it wasnt found
-     */
-    fun getCampsite(campId: String, onResult: (Campsite?) -> Unit) {
-        campsiteRef.document(campId).get()
-            .addOnSuccessListener { document ->
-                val campsite = document.toObject(Campsite::class.java)
-                onResult(campsite)
+    fun getUserByDevice(deviceId: String, onResult: (User?) -> Unit) {
+        usersRef.whereEqualTo("deviceId", deviceId)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val user = documents.documents[0].toObject(User::class.java)
+                    onResult(user)
+                } else {
+                    onResult(null)
+                }
             }
             .addOnFailureListener {
                 onResult(null)
             }
-    }
-
-    /**
-     * gets the campsites the current user owns
-     *
-     * @param onResult gets the campsites or an empty list if it failed
-     */
-    fun getCampsiteByOwner(onResult: (List<Campsite>) -> Unit) {
-        campsiteRef.whereEqualTo("ownerId", currentDeviceId).get()
-            .addOnSuccessListener { documents ->
-                val campsites = documents.toObjects(Campsite::class.java)
-                onResult(campsites)
-            }
-            .addOnFailureListener {
-                onResult(emptyList())
-            }
-    }
-
-    fun getAllCampsites(onResult: (List<Campsite>) -> Unit) {
-        campsiteRef.get()
-            .addOnSuccessListener { documents ->
-                val campsites = documents.toObjects(Campsite::class.java)
-                onResult(campsites)
-            }
-            .addOnFailureListener {
-                onResult(emptyList())
-            }
-    }
-
-    fun searchCampsite(campName: String, onResult: (List<Campsite>) -> Unit) {
-        // the campsite field is "name" now, it used to be "campName"
-        campsiteRef.whereEqualTo("name", campName).get()
-            .addOnSuccessListener { documents ->
-                val campsite = documents.toObjects(Campsite::class.java)
-                onResult(campsite)
-            }
-            .addOnFailureListener {
-                onResult(emptyList())
-            }
-    }
-
-    fun getCampId(campName: String, onResult: (String) -> Unit){
-        campsiteRef.whereEqualTo("name", campName).get()
-            .addOnSuccessListener { documents ->
-                val campsite = documents.toObjects(Campsite::class.java)
-                onResult(campsite[0].id)
-            }
-    }
-    //endregion
-
-
+        fun getCampId(campName: String, onResult: (String) -> Unit) {
+            campsiteRef.whereEqualTo("name", campName).get()
+                .addOnSuccessListener { documents ->
+                    val campsite = documents.toObjects(Campsite::class.java)
+                    onResult(campsite[0].id)
+                }
+        }
+        //endregion
+        
     /** Register to hold a specific lottery to be displayed, for the purposes of edit lottery
      * Ideally this is a lottery ID, which getLottery() would use to query the thing on the spot */
     var theLottery: Lottery? = null  //  "the" suggests a singular specific item I also didn't want to possibly interfere with leaveWaitlist
@@ -487,7 +816,6 @@ open class Model: ModelUpdater<View>{
                 "waitlistCapacity" to lottery.waitlistCapacity,
                 "status" to lottery.status.name
             )
-
             lotteryRef.document(lottery.id)
                 .update(updates)
                 .addOnSuccessListener {
@@ -1095,5 +1423,5 @@ open class Model: ModelUpdater<View>{
 
 
     //endregion
-
+    }
 }

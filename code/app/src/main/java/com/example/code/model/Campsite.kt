@@ -1,5 +1,8 @@
 package com.example.code.model
 
+import com.google.firebase.firestore.Exclude
+import java.util.Locale
+
 /**
  * a campsite listed by an owner
  *
@@ -23,7 +26,7 @@ package com.example.code.model
 class Campsite(
     var id: String="site-1",
     val ownerId: String="owner-1",
-    name: String="Campsite",
+    name: String= "Campsite",
     var location: String="",
     var lotteryId: String = "",
     maxOccupancy: Int=1,
@@ -83,6 +86,10 @@ class Campsite(
     var tags: List<String> = cleanTags(tags)
         set(value) { field = cleanTags(value) }
 
+    var tagList: List<String>
+        get() = tags.toList()
+        set(value) { tags = value.toSet() }
+
     // one rating per user keyed by user id
     private val _ratings = mutableMapOf<String, Rating>()
 
@@ -91,16 +98,23 @@ class Campsite(
     }
 
     /** every rating with one per user */
+    @get:Exclude
     val ratings: List<Rating>
         get() = _ratings.values.toList()
 
     /** how many people rated it */
+    @get:Exclude
     val ratingCount: Int
         get() = _ratings.size
 
     /** average score or null when nobody has rated it yet */
+    @get:Exclude
     val averageRating: Double?
         get() = if (_ratings.isEmpty()) null else _ratings.values.map { it.score }.average()
+
+    @get:Exclude
+    val ratingText: String
+        get() = averageRating?.let { String.format(Locale.US, "%.1f", it) } ?: "No ratings yet"
 
     /**
      * checks if a group fits
