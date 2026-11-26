@@ -38,6 +38,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.controllers.OwnerLotteriesController
+import com.example.code.model.Lottery
 import com.example.code.model.LotteryStatus
 
 class DummyLottery(
@@ -47,10 +48,12 @@ class DummyLottery(
     val winners: Int,
     val drawDate: String,
     val status: LotteryStatus,
-) {}
+)
 
 /**
- *  OwnerLotteriesView: the view for the owner to see their lotteries
+ *  OwnerLotteriesView: the page that lists an owner's lotteries
+ *
+ *  @param model the app model to pull backend information from
  *
  */
 class OwnerLotteriesView(model : Model) : View() {
@@ -117,7 +120,6 @@ class OwnerLotteriesView(model : Model) : View() {
         status: LotteryStatus,
         navController: NavController
     ) {
-        val action = if (status == LotteryStatus.OPEN) "Draw" else "Winners"
 
         Column(
             modifier = Modifier
@@ -126,12 +128,14 @@ class OwnerLotteriesView(model : Model) : View() {
                 .fillMaxWidth()
                 .height(150.dp)
         ) {
+            // Information Section
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .padding(10.dp)
                     .weight(1f),
             ) {
+                // Lottery name and status
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -146,14 +150,9 @@ class OwnerLotteriesView(model : Model) : View() {
                             fontWeight = FontWeight.Bold,
                             color = primaryGreenTextColor,
                         )
-                        Text(
-                            text = location,
-                            fontSize = 12.sp,
-                            fontWeight = FontWeight.Bold,
-                            color = primaryGreenTextColor,
-                        )
                     }
 
+                    // Fill whole middle space
                     Spacer(
                         modifier = Modifier.weight(1f)
                     )
@@ -179,9 +178,13 @@ class OwnerLotteriesView(model : Model) : View() {
 
                     }
                 }
+
+                // Info about waitlist, winners, and draw deadline
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
+                        .weight(1f)
+                        .padding(top = 5.dp)
                 ) {
                     SiteInfoBox(
                         info = "Entrants",
@@ -208,6 +211,7 @@ class OwnerLotteriesView(model : Model) : View() {
                 }
             }
 
+            // Action section: edit lottery, view waitlist, view winners
             Row(
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
@@ -231,38 +235,36 @@ class OwnerLotteriesView(model : Model) : View() {
                 )
 
                 ExtendedFloatingActionButton(
-                    onClick = { controller.onWaitlist() },
+                    onClick = { controller.onWaitlist(navController, Lottery()) },
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,
                     icon = {
                         Icon(
                             imageVector = Icons.Outlined.AccountCircle,
-                            contentDescription = "Waitlist",
+                            contentDescription = "View waitlist",
                         )
                     },
                     text = { Text("Waitlist") }
                 )
 
-                ExtendedFloatingActionButton(
-                    onClick = {
-                        if (status == LotteryStatus.OPEN) {
-                            controller.onDrawLottery()
-                        } else if (status == LotteryStatus.DRAWN) {
-                            controller.onViewWinners()
-                        }
-                    },
-                    shape = CircleShape,
-                    containerColor = primaryPurple,
-                    contentColor = secondaryPurple,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = "Draw or View",
-                        )
-                    },
-                    text = { Text(action) }
-                )
+                if (status == LotteryStatus.DRAWN) {
+                    ExtendedFloatingActionButton(
+                        onClick = {
+                            controller.onViewWinners(navController, Lottery())
+                        },
+                        shape = CircleShape,
+                        containerColor = primaryPurple,
+                        contentColor = secondaryPurple,
+                        icon = {
+                            Icon(
+                                imageVector = Icons.Filled.PlayArrow,
+                                contentDescription = "View winners",
+                            )
+                        },
+                        text = { Text("Winners") }
+                    )
+                }
             }
         }
 

@@ -31,11 +31,23 @@ class OwnerLotteriesController(
 
     }
 
-    fun onViewWinners() {
+    /**
+     * Navigates to the Winners page for a given lottery
+     *
+     * @param navController NavController used to switch views in the app
+     * @param lottery the lottery needed to call Lottery class methods
+     */
+    fun onViewWinners(navController: NavController, lottery: Lottery) {
 
     }
 
-    fun onWaitlist() {
+    /**
+     * Navigates to the Waitlist page for a given lottery
+     *
+     * @param navController NavController used to switch views in the app
+     * @param lottery the lottery needed to call Lottery class methods
+     */
+    fun onWaitlist(navController: NavController, lottery: Lottery) {
 
     }
 }

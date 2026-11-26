@@ -23,8 +23,8 @@ class AddEditLotteryController(
      * 
      */
     fun onSaveLottery(
-        campsites: List<String>, // is this how the view will work? Will you have access to a list of campsiteId's?
-        numWinners: Int,            // I assumed you would only have one id, and you edit the lottery to add more campsites
+        campsites: List<String>,
+        numWinners: Int,
         waitlistCapacity: Int,
         registrationStart: String,
         registrationEnd: String,
@@ -43,11 +43,10 @@ class AddEditLotteryController(
 
     /**
      * Cancel lottery creation/update
-     * 
-    */
+     * @param navController NavController to switch out of this page
+     */
     fun onCancel(navController: NavController) {
         navController.navigate(Routes.LOTTERIES) // TODO: this should be lotteries page, I think this is right, need double check
-
     }
     
 }
