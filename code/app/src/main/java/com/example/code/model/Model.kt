@@ -656,27 +656,6 @@ open class Model: ModelUpdater<View>{
             }
     }
 
-    fun filterCampsite(filter: Campsite, onResult: (List<Campsite>) -> Unit) {
-        campsiteRef.get()
-            .addOnSuccessListener { result ->
-                val campsites = result.toCampsites()
-
-                val filtered = campsites.filter { campsite ->
-
-                    val matchesLocation = filter.location.isBlank() ||
-                            campsite.location.contains(filter.location, ignoreCase = true)
-
-                    val matchesGuest = campsite.maxOccupancy >= filter.maxOccupancy
-
-                    matchesLocation && matchesGuest
-                }
-                onResult(filtered)
-            }
-            .addOnFailureListener {
-                onResult(emptyList())
-            }
-    }
-
     private fun QuerySnapshot.toCampsites(): List<Campsite> = documents.mapNotNull { d ->
         try {
             d.toObject(Campsite::class.java)
