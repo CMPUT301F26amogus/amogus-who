@@ -22,6 +22,11 @@ import com.google.firebase.firestore.QuerySnapshot
 import kotlin.String
 
 import com.example.code.model.*
+import com.google.android.gms.tasks.Task
+import com.google.firebase.firestore.DocumentReference
+import com.google.firebase.firestore.Query
+import com.google.firebase.firestore.QuerySnapshot
+import com.google.firebase.firestore.FieldPath
 import java.time.LocalDate
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
@@ -51,7 +56,6 @@ open class Model: ModelUpdater<View>{
     @get:Exclude
     var currentDeviceId: String = "" // DeviceID of current user
     var campId: String = "" // Buffer for campsite ID
-    var notificationCount: Int = 0 // Tracker for total notification count
 
     // Top collections
     private val usersRef by lazy { db.collection("users") } // admin, owner, and entrants
@@ -65,7 +69,7 @@ open class Model: ModelUpdater<View>{
     private val imageRef by lazy { db.collection("images") }
 
     // Subcollections
-    // waitlist entries live under their lottery: lotteries/{lotId}/entrants/{lotId}_{deviceId}
+    // waitlist entries live under their lottery: lotteries/{lotId}/entrants/{deviceId}
     // entry is a WaitlistEntry object
     private fun waitlistRef(lotId: String) = lotteryRef.document(lotId).collection("entrants") // collection "entrants" will hold the waitlists for the entrants
     // availability lives under its campsite: campsites/{campId}/availability/{docId}
@@ -160,8 +164,8 @@ open class Model: ModelUpdater<View>{
      * Always check for null, if this is null then user doesnt exist.
      * Otherwise this returns user as an object
      */
-    fun getUserObj( onResult: (User?) -> Unit) {
-        usersRef.document(currentDeviceId).get()
+    fun getUserObj(deviceId: String = currentDeviceId, onResult: (User?) -> Unit) {
+        usersRef.document(deviceId).get()
             .addOnSuccessListener { snapshot ->
                 if (snapshot.exists()) {
                     val user = snapshot.toObject(User::class.java)
@@ -171,24 +175,6 @@ open class Model: ModelUpdater<View>{
                     onResult(null)
                 }
             }
-    }
-
-    /**
-     * gets how many notifications the current user has and keeps it in [notificationCount]
-     *
-     * @param onResult gets the count or 0 if the user doesnt exist
-     */
-    fun setNotifCount(onResult: (Int) -> Unit){
-        usersRef.document(currentDeviceId).get().addOnSuccessListener { snapshot ->
-            if (snapshot.exists()) {
-                val user = snapshot.toObject(User::class.java)
-                // users now hold a list of notification ids instead of a count
-                notificationCount = user?.notifications?.size ?: 0
-                onResult(notificationCount)
-            } else {
-                onResult(0)
-            }
-        }
     }
 
 
@@ -247,7 +233,7 @@ open class Model: ModelUpdater<View>{
      *      if returns user, then view is homepage
      */
     fun signIn(onResult: (User?) -> Unit){
-        getUserObj(onResult)
+        getUserObj{user -> onResult(user)}
     }
 
     /**
@@ -281,12 +267,28 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
-     * delete a profile (any role)
+     * delete a profile (any role) and everything that belongs to it
      *
+     * removes, in this order:
+     *  - the lotteries the user owns, with their waitlists
+     *  - the campsites the user owns, active reservations other people had on them get rejected
+     *    and those people get a notification
+     *  - the users own waitlist entries, reservations and notifications
+     *  - the user profile itself, last
+     *
+     * the profile goes last on purpose, if a step fails the profile still exists
+     * and this can just be run again, every step is safe to repeat
+     *
+     * @param onResult true if everything was deleted, false if a step failed
      */
-    fun deleteProfile(){
-        usersRef.document(currentDeviceId).delete()
-            .addOnSuccessListener {notifyViews()}
+    fun deleteProfile(onResult: (Boolean) -> Unit = {}){
+
+            usersRef.document(currentDeviceId).delete()
+            .addOnSuccessListener {
+                onResult(true)
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(false) }
     }
     //endregion
 
@@ -562,7 +564,7 @@ open class Model: ModelUpdater<View>{
                     throw Exception("Campsite does not exist.")
                 }
 
-                //Check that the user owns the campsite
+                    //Check that the user owns the campsite
                 val ownerId = document.getString("ownerId")
 
                 if (ownerId != deviceId) {
@@ -707,6 +709,8 @@ open class Model: ModelUpdater<View>{
             .addOnFailureListener {
                 onResult(null)
             }
+    }
+
         fun getCampId(campName: String, onResult: (String) -> Unit) {
             campsiteRef.whereEqualTo("name", campName).get()
                 .addOnSuccessListener { documents ->
@@ -714,27 +718,116 @@ open class Model: ModelUpdater<View>{
                     onResult(campsite[0].id)
                 }
         }
-    }
         //endregion
 
+    /** Register to hold a specific lottery to be displayed, for the purposes of edit lottery
+     * Ideally this is a lottery ID, which getLottery() would use to query the thing on the spot */
+    var theLottery: Lottery? = null  //  "the" suggests a singular specific item I also didn't want to possibly interfere with leaveWaitlist
 
-        //region Lotteries
-        /**
-         * saves a lottery to the database eg after changing its periods
-         *
-         * @param lottery the lottery to save
-         */
-        fun createLottery(lottery: Lottery) {
-            lotteryRef.document(lottery.id).set(lottery)
+    /** returns the specific lottery to be displayed*/
+    fun gettTheLottery() : Lottery? {
+        /** Ideally this would pull the lottery in question straight from the database on the spot
+         * to get the most current version*/
+        return theLottery
+    }
+
+    /** Sets the specific lottery to be displayed */
+    fun settTheLottery(newLottery: Lottery?) {
+        theLottery = newLottery
+        notifyViews()
+    }
+
+    public
+
+    //region Lotteries
+    /**
+     * creates a lottery for a campsite of the current user
+     *
+     * the id is made here and the current user becomes the owner
+     * the lottery starts OPEN and is saved on the lottery and on the campsite
+     * since getLottery(campsiteId) reads it from the campsite
+     *
+     * dates are strings like 2027-05-01 and the end days are exclusive like DateRange
+     * registration has to end before booking starts
+     *
+     * @param campsiteId id of the campsite, it needs to be saved already
+     * @param registrationStart first day entrants can join the waitlist
+     * @param registrationEnd day registration closes
+     * @param bookingStart first day winners can reserve their dates
+     * @param bookingEnd day booking closes
+     * @param numWinners how many entrants get drawn, more than 0
+     * @param waitlistCapacity most entrants allowed on the waitlist, 0 means no limit
+     * @param onResult gets the new lottery or the failure, eg if something wasnt valid
+     */
+    fun createLottery(
+        campsiteId: String,
+        registrationStart: String,
+        registrationEnd: String,
+        bookingStart: String,
+        bookingEnd: String,
+        numWinners: Int,
+        waitlistCapacity: Int = 0,
+        onResult: (Result<Lottery>) -> Unit
+    ) {
+        try {
+            require(campsiteId.isNotBlank()) { "A lottery needs a saved campsite" }
+            val regStart = LocalDate.parse(registrationStart)
+            val regEnd = LocalDate.parse(registrationEnd)
+            val bookStart = LocalDate.parse(bookingStart)
+            val bookEnd = LocalDate.parse(bookingEnd)
+            require(regStart.isBefore(regEnd)) { "Registration must end after it starts" }
+            require(bookStart.isBefore(bookEnd)) { "Booking must end after it starts" }
+            require(!bookStart.isBefore(regEnd)) { "Registration period must end before the booking period starts" }
+            require(numWinners > 0) { "Number of winners must be more than 0, was $numWinners" }
+            require(waitlistCapacity >= 0) { "Waitlist capacity must be 0 or more, was $waitlistCapacity" }
+        } catch (e: Exception) { // bad values or dates that dont parse
+            onResult(Result.failure(e))
+            return
         }
 
-        fun deleteLottery(lottery: Lottery) {
-            lotteryRef.document(lottery.id).delete()
-        }
+        val doc = lotteryRef.document()
+        val lottery = Lottery(
+            id = doc.id,
+            ownerId = currentDeviceId,
+            campsiteIds = listOf(campsiteId),
+            registrationStart = registrationStart,
+            registrationEnd = registrationEnd,
+            bookingStart = bookingStart,
+            bookingEnd = bookingEnd,
+            numWinners = numWinners,
+            waitlistCapacity = waitlistCapacity,
+            status = LotteryStatus.OPEN
+        )
 
+        // one batch so the lottery and the campsite pointing at it are saved together or not at all
+        val batch = db.batch()
+        batch.set(doc, lottery)
+        batch.update(campsiteRef.document(campsiteId), "lotteryId", doc.id)
+
+        batch.commit()
+            .addOnSuccessListener {
+                onResult(Result.success(lottery))
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(Result.failure(it)) }
+    }
+
+    fun deleteLottery(lottery: Lottery, onResult: (Boolean) -> Unit = {}) {
+        val batch = db.batch()
+        batch.delete(lotteryRef.document(lottery.id))
+        lottery.campsiteIds.forEach { batch.update(campsiteRef.document(it), "lotteryId", "") }
+        batch.commit()
+            .addOnSuccessListener {
+                onResult(true)
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(false) }
+    }
+        // TODO: this doesnt work, still need to fix this.
         fun updateLottery(lottery: Lottery, onResult: (Result<Unit>) -> Unit) {
             val updates = mapOf(
-                "campsites" to lottery.campsites,
+                "name" to lottery.name,
+                "campsiteIds" to lottery.campsiteIds,
                 "registrationStart" to lottery.registrationStart,
                 "registrationEnd" to lottery.registrationEnd,
                 "bookingStart" to lottery.bookingStart,
@@ -743,7 +836,6 @@ open class Model: ModelUpdater<View>{
                 "waitlistCapacity" to lottery.waitlistCapacity,
                 "status" to lottery.status.name
             )
-
             lotteryRef.document(lottery.id)
                 .update(updates)
                 .addOnSuccessListener {
@@ -767,13 +859,13 @@ open class Model: ModelUpdater<View>{
          *
          *@param onResult gets the lotteries or an empty list if it failed
          */
-        fun getLotteriesIn(onResult: (List<Lottery>) -> Unit) {
+        fun getLotteriesIn(status: EntryStatus = EntryStatus.DECLINED, onResult: (List<Lottery>) -> Unit) {
             db.collectionGroup("entrants")
                 .whereEqualTo("deviceId", currentDeviceId)
                 .get()
                 .addOnSuccessListener { documents ->
                     val lotteryIds = documents.toObjects(WaitlistEntry::class.java)
-                        .filter { it.status != EntryStatus.DECLINED }
+                        .filter { it.status == status }
                         .map { it.lotteryId }
                         .distinct()
 
@@ -796,17 +888,15 @@ open class Model: ModelUpdater<View>{
         /**
          * get lottery associated with campsite
          *
-         * @param campsiteId id of the campsite
+         * @param lotteryId id of the campsite
          */
-        fun getLottery(campsiteId: String, onResult: (Lottery?) -> Unit) {
-            campsiteRef.document(campsiteId).get().addOnSuccessListener { snapshot ->
-                if (snapshot.exists()) {
-                    val campsite = snapshot.toObject(Campsite::class.java)
-                    onResult(campsite?.lottery)
-                } else {
-                    onResult(null)
+        fun getLottery(lotteryId: String, onResult: (Lottery?) -> Unit) {
+
+            lotteryRef.document(lotteryId).get()
+                .addOnSuccessListener { lotterySnapshot ->
+                    onResult(lotterySnapshot.toObject(Lottery::class.java))
                 }
-            }
+                .addOnFailureListener { onResult(null) }
         }
 
         /**
@@ -824,215 +914,144 @@ open class Model: ModelUpdater<View>{
         ) {
             val lotteryDocument = lotteryRef.document(lotId)
 
-            // First, retrieve the lottery.
-            lotteryDocument.get()
-                .addOnSuccessListener { lotteryDoc ->
+            db.runTransaction<List<String>> { transaction ->
+                val snapshot = transaction.get(lotteryDocument)
+                val lottery = snapshot.toObject(Lottery::class.java)
+                if (!snapshot.exists() || lottery == null) throw Exception("Lottery not found")
 
-                    if (!lotteryDoc.exists()) {
-                        onResult(Result.failure(Exception("Lottery not found")))
-                        return@addOnSuccessListener
-                    }
-
-                    // Check whether registration has ended.
-                    // registrationEnd is saved as a string like 2027-05-01 and the end day is exclusive
-                    // if it was never set there is nothing to wait for
-                    val regEnd = lotteryDoc.getString("registrationEnd")
-                        ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-
-                    if (regEnd != null && LocalDate.now().isBefore(regEnd)) {
-                        onResult(Result.failure(Exception("Registration has not ended")))
-                        return@addOnSuccessListener
-                    }
-
-                    // Check whether the lottery has already been drawn.
-                    val status = lotteryDoc.getString("status")
-
-                    if (status != null && status != LotteryStatus.OPEN.name) {
-                        onResult(Result.failure(Exception("Lottery has already been drawn")))
-                        return@addOnSuccessListener
-                    }
-
-                    val winnerCount = lotteryDoc.getLong("numWinners")?.toInt() ?: 0
-
-                    if (winnerCount <= 0) {
-                        onResult(Result.failure(Exception("Invalid winner count")))
-                        return@addOnSuccessListener
-                    }
-
-                    // Retrieve all entrants who are still waiting.
-                    // the waitlist is already inside this lottery so no need to filter by lottery id
-                    waitlistRef(lotId)
-                        .whereEqualTo("status", EntryStatus.WAITING.name)
-                        .get()
-                        .addOnSuccessListener { documents ->
-
-                            val entries = documents.documents
-
-                            if (entries.size < winnerCount) {
-                                onResult(
-                                    Result.failure(Exception("Not enough eligible entrants"))
-                                )
-                                return@addOnSuccessListener
-                            }
-
-                            // Randomly select winners.
-                            val winners = entries.shuffled().take(winnerCount)
-                            // WaitlistEntry stores the entrants device id as "deviceId"
-                            val winnerIds = winners.mapNotNull {
-                                it.getString("deviceId")
-                            }
-
-                            val winnerEntryIds = winners.map { it.id }.toSet()
-
-                            // Update all waitlist entries and the lottery.
-                            val batch = db.batch()
-
-                            for (entry in entries) {
-                                val newStatus =
-                                    if (entry.id in winnerEntryIds) {
-                                        EntryStatus.SELECTED
-                                    } else {
-                                        EntryStatus.NOT_SELECTED
-                                    }
-
-                                batch.update(
-                                    entry.reference,
-                                    "status",
-                                    newStatus.name
-                                )
-                            }
-
-                            batch.update(
-                                lotteryDocument,
-                                "status",
-                                LotteryStatus.DRAWN.name
-                            )
-
-                            batch.update(
-                                lotteryDocument,
-                                "winnerIds",
-                                winnerIds
-                            )
-
-                            batch.commit()
-                                .addOnSuccessListener {
-                                    onResult(Result.success(winnerIds))
-                                }
-                                .addOnFailureListener { exception ->
-                                    onResult(Result.failure(exception))
-                                }
-                        }
-                        .addOnFailureListener { exception ->
-                            onResult(Result.failure(exception))
-                        }
+                // registrationEnd is a string like 2027-05-01 and the end day is exclusive
+                // if it was never set there is nothing to wait for
+                val regEnd = lottery.registrationEnd.takeIf { it.isNotBlank() }
+                    ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
+                if (regEnd != null && LocalDate.now().isBefore(regEnd)) {
+                    throw Exception("Registration has not ended")
                 }
-                .addOnFailureListener { exception ->
-                    onResult(Result.failure(exception))
+
+                if (lottery.status != LotteryStatus.OPEN) throw Exception("Lottery has already been drawn")
+                if (lottery.numWinners <= 0) throw Exception("Invalid winner count")
+
+                val waiting = lottery.waitlist.filter { it.status == EntryStatus.WAITING }
+                if (waiting.size < lottery.numWinners) throw Exception("Not enough eligible entrants")
+
+                // an entrys id is the entrants device id
+                val winnerIds = waiting.shuffled().take(lottery.numWinners).map { it.id }
+                val winnerSet = winnerIds.toSet()
+                waiting.forEach {
+                    it.status = if (it.id in winnerSet) EntryStatus.SELECTED else EntryStatus.NOT_SELECTED
                 }
+
+                transaction.update(
+                    lotteryDocument,
+                    "waitlist", lottery.waitlist,
+                    "status", LotteryStatus.DRAWN.name,
+                    "winnerIds", winnerIds
+                )
+                winnerIds
+            }
+                .addOnSuccessListener { onResult(Result.success(it)) }
+                .addOnFailureListener { onResult(Result.failure(it)) }
         }
         //endregion
 
 
+
         //region Waitlist
+        // This entire region is rewritten by claude sonnet 5.5
+        // Prompt: "Can you change the Waitlist functions in model to update the waitlist in the lottery when someone joins and leaves? Should we use a whole subcollection to store waitlist entries? it is probably easier to get rid of the subcollection, yea get rid of the sub collection and change it so that all waitlist entries are just stored in the list that is in the lottery's document."
+        // 2026-11-23
 
         // entrants should be able to join the waiting list
-        /**
-         * Adds the current user to the waitlist of the specified lottery.
-         *
-         * the entry is saved under the lottery as lotteries/{id}/entrants/{id}_{deviceId}
-         * a waitlistCapacity of 0 or less means no limit, and people who left dont count towards it
-         *
-         * @param lottery Target lottery to join
-         * @param onResult Callback returning true if joined successfully, false if full, already joined, or failed
-         */
-        fun joinWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
-            val entryId = "${lottery.id}_$currentDeviceId"
-            val entryDoc = waitlistRef(lottery.id).document(entryId)
+    /**
+     * Adds the current user to the waitlist of the specified lottery.
+     *
+     * the entry is added to the waitlist list in the lottery document, in a transaction so two people
+     * joining at once cant overwrite each other or go over the capacity
+     * a waitlistCapacity of 0 or less means no limit
+     *
+     * @param lottery Target lottery to join
+     * @param onResult true if joined successfully, false if full, already joined, or failed
+     */
+    fun joinWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
+        val lotteryDoc = lotteryRef.document(lottery.id)
 
-            lotteryRef.document(lottery.id).get()
-                .addOnSuccessListener { snapshot ->
-                    if (!snapshot.exists()) {
-                        onResult(false)
-                        return@addOnSuccessListener
-                    }
+        db.runTransaction<Boolean> { transaction ->
+            val snapshot = transaction.get(lotteryDoc)
+            if (!snapshot.exists()) return@runTransaction false // lottery doesnt exist
 
-                    val capacity = snapshot.getLong("waitlistCapacity")?.toInt() ?: 0
+            val current = snapshot.toObject(Lottery::class.java) ?: return@runTransaction false
+            val entries = current.waitlist
 
-                    //Check if user is already in the waitlist
-                    entryDoc.get()
-                        .addOnSuccessListener { existing ->
-                            if (existing.exists()) {
-                                onResult(false)
-                                return@addOnSuccessListener
-                            }
+            if (entries.any { it.id == currentDeviceId }) return@runTransaction false // already joined
+            if (current.waitlistCapacity > 0 && entries.size >= current.waitlistCapacity) {
+                return@runTransaction false // waitlist is full
+            }
 
-                            //Check if waitlist has reached maximum capacity (if capacity is set)
-                            waitlistRef(lottery.id).get()
-                                .addOnSuccessListener { entries ->
-                                    val taken = entries.documents.count {
-                                        it.getString("status") != EntryStatus.DECLINED.name
-                                    }
-                                    if (capacity > 0 && taken >= capacity) {
-                                        onResult(false) // Waitlist is full
-                                        return@addOnSuccessListener
-                                    }
-
-                                    val newEntry = WaitlistEntry(
-                                        id = entryId,
-                                        lotteryId = lottery.id,
-                                        deviceId = currentDeviceId,
-                                        status = EntryStatus.WAITING
-                                    )
-
-                                    entryDoc.set(newEntry)
-                                        .addOnSuccessListener {
-                                            onResult(true)
-                                            notifyViews()
-                                        }
-                                        .addOnFailureListener { onResult(false) }
-                                }
-                                .addOnFailureListener { onResult(false) }
-                        }
-                        .addOnFailureListener { onResult(false) }
-                }
-                .addOnFailureListener { onResult(false) }
+            val newEntry = WaitlistEntry(
+                id = currentDeviceId,
+                lotteryId = lottery.id,
+                status = EntryStatus.WAITING
+            )
+            transaction.update(
+                lotteryDoc,
+                "waitlist", entries + newEntry,
+                "entrantIds", FieldValue.arrayUnion(currentDeviceId)
+            )
+            true
         }
+            .addOnSuccessListener { joined ->
+                onResult(joined)
+                if (joined) notifyViews()
+            }
+            .addOnFailureListener { onResult(false) }
+    }
 
         // entrants need to be able to leave waitlist
-        /**
-         * leaves the waitlist of the lottery
-         *
-         * @param lottery Lottery that the entrant wants to leave waitlist from
-         * @param onResult true if the entry was deleted, false if it failed
-         */
-        fun leaveWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
-            // same id joinWaitlist saves the entry under, so we delete the right one
-            waitlistRef(lottery.id).document("${lottery.id}_$currentDeviceId").delete()
-                .addOnSuccessListener {
-                    onResult(true) //even if user isnt in lottery it will return true, but i dont think we need to implement this
-                    notifyViews()
-                }
-                .addOnFailureListener { onResult(false) }
-        }
+    /**
+     * leaves the waitlist of the lottery
+     *
+     * @param lottery Lottery that the entrant wants to leave waitlist from
+     * @param onResult true if they are off the waitlist, false if it failed
+     */
+    fun leaveWaitlist(lottery: Lottery, onResult: (Boolean) -> Unit) {
+        removeFromWaitlist(lottery.id)
+            .addOnSuccessListener {
+                onResult(true) // also true if they were never on it
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(false) }
+    }
 
-        /**
-         * gets the entrants still waiting on a lottery, for the owner
-         *
-         * @param lottery the lottery to get the waitlist of
-         */
-        fun getWaitlist(lottery: Lottery, onResult: (Result<List<WaitlistEntry>>) -> Unit) {
-            waitlistRef(lottery.id)
-                .whereEqualTo("status", EntryStatus.WAITING.name)
-                .get()
-                .addOnSuccessListener { documents ->
-                    val entries = documents.toObjects(WaitlistEntry::class.java)
-
-                    onResult(Result.success(entries))
-                }
-                .addOnFailureListener { exception ->
-                    onResult(Result.failure(exception))
-                }
+    // takes the current user out of one lottery, arrayRemove cant be used because it needs the exact entry
+    // and the entry status may have changed since they joined
+    fun removeFromWaitlist(lotteryId: String): Task<Void> {
+        val lotteryDoc = lotteryRef.document(lotteryId)
+        return db.runTransaction<Void> { transaction ->
+            val snapshot = transaction.get(lotteryDoc)
+            val entries = snapshot.toObject(Lottery::class.java)?.waitlist ?: emptyList()
+            transaction.update(
+                lotteryDoc,
+                "waitlist", entries.filter { it.id != currentDeviceId },
+                "entrantIds", FieldValue.arrayRemove(currentDeviceId)
+            )
+            null
         }
+    }
+
+    fun getWaitlist(lottery: Lottery, onResult: (Result<List<WaitlistEntry>>) -> Unit) {
+        lotteryRef.document(lottery.id).get()
+            .addOnSuccessListener { snapshot ->
+                val current = snapshot.toObject(Lottery::class.java)
+                if (current == null) {
+                    onResult(Result.failure(Exception("Lottery not found")))
+                    return@addOnSuccessListener
+                }
+                onResult(Result.success(current.waitlist.filter { it.status == EntryStatus.WAITING }))
+                notifyViews()
+            }
+            .addOnFailureListener { exception ->
+                onResult(Result.failure(exception))
+            }
+    }
         //endregion
 
 
@@ -1065,7 +1084,7 @@ open class Model: ModelUpdater<View>{
                 numGuests = guests,
                 status = ReservationStatus.ACTIVE,
                 rulesAccepted = rulesAccepted,
-                lotteryId = campsite.lottery.id
+                lotteryId = campsite.lotteryId
             )
             doc.set(newReservation).addOnSuccessListener { notifyViews() }
         }
@@ -1151,6 +1170,111 @@ open class Model: ModelUpdater<View>{
                 }
         }
 
+        // Avery's owner reservation functions (#194), brought back after the dev merge dropped them.
+        // Changed to match this branch: they use the current user instead of an ownerId parameter
+        // (like getCampsiteByOwner) and don't call notifyViews since they only read data
+
+        /**
+         * removes user from reservation, this allows user to decline reservation
+         *
+         * saved as cancelled since rejected is only for the owner rejecting the entrant
+         *
+         * @param reservation the Reservation object that the user is declining
+         */
+        fun declineReservation(reservation: Reservation) {
+            reservationRef.document(reservation.id).update(
+                "status", ReservationStatus.CANCELLED.name
+            ).addOnSuccessListener { notifyViews() }
+        }
+
+        /**
+         * gets every reservation at the current owners campsites with the campsite and entrant name for each card
+         *
+         * reservations only keep ids so this finds the owners campsites first then their reservations
+         * then the entrants names
+         * whereIn takes at most 30 values so the ids are asked for in chunks
+         *
+         * @param onResult gets the reservations or an empty list if anything failed
+         */
+        private fun getOwnerReservations(onResult: (List<OwnerReservation>) -> Unit) {
+            campsiteRef.whereEqualTo("ownerId", currentDeviceId).get()
+                .addOnSuccessListener { campDocs ->
+                    val campsites = campDocs.toObjects(Campsite::class.java).associateBy { it.id }
+                    if (campsites.isEmpty()) {
+                        onResult(emptyList())
+                        return@addOnSuccessListener
+                    }
+
+                    val reservationQueries = campsites.keys.chunked(30).map {
+                        reservationRef.whereIn("campsiteId", it).get()
+                    }
+                    Tasks.whenAllSuccess<QuerySnapshot>(reservationQueries)
+                        .addOnSuccessListener { reservationSnaps ->
+                            val reservations = reservationSnaps.flatMap { it.toObjects(Reservation::class.java) }
+                            val entrantIds = reservations.map { it.entrantId }.filter { it.isNotBlank() }.distinct()
+                            if (entrantIds.isEmpty()) {
+                                onResult(reservations.map { OwnerReservation(it, campsites[it.campsiteId], "") })
+                                return@addOnSuccessListener
+                            }
+
+                            // user docs are keyed by device id so look them up by document id
+                            val userQueries = entrantIds.chunked(30).map {
+                                usersRef.whereIn(FieldPath.documentId(), it).get()
+                            }
+                            Tasks.whenAllSuccess<QuerySnapshot>(userQueries)
+                                .addOnSuccessListener { userSnaps ->
+                                    val names = userSnaps.flatMap { it.documents }
+                                        .associate { it.id to (it.getString("name") ?: "") }
+                                    onResult(reservations.map {
+                                        OwnerReservation(it, campsites[it.campsiteId], names[it.entrantId] ?: "")
+                                    })
+                                }
+                                .addOnFailureListener { onResult(emptyList()) }
+                        }
+                        .addOnFailureListener { onResult(emptyList()) }
+                }
+                .addOnFailureListener { onResult(emptyList()) }
+        }
+
+        /**
+         * gets the active reservations at all of the current owners campsites
+         *
+         * @param onResult gets the reservations sorted by check in or an empty list if it failed
+         */
+        fun getOwnerActiveReservations(onResult: (List<OwnerReservation>) -> Unit) {
+            getOwnerReservations { all ->
+                val today = LocalDate.now()
+                // skip any reservation saved with bad dates instead of crashing
+                onResult(all.filter { runCatching { it.reservation.isActive(today) }.getOrDefault(false) }
+                    .sortedBy { it.reservation.checkIn })
+            }
+        }
+
+        /**
+         * gets the past reservations at all of the current owners campsites
+         *
+         * @param onResult gets the reservations newest first or an empty list if it failed
+         */
+        fun getOwnerPastReservations(onResult: (List<OwnerReservation>) -> Unit) {
+            getOwnerReservations { all ->
+                val today = LocalDate.now()
+                // skip any reservation saved with bad dates instead of crashing
+                onResult(all.filter { runCatching { it.reservation.isPast(today) }.getOrDefault(false) }
+                    .sortedByDescending { it.reservation.checkIn })
+            }
+        }
+
+        /**
+         * gets the cancelled reservations at all of the current owners campsites
+         *
+         * @param onResult gets the reservations sorted by check in or an empty list if it failed
+         */
+        fun getOwnerCancelledReservations(onResult: (List<OwnerReservation>) -> Unit) {
+            getOwnerReservations { all ->
+                onResult(all.filter { it.reservation.isCancelled() }.sortedBy { it.reservation.checkIn })
+            }
+        }
+
         /**
          * gets the booked dates of a campsite for its owner
          *
@@ -1184,18 +1308,19 @@ open class Model: ModelUpdater<View>{
          * saves it in the notifications collection and adds its id to the users notifications list
          * does nothing if the user turned notifications off
          *
-         * @param notification The notification message
+         * @param content The notification message
+         * @param userId The user to send the notification to
          */
-        fun notifyUser(notification: String) {
+        fun notifyUser(content: String, userId: String) {
             // getUserObj is async so everything that needs the user has to happen inside the callback
-            getUserObj { user ->
+            getUserObj(userId) { user ->
                 if (user == null || !user.notificationsEnabled) return@getUserObj
 
                 val doc = notificationRef.document()
                 val newNotification = Notification(
                     id = doc.id,
-                    entrantId = currentDeviceId,
-                    content = notification,
+                    entrantId = userId,
+                    content = content,
                     // format YYYY-MM-DDTHH:MM:SS, truncated so the seconds always show
                     timestamp = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
                         .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
@@ -1203,9 +1328,7 @@ open class Model: ModelUpdater<View>{
 
                 doc.set(newNotification).addOnSuccessListener {
                     // arrayUnion adds just the id so we dont overwrite the whole user document
-                    usersRef.document(currentDeviceId)
-                        .update("notifications", FieldValue.arrayUnion(doc.id))
-                    notificationCount = user.notifications.size + 1
+                    usersRef.document(userId).update("notifications", FieldValue.arrayUnion(doc.id))
                     notifyViews()
                 }
             }
@@ -1216,12 +1339,14 @@ open class Model: ModelUpdater<View>{
          *
          * @param onResult gets the notifications oldest first or an empty list if it failed
          */
-        fun getNotifications(onResult: (List<Notification>) -> Unit) {
-            notificationRef.whereEqualTo("entrantId", currentDeviceId).get()
+        fun getNotifications(
+            userId: String = currentDeviceId,
+            onResult: (List<Notification>) -> Unit
+        ) {
+            notificationRef.whereEqualTo("entrantId", userId).get()
                 .addOnSuccessListener { documents ->
                     val notifications = documents.toObjects(Notification::class.java)
                         .sortedBy { it.timestamp }
-                    notificationCount = notifications.size
                     onResult(notifications)
                 }
                 .addOnFailureListener {
@@ -1229,4 +1354,94 @@ open class Model: ModelUpdater<View>{
                 }
         }
         //endregion
+
+        //region Deleting data
+        // these return a Task so deleteProfile can chain them, onSuccessTask stops the chain at the first failure
+
+        // firestore batches hold at most 500 writes so big lists get split up
+        fun deleteDocs(refs: List<DocumentReference>): Task<Void> =
+            Tasks.whenAll(refs.chunked(500).map { chunk ->
+                val batch = db.batch()
+                chunk.forEach { batch.delete(it) }
+                batch.commit()
+            })
+
+        // deletes every document a query finds
+        fun deleteQuery(query: Query): Task<Void> =
+            query.get()
+                .onSuccessTask { snapshot -> deleteDocs(snapshot.documents.map { it.reference }) }
+
+        fun Task<Void>.reportTo(onResult: (Boolean) -> Unit) {
+            addOnSuccessListener {
+                onResult(true)
+                notifyViews()
+            }
+            addOnFailureListener { onResult(false) }
+        }
+
+        fun deleteMyNotifications(): Task<Void> =
+            deleteQuery(notificationRef.whereEqualTo("entrantId", currentDeviceId))
+
+    // takes the user off every waitlist they are on, whatever their entry status
+        fun deleteMyWaitlistEntries(): Task<Void> =
+            lotteryRef.whereArrayContains("entrantIds", currentDeviceId).get().onSuccessTask { snapshot ->
+                Tasks.whenAll(snapshot.documents.map { removeFromWaitlist(it.id) })
+        }
+
+        // deleting a reservation also frees its dates since getBookedDates only looks at reservations
+        fun deleteMyReservations(): Task<Void> =
+            deleteQuery(reservationRef.whereEqualTo("entrantId", currentDeviceId))
+
+        /**
+         * removes the current user from every waitlist they are on, even lotteries they already lost
+         *
+         * @param onResult true if they were removed, false if it failed
+         */
+        fun deleteWaitlistEntries(onResult: (Boolean) -> Unit = {}) {
+            deleteMyWaitlistEntries().reportTo(onResult)
+        }
+
+        /**
+         * deletes every reservation the current user made
+         *
+         * @param onResult true if they were deleted, false if it failed
+         */
+        fun deleteReservations(onResult: (Boolean) -> Unit = {}) {
+            deleteMyReservations().reportTo(onResult)
+        }
+
+    // lotteries the user runs, their waitlists are inside them so they go too
+    fun deleteOwnedLotteries(): Task<Void> =
+        deleteQuery(lotteryRef.whereEqualTo("ownerId", currentDeviceId))
+
+        // campsites the user owns
+        fun deleteOwnedCampsites(): Task<Void> =
+            campsiteRef.whereEqualTo("ownerId", currentDeviceId).get().onSuccessTask { snapshot ->
+                val campsites = snapshot.documents
+                Tasks.whenAll(campsites.map { rejectActiveReservationsAt(it.id) })
+                    .onSuccessTask { Tasks.whenAll(campsites.map { deleteQuery(availabilityRef(it.id)) }) }
+                    .onSuccessTask { deleteDocs(campsites.map { it.reference }) }
+            }
+
+        // other people booked these stays so reject them and tell them instead of just deleting
+        fun rejectActiveReservationsAt(campsiteId: String): Task<Void> =
+            reservationRef.whereEqualTo("campsiteId", campsiteId)
+                .whereEqualTo("status", ReservationStatus.ACTIVE.name).get()
+                .onSuccessTask { snapshot ->
+                    val batch = db.batch()
+                    snapshot.documents.forEach {
+                        batch.update(it.reference, "status", ReservationStatus.REJECTED.name)
+                    }
+                    snapshot.documents.mapNotNull { it.getString("entrantId") }.distinct().forEach {
+                        notifyUser(
+                            "Your reservation was cancelled because the owner removed their campsite",
+                            it
+                        )
+                    }
+                    batch.commit()
+                }
+
+
+    //endregion
+    }
 }

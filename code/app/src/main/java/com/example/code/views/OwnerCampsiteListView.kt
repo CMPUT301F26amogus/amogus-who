@@ -93,148 +93,148 @@ class OwnerCampsiteListView : View() {
         }
     }
 
-    @Composable
-    private fun CampsiteCard(
-        campsiteName: String,
-        location: String,
-        upcoming: Int,
-        requests: Int,
-        lotteryStatus: String,
-        rating: Double,
-        onClickEdit: () -> Unit,
-        onClickDetails: () -> Unit,
-    ) {
-        Column(
-            modifier = Modifier
-                .clip(shape = RoundedCornerShape(12.dp))
-                .background(color = cardPrimary)
-                .fillMaxWidth()
-                .height(150.dp)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp)
-                    .weight(1f),
-            ) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
-                ) {
-                    Column(
-                        modifier = Modifier,
-                    ) {
-                        Text(
-                            text = campsiteName,
-                            fontSize = 20.sp,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            color = primaryGreenTextColor,
-                        )
-                        Text(
-                            text = location,
-                            fontSize = 12.sp,
-                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
-                            color = primaryGreenTextColor,
-                        )
-                    }
-
-                    Spacer(
-                        modifier = Modifier.weight(1f)
-                    )
-
-                    Column(
-                        modifier = Modifier
-                            .width(95.dp)
-                            .height(35.dp)
-                    ) {
-                        ExtendedFloatingActionButton(
-                            onClick = { /* Not a button in practice */ },
-                            shape = CircleShape,
-                            containerColor = tertiaryPurple,
-                            contentColor = secondaryPurple,
-                            icon = {
-                                Icon(
-                                    imageVector = Icons.Outlined.Star,
-                                    contentDescription = "Edit",
-                                )
-                            },
-                            text = { Text(rating.toString()) }
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                ) {
-                    SiteInfoBox(
-                        info = "Upcoming",
-                        data = upcoming.toString(),
-                    )
-
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
-
-                    SiteInfoBox(
-                        info = "Requests",
-                        data = requests.toString(),
-                    )
-
-                    Spacer(
-                        modifier = Modifier.width(8.dp)
-                    )
-
-                    SiteInfoBox(
-                        info = "Lottery",
-                        data = lotteryStatus,
-                    )
-                }
-            }
-
-            Row(
-                verticalAlignment = Alignment.CenterVertically,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .height(50.dp)
-                    .background(color = cardAccent)
-                    .padding(10.dp),
-            ) {
-                ExtendedFloatingActionButton(
-                    onClick = onClickEdit,
-                    shape = CircleShape,
-                    containerColor = cardAccent,
-                    contentColor = primaryTextColor,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Edit,
-                            contentDescription = "Edit",
-                        )
-                    },
-                    text = { Text("Edit") }
-                )
-
-                Spacer(
-                    modifier = Modifier.weight(1f)
-                )
-
-                ExtendedFloatingActionButton(
-                    onClick = onClickDetails,
-                    shape = CircleShape,
-                    containerColor = cardAccent,
-                    contentColor = primaryTextColor,
-                    icon = {
-                        Icon(
-                            imageVector = Icons.Filled.PlayArrow,
-                            contentDescription = "Details",
-                        )
-                    },
-                    text = { Text("Details") }
-                )
-            }
-        }
-
-    }
+//    @Composable
+//    private fun CampsiteCard(
+//        campsiteName: String,
+//        location: String,
+//        upcoming: Int,
+//        requests: Int,
+//        lotteryStatus: String,
+//        rating: Double,
+//        onClickEdit: () -> Unit,
+//        onClickDetails: () -> Unit,
+//    ) {
+//        Column(
+//            modifier = Modifier
+//                .clip(shape = RoundedCornerShape(12.dp))
+//                .background(color = cardPrimary)
+//                .fillMaxWidth()
+//                .height(150.dp)
+//        ) {
+//            Column(
+//                modifier = Modifier
+//                    .fillMaxSize()
+//                    .padding(10.dp)
+//                    .weight(1f),
+//            ) {
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                        .weight(1f),
+//                ) {
+//                    Column(
+//                        modifier = Modifier,
+//                    ) {
+//                        Text(
+//                            text = campsiteName,
+//                            fontSize = 20.sp,
+//                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+//                            color = primaryGreenTextColor,
+//                        )
+//                        Text(
+//                            text = location,
+//                            fontSize = 12.sp,
+//                            fontWeight = androidx.compose.ui.text.font.FontWeight.Bold,
+//                            color = primaryGreenTextColor,
+//                        )
+//                    }
+//
+//                    Spacer(
+//                        modifier = Modifier.weight(1f)
+//                    )
+//
+//                    Column(
+//                        modifier = Modifier
+//                            .width(95.dp)
+//                            .height(35.dp)
+//                    ) {
+//                        ExtendedFloatingActionButton(
+//                            onClick = { /* Not a button in practice */ },
+//                            shape = CircleShape,
+//                            containerColor = tertiaryPurple,
+//                            contentColor = secondaryPurple,
+//                            icon = {
+//                                Icon(
+//                                    imageVector = Icons.Outlined.Star,
+//                                    contentDescription = "Edit",
+//                                )
+//                            },
+//                            text = { Text(rating.toString()) }
+//                        )
+//                    }
+//                }
+//                Row(
+//                    modifier = Modifier
+//                        .fillMaxWidth()
+//                ) {
+//                    SiteInfoBox(
+//                        info = "Upcoming",
+//                        data = upcoming.toString(),
+//                    )
+//
+//                    Spacer(
+//                        modifier = Modifier.width(8.dp)
+//                    )
+//
+//                    SiteInfoBox(
+//                        info = "Requests",
+//                        data = requests.toString(),
+//                    )
+//
+//                    Spacer(
+//                        modifier = Modifier.width(8.dp)
+//                    )
+//
+//                    SiteInfoBox(
+//                        info = "Lottery",
+//                        data = lotteryStatus,
+//                    )
+//                }
+//            }
+//
+//            Row(
+//                verticalAlignment = Alignment.CenterVertically,
+//                modifier = Modifier
+//                    .fillMaxWidth()
+//                    .height(50.dp)
+//                    .background(color = cardAccent)
+//                    .padding(10.dp),
+//            ) {
+//                ExtendedFloatingActionButton(
+//                    onClick = onClickEdit,
+//                    shape = CircleShape,
+//                    containerColor = cardAccent,
+//                    contentColor = primaryTextColor,
+//                    icon = {
+//                        Icon(
+//                            imageVector = Icons.Outlined.Edit,
+//                            contentDescription = "Edit",
+//                        )
+//                    },
+//                    text = { Text("Edit") }
+//                )
+//
+//                Spacer(
+//                    modifier = Modifier.weight(1f)
+//                )
+//
+//                ExtendedFloatingActionButton(
+//                    onClick = onClickDetails,
+//                    shape = CircleShape,
+//                    containerColor = cardAccent,
+//                    contentColor = primaryTextColor,
+//                    icon = {
+//                        Icon(
+//                            imageVector = Icons.Filled.PlayArrow,
+//                            contentDescription = "Details",
+//                        )
+//                    },
+//                    text = { Text("Details") }
+//                )
+//            }
+//        }
+//
+//    }
 
     @Composable
     private fun Content(navController: NavController) {
@@ -244,16 +244,16 @@ class OwnerCampsiteListView : View() {
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             items(count = campsites.size) { campsite ->
-                CampsiteCard(
-                    campsiteName = campsites[campsite].campsiteName,
-                    location = campsites[campsite].location,
-                    upcoming = campsites[campsite].upcoming,
-                    requests = campsites[campsite].requests,
-                    lotteryStatus = campsites[campsite].lotteryStatus,
-                    rating = campsites[campsite].rating,
-                    onClickEdit = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
-                    onClickDetails = { navController.navigate(Routes.CAMPSITE_DETAILS) },
-                )
+//                CampsiteCard(
+//                    campsiteName = campsites[campsite].campsiteName,
+//                    location = campsites[campsite].location,
+//                    upcoming = campsites[campsite].upcoming,
+//                    requests = campsites[campsite].requests,
+//                    lotteryStatus = campsites[campsite].lotteryStatus,
+//                    rating = campsites[campsite].rating,
+//                    onClickEdit = { navController.navigate(Routes.ADD_EDIT_CAMPSITE) },
+//                    onClickDetails = { navController.navigate(Routes.CAMPSITE_DETAILS) },
+//                )
                 Spacer(
                     modifier = Modifier
                         .height(20.dp)
