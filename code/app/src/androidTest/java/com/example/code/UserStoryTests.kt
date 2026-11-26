@@ -24,17 +24,22 @@ import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import org.junit.Rule
 import org.junit.Test
-import org.junit.rules.ExternalResource
+import org.junit.Assert.assertEquals
+import org.junit.Assert.assertTrue
+import org.junit.rules.TestRule
+import org.junit.runners.model.Statement
 import org.junit.runner.RunWith
 import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.concurrent.CountDownLatch
 import java.util.concurrent.TimeUnit
 
 /**
  * one test or more per user story
  *
  * named after the story id so its easy to match them up with the spec
- * the seed rule signs this device in as an owner and puts the test data in firestore
- * then puts the devices real profile back when the test is done
+ * the seed rule signs this device in as an entrant for us_01 tests and an owner for the rest
+ * puts the test data in firestore then puts the devices real profile back when the test is done
  */
 @RunWith(AndroidJUnit4::class)
 class UserStoryTests {
@@ -118,26 +123,94 @@ class UserStoryTests {
         toDeclineReservation,
     )
 
+    // entrant cards show the campsite not the entrant so each entrant reservation gets its own campsite
+    // they belong to a made up owner so they never show up in the owner tests
+    private val entrantCampsites = mutableListOf<Campsite>()
+
+    // makes a reservation for this device at its own campsite so the card can be found by campsite name
+    private fun entrantReservation(
+        key: String,
+        campsiteName: String,
+        checkInDaysFromNow: Long,
+        status: ReservationStatus,
+    ): Reservation {
+        val campsite = Campsite(
+            id = "us-01-$key-site-$deviceId",
+            ownerId = "us-01-owner-$deviceId",
+            name = campsiteName,
+            location = "Test Park",
+        )
+        entrantCampsites.add(campsite)
+        return Reservation(
+            id = "us-01-$key-$deviceId",
+            campsiteId = campsite.id,
+            entrantId = deviceId,
+            checkIn = LocalDate.now().plusDays(checkInDaysFromNow).toString(),
+            checkOut = LocalDate.now().plusDays(checkInDaysFromNow + 2).toString(),
+            numGuests = 3,
+            status = status,
+        )
+    }
+
+    // the campsite name on this reservations card
+    private fun campsiteOf(reservation: Reservation): String =
+        entrantCampsites.first { it.id == reservation.campsiteId }.name
+
+    // current cards sort by check in so the one the cancel test uses comes first
+    private val myToCancelReservation =
+        entrantReservation("to-cancel", "US 01.07.01 Cancel Campsite", 3, ReservationStatus.ACTIVE)
+    private val myUpcomingReservation =
+        entrantReservation("upcoming", "US 01.06.01 Upcoming Campsite", 5, ReservationStatus.ACTIVE)
+    // past cards sort newest first so the finished one comes first
+    // still saved as active since nothing sets PAST but check out was a week ago
+    private val myFinishedReservation =
+        entrantReservation("finished", "US 01.06.02 Finished Campsite", -10, ReservationStatus.ACTIVE)
+    private val myMarkedPastReservation =
+        entrantReservation("marked-past", "US 01.06.02 Marked Past Campsite", -20, ReservationStatus.PAST)
+    // cancelled and rejected ones shouldnt show on either tab
+    private val myCancelledReservation =
+        entrantReservation("cancelled", "US 01.06 Cancelled Campsite", 12, ReservationStatus.CANCELLED)
+    private val myRejectedReservation =
+        entrantReservation("rejected", "US 01.06 Rejected Campsite", 14, ReservationStatus.REJECTED)
+
+    private val entrantReservations = listOf(
+        myToCancelReservation,
+        myUpcomingReservation,
+        myFinishedReservation,
+        myMarkedPastReservation,
+        myCancelledReservation,
+        myRejectedReservation,
+    )
+
     // runs before the compose rule because the app picks owner or entrant home as soon as it opens
+    // every test gets all the data since owner and entrant data cant show up in each others lists
     @get:Rule(order = 0)
-    val seedOwnerData = object : ExternalResource() {
-        private var savedUser: Map<String, Any>? = null
-
-        override fun before() {
-            // keep whatever profile this device had so we can put it back after
-            savedUser = await(userDoc.get()).data
-            await(userDoc.set(User(deviceId = deviceId, name = "US 02.07 Owner", role = Role.OWNER)))
-            await(campsiteRef.document(testCampsite.id).set(testCampsite))
-            seededEntrants.forEach { await(usersRef.document(it.deviceId).set(it)) }
-            seededReservations.forEach { await(reservationRef.document(it.id).set(it)) }
-        }
-
-        override fun after() {
-            seededReservations.forEach { await(reservationRef.document(it.id).delete()) }
-            seededEntrants.forEach { await(usersRef.document(it.deviceId).delete()) }
-            await(campsiteRef.document(testCampsite.id).delete())
-            val user = savedUser
-            if (user != null) await(userDoc.set(user)) else await(userDoc.delete())
+    val seedData = TestRule { base, description ->
+        object : Statement() {
+            override fun evaluate() {
+                // entrant stories start with us_01 and need the entrant home so everything else is an owner
+                val role = if (description.methodName.startsWith("us_01")) Role.ENTRANT else Role.OWNER
+                // keep whatever profile this device had so we can put it back after
+                val savedUser = await(userDoc.get()).data
+                try {
+                    await(userDoc.set(User(deviceId = deviceId, name = "US Test ${role.name}", role = role)))
+                    await(campsiteRef.document(testCampsite.id).set(testCampsite))
+                    entrantCampsites.forEach { await(campsiteRef.document(it.id).set(it)) }
+                    seededEntrants.forEach { await(usersRef.document(it.deviceId).set(it)) }
+                    (seededReservations + entrantReservations).forEach {
+                        await(reservationRef.document(it.id).set(it))
+                    }
+                    base.evaluate()
+                } finally {
+                    (seededReservations + entrantReservations).forEach {
+                        await(reservationRef.document(it.id).delete())
+                    }
+                    seededEntrants.forEach { await(usersRef.document(it.deviceId).delete()) }
+                    entrantCampsites.forEach { await(campsiteRef.document(it.id).delete()) }
+                    await(campsiteRef.document(testCampsite.id).delete())
+                    if (savedUser != null) await(userDoc.set(savedUser)) else await(userDoc.delete())
+                }
+            }
         }
     }
 
@@ -195,6 +268,30 @@ class UserStoryTests {
             check(System.currentTimeMillis() < giveUpAt) { "Reservation $reservationId never became $status" }
             Thread.sleep(250)
         }
+    }
+
+    // goes from the entrant home to one tab of the reservations screen
+    private fun openEntrantReservations(tab: String) {
+        // the app shows a spinner until it loads the user so wait for the entrant home
+        composeTestRule.waitUntil(10_000) {
+            composeTestRule.onAllNodesWithTag("My Reservations")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule
+            .onNodeWithTag("My Reservations")
+            .performClick()
+        composeTestRule
+            .onNodeWithTag("Header: Reservations")
+            .assertExists()
+        composeTestRule
+            .onNodeWithText(tab)
+            .performClick()
+    }
+
+    // the dates the way the cards show them like 05/01/27 | 05/03/27
+    private fun cardDates(reservation: Reservation): String {
+        val format = DateTimeFormatter.ofPattern("MM/dd/yy")
+        return "${LocalDate.parse(reservation.checkIn).format(format)} | ${LocalDate.parse(reservation.checkOut).format(format)}"
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.01", 2026-11-23
@@ -326,5 +423,144 @@ class UserStoryTests {
         waitForText(testEntrant.name)
         assertNotShown(nameOf(toCancelReservation))
         assertNotShown(nameOf(toDeclineReservation))
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.06.01", 2026-11-24
+    */
+    // US 01.06.01
+    // as an entrant i want to view a list of my active reservations
+    @Test
+    fun us_01_06_01_entrant_views_active_reservations() {
+        openEntrantReservations("Current")
+
+        // both upcoming stays show up
+        waitForText(campsiteOf(myUpcomingReservation))
+        assertShown(campsiteOf(myToCancelReservation))
+        assertShown(campsiteOf(myUpcomingReservation))
+
+        // the card shows the real dates and guests not placeholders
+        assertShown(cardDates(myUpcomingReservation))
+        composeTestRule
+            .onAllNodesWithText("Guests: 3")
+            .onFirst()
+            .assertIsDisplayed()
+
+        // finished cancelled and rejected ones dont belong here
+        assertNotShown(campsiteOf(myFinishedReservation))
+        assertNotShown(campsiteOf(myMarkedPastReservation))
+        assertNotShown(campsiteOf(myCancelledReservation))
+        assertNotShown(campsiteOf(myRejectedReservation))
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.06.02", 2026-11-24
+    */
+    // US 01.06.02
+    // as an entrant i want to view a list of my past reservations
+    @Test
+    fun us_01_06_02_entrant_views_past_reservations() {
+        openEntrantReservations("Past")
+
+        // finished stays show up whether theyre still saved as active or marked past
+        waitForText(campsiteOf(myFinishedReservation))
+        assertShown(campsiteOf(myFinishedReservation))
+        assertShown(campsiteOf(myMarkedPastReservation))
+        assertShown(cardDates(myFinishedReservation))
+
+        // upcoming cancelled and rejected ones dont belong here
+        assertNotShown(campsiteOf(myUpcomingReservation))
+        assertNotShown(campsiteOf(myToCancelReservation))
+        assertNotShown(campsiteOf(myCancelledReservation))
+        assertNotShown(campsiteOf(myRejectedReservation))
+
+        // a stay thats over cant be cancelled
+        composeTestRule
+            .onNodeWithText("X Cancel")
+            .assertDoesNotExist()
+
+        // and a finished stay isnt still listed as current
+        composeTestRule
+            .onNodeWithText("Current")
+            .performClick()
+        waitForText(campsiteOf(myUpcomingReservation))
+        assertNotShown(campsiteOf(myFinishedReservation))
+        assertNotShown(campsiteOf(myMarkedPastReservation))
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.07.01", 2026-11-24
+    */
+    // US 01.07.01
+    // as an entrant i want to cancel my campsite reservation
+    @Test
+    fun us_01_07_01_entrant_cancels_reservation() {
+        openEntrantReservations("Current")
+        waitForText(campsiteOf(myToCancelReservation))
+
+        // the reservation to cancel checks in first so its cancel button is the first one
+        composeTestRule
+            .onAllNodesWithText("X Cancel")
+            .onFirst()
+            .performClick()
+
+        // backing out of the popup leaves the reservation alone
+        composeTestRule
+            .onNodeWithText("Cancel reservation?")
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Keep it")
+            .performClick()
+        composeTestRule
+            .onNodeWithText("Cancel reservation?")
+            .assertDoesNotExist()
+        assertEquals(
+            ReservationStatus.ACTIVE.name,
+            await(reservationRef.document(myToCancelReservation.id).get()).getString("status"),
+        )
+
+        // confirming actually cancels it
+        composeTestRule
+            .onAllNodesWithText("X Cancel")
+            .onFirst()
+            .performClick()
+        composeTestRule
+            .onNodeWithText("Yes, cancel")
+            .performClick()
+        waitForText("was cancelled")
+        waitForStatus(myToCancelReservation.id, ReservationStatus.CANCELLED)
+
+        // the list reloads without it but the other upcoming stay is still there
+        // exact text so the banner that names the campsite doesnt count
+        composeTestRule.waitUntil(10_000) {
+            composeTestRule.onAllNodesWithText(campsiteOf(myToCancelReservation))
+                .fetchSemanticsNodes().isEmpty()
+        }
+        assertShown(campsiteOf(myUpcomingReservation))
+
+        // and it doesnt turn up as past either
+        composeTestRule
+            .onNodeWithText("Past")
+            .performClick()
+        waitForText(campsiteOf(myFinishedReservation))
+        assertNotShown(campsiteOf(myToCancelReservation))
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.07.01", 2026-11-24
+    */
+    // US 01.07.01
+    // a stay thats already over cant be cancelled even though its still saved as active
+    @Test
+    fun us_01_07_01_entrant_cannot_cancel_finished_stay() {
+        var result: Result<Unit>? = null
+        val done = CountDownLatch(1)
+        Model().cancelReservation(myFinishedReservation) {
+            result = it
+            done.countDown()
+        }
+        assertTrue("cancel never answered", done.await(10, TimeUnit.SECONDS))
+
+        assertTrue(result!!.isFailure)
+        assertEquals(
+            ReservationStatus.ACTIVE.name,
+            await(reservationRef.document(myFinishedReservation.id).get()).getString("status"),
+        )
     }
 }
