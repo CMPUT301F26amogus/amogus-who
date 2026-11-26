@@ -23,9 +23,8 @@ class OwnerEditCampsiteController (
             updates
         ) { success, error ->
             onResult(success,error)
-            if (success) navController.popBackStack()
+            if (success) navController.popBackStack() // TODO: Is this the right screen to go to after editing? idk
         }
-        navController.popBackStack() // TODO: Is this the right screen to go to after editing? idk
     }
 
     fun onAddCampsite (navController: NavController,campName: String, location: String, desc: String, maxOcc: Int,
