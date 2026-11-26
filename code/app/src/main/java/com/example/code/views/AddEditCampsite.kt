@@ -65,8 +65,6 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
 
     var pricePerNight : String = ""
 
-    var availability: AvailabilitySchedule = AvailabilitySchedule(emptyList(), emptyList())
-
     var bookingPeriodStart : String = ""
 
     var bookingPeriodEnd : String = ""

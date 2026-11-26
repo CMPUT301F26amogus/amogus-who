@@ -3,6 +3,7 @@ package com.example.code.controllers
 import Model
 import androidx.navigation.NavController
 import com.example.code.model.Campsite
+import com.example.code.model.EntrantReservation
 import com.example.code.model.Reservation
 import com.example.code.Routes
 
@@ -10,10 +11,31 @@ class EntrantReservationsController(
     private val model : Model
 ) {
     /**
-     * Cancels a reservation
+     * loads the current users reservations that are coming up or happening now
+     *
+     * @param onResult gets the reservations sorted by check in or an empty list if it failed
      */
-    public fun cancelReservation(reservation: Reservation){
-        model.cancelReservation(reservation)
+    fun onActiveReservations(onResult: (List<EntrantReservation>) -> Unit) {
+        model.getEntrantActiveReservations(model.currentDeviceId, onResult)
+    }
+
+    /**
+     * loads the current users reservations that are over
+     *
+     * @param onResult gets the reservations newest first or an empty list if it failed
+     */
+    fun onPastReservations(onResult: (List<EntrantReservation>) -> Unit) {
+        model.getEntrantPastReservations(model.currentDeviceId, onResult)
+    }
+
+    /**
+     * cancels one of the current users reservations
+     *
+     * @param reservation the reservation to cancel
+     * @param onResult success once its cancelled or a failure saying why it couldnt be
+     */
+    public fun cancelReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
+        model.cancelReservation(reservation, onResult)
     }
 
     /**

@@ -101,29 +101,6 @@ interface InputFieldFunctions {
     }
 
     @Composable
-    fun PriceField(
-        s : TextFieldState,
-        labelText: String,
-        modifier: Modifier,
-        placeholder : String = ""
-    ) {
-        TextField(
-            state = s,
-            label = { Text(labelText) },
-            keyboardOptions = KeyboardOptions(
-                keyboardType = KeyboardType.Decimal
-            ),
-            inputTransformation = InputTransformation.maxLength(8).then {
-                if (!asCharSequence().matches(Regex("\\d*\\.?\\d{0,2}"))) {
-                    revertAllChanges()
-                }
-            },
-            modifier = modifier,
-            placeholder = { Text(placeholder) }
-        )
-    }
-
-    @Composable
     fun StringField(
         s : TextFieldState,
         labelText: String,
