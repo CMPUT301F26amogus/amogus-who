@@ -31,7 +31,7 @@ import com.example.code.Controllers.OwnerEditCampsiteController
 import com.example.code.model.Campsite
 import com.example.code.ui.theme.CodeTheme
 
-class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), InputFieldFunctions {
+class AddEditCampsite (model: Model): View(), InputFieldFunctions {
 
     val controller = OwnerEditCampsiteController(model)
 
@@ -70,21 +70,23 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
 
 //    var tags : String = ""
 
-    var headerName = if (isEdit) {"Edit Campsite"} else { "Add Campsite" }
+    var headerName = ""
 
     override fun update(model: Model) {
         val tempCampsite = model.gettTempCampsite()
         oldCampsite = tempCampsite
-        if (tempCampsite != null && isEdit){
+        if (tempCampsite != null){
             oldCampsite = tempCampsite
             campsiteName = tempCampsite.name
             campDescription = tempCampsite.description
             parkName = tempCampsite.location
             maxGuests = tempCampsite.maxOccupancy.toString()
             pricePerNight = tempCampsite.pricePerNight.toString()
+            headerName = "Edit Campsite"
         }
         else {
             clear()
+            headerName = "Add Campsite"
         }
     }
 
@@ -312,7 +314,7 @@ class AddEditCampsite (model: Model, val isEdit: Boolean = false): View(), Input
 @Composable
 fun AddCampsiteViewPreview() {
     val m = Model()
-    val mp = AddEditCampsite(m, false)
+    val mp = AddEditCampsite(m)
     CodeTheme {
         (
                 mp.ShowScreen(rememberNavController())

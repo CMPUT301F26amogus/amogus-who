@@ -13,10 +13,6 @@
         </DropdownSelection>
         <DialogSelection />
       </SelectionState>
-      <SelectionState runConfigName="entrant_navigate_to_search()">
-        <option name="selectionMode" value="DROPDOWN" />
-        <DialogSelection />
-      </SelectionState>
       <SelectionState runConfigName="searchResultsViewPreview">
         <option name="selectionMode" value="DROPDOWN" />
         <DialogSelection />

@@ -24,7 +24,7 @@ class OwnerEditCampsiteController (
             onResult(success,error)
             if (success) navController.popBackStack()
         }
-        navController.navigate("owner_home")
+        navController.popBackStack()
     }
 
     fun onAddCampsite (navController: NavController,campName: String, location: String, desc: String, maxOcc: Int,
