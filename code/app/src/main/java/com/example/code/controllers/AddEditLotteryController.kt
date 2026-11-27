@@ -32,7 +32,7 @@ class AddEditLotteryController(
         bookingEnd: String,
     ) {
 
-        model.createLottery(campsites[1], registrationStart, registrationEnd, bookingStart, bookingEnd, numWinners, waitlistCapacity) {
+        model.createLottery(campsites[0], registrationStart, registrationEnd, bookingStart, bookingEnd, numWinners, waitlistCapacity) {
             result ->
             result.onSuccess { print("success") }
             result.onFailure { e-> print(e.message) } // The exception is caught in the model, this is error message if the exception is thrown.
@@ -54,8 +54,8 @@ class AddEditLotteryController(
      * @param lottery to be deleted
      * @param navController to switch out of this page once deleted
      */
-    fun onDelete(navController: NavController) {
-        // TODO: delete the lottery from the database
+    fun onDelete(lottery: Lottery,navController: NavController) {
+        model.deleteLottery(lottery)
         navController.popBackStack()
     }
     

@@ -48,6 +48,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
@@ -64,7 +65,7 @@ import java.util.Locale
 
 class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), InputFieldFunctions{
 
-    val controller = AddEditLotteryController(model)
+    private val controller = AddEditLotteryController(model)
     private val availableCampsites = model.campsiteList
 
     var headerName = if (isEdit) { "Edit Lottery" } else { "Add Lottery" }
@@ -73,13 +74,14 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     /** Display variables
      *      the variable versions of each field within Lottery creation
      * */
-    var oldLottery : Lottery? = null
-    val winnersMax = mutableStateOf("")
-    val waitlistMax = mutableStateOf("")
-    val registrationStart = mutableStateOf("")  // [1]
-    val registrationEnd = mutableStateOf("")    // [1]
-    val bookingStart = mutableStateOf("")
-    val bookingEnd = mutableStateOf("")
+    private var oldLottery: Lottery? = null
+    private val selectedCampsites = mutableStateListOf<String>() // reference by ID
+    private val maxWinners = mutableStateOf("")
+    private val maxWaitlist = mutableStateOf("")
+    private val registrationStart = mutableStateOf("")  // [1]
+    private val registrationEnd = mutableStateOf("")    // [1]
+    private val bookingStart = mutableStateOf("")
+    private val bookingEnd = mutableStateOf("")
 
     /** Update
      *      If this view is an edit view then it will grab the values of the lottery to be edited,
@@ -88,22 +90,33 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     override fun update(model: Model){
         if (isEdit){
             oldLottery = model.gettTheLottery()
-            //  extract oldLottery variables
-            if (oldLottery != null) {
-//                lotteryCampsiteID = oldLottery!!.campsiteIds
-//                waitListCapacity = oldLottery!!.waitlistCapacity
-                // TODO: Lotteries need some variable to represent the date in which it is automatically drawn
-//                drawDate = oldLottery!!.drawDate
-                registrationStart.value = oldLottery!!.registrationStart  // [1]
-                registrationEnd.value = oldLottery!!.registrationEnd      // [1]
-                bookingStart.value = oldLottery!!.bookingStart
-                bookingEnd.value = oldLottery!!.bookingEnd
-            }
-            else {
-                clear()
-            }
         }
-        else { clear() }
+        reset()
+    }
+
+    /**clear
+     *
+     * resets fields when cancel is pressed
+     * */
+    fun reset() {
+        if (oldLottery != null) {
+            // TODO: Lotteries need some variable to represent the date in which it is automatically drawn
+            selectedCampsites.clear()
+            maxWinners.value = oldLottery!!.numWinners.toString()
+            maxWaitlist.value = oldLottery!!.waitlistCapacity.toString()
+            registrationStart.value = oldLottery!!.registrationStart      // [1]
+            registrationEnd.value = oldLottery!!.registrationEnd          // [1]
+            bookingStart.value = oldLottery!!.bookingStart
+            bookingEnd.value = oldLottery!!.bookingEnd
+        }
+        else {
+            maxWinners.value = ""
+            maxWaitlist.value = ""
+            registrationStart.value = ""
+            registrationEnd.value = ""
+            bookingStart.value = ""
+            bookingEnd.value = ""
+        }
     }
 
     /*
@@ -120,15 +133,17 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      * 2026-11-26
      */
     @Composable
-    private fun CampsiteSelect(campsites: List<Campsite>) {
+    private fun CampsiteSelect(
+        availableCampsites: List<Campsite>,
+        selectedCampsites: MutableList<String>  // reference by ID
+    ) {
         var expanded by remember { mutableStateOf(false) }
-        val selectedCampsiteIds = remember { mutableStateListOf<String>() }
         val fieldColor = tertiaryPurple
         val dividerColor = primaryTextColor.copy(alpha = 0.55f)
         val visibleCampsites = if (expanded) {
-            campsites
+            availableCampsites
         } else {
-            campsites.filter { it.id in selectedCampsiteIds }
+            availableCampsites.filter { it.id in selectedCampsites }
         }
 
         Column(
@@ -141,11 +156,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                 modifier = Modifier
                     .fillMaxWidth()
                     .clickable(role = Role.Button) { expanded = !expanded }
-                    .padding(start = 12.dp, end = 8.dp, top = 10.dp, bottom = 10.dp),
+                    .padding(start = 12.dp, end = 8.dp, top = 10.dp, bottom = 10.dp)
+                    .testTag("onSelectCampsites"),
                 verticalAlignment = Alignment.CenterVertically
             ) {
                 Text(
-                    text = if (selectedCampsiteIds.isEmpty()) {
+                    text = if (selectedCampsites.isEmpty()) {
                         "Select Campsite(s)*"
                     } else {
                         "Selected Campsite(s)"
@@ -173,15 +189,15 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         .verticalScroll(rememberScrollState())
                 ) {
                     visibleCampsites.forEach { campsite ->
-                        val isSelected = campsite.id in selectedCampsiteIds
+                        val isSelected = campsite.id in selectedCampsites
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
                                 .clickable(role = Role.Checkbox) {
                                     if (isSelected) {
-                                        selectedCampsiteIds.remove(campsite.id)
+                                        selectedCampsites.remove(campsite.id)
                                     } else {
-                                        selectedCampsiteIds.add(campsite.id)
+                                        selectedCampsites.add(campsite.id)
                                     }
                                 }
                                 .padding(start = 12.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
@@ -204,9 +220,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                 checked = isSelected,
                                 onCheckedChange = {
                                     if (isSelected) {
-                                        selectedCampsiteIds.remove(campsite.id)
+                                        selectedCampsites.remove(campsite.id)
                                     } else {
-                                        selectedCampsiteIds.add(campsite.id)
+                                        selectedCampsites.add(campsite.id)
                                     }
                                 },
                                 colors = CheckboxDefaults.colors(
@@ -250,6 +266,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .testTag("onMaxWinners")
             )
             Spacer(modifier = Modifier.width(10.dp))
             TextField(
@@ -268,6 +285,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
+                    .testTag("onMaxWaitlist")
             )
         }
     }
@@ -284,7 +302,11 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      * 2026-11-26
      */
     @Composable
-    private fun PeriodSelect(start: MutableState<String>, end: MutableState<String>) {  // [1]
+    private fun PeriodSelect(
+        start: MutableState<String>,                                                    // [1]
+        end: MutableState<String>,                                                      // [1]
+        purpose: String = "",
+    ) {
         var startDate by start                                                          // [1]
         var endDate by end                                                              // [1]
         val context = LocalContext.current
@@ -328,7 +350,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         focusedTextColor = primaryTextColor,
                         unfocusedTextColor = secondaryPurple,
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("on${purpose}Start")
                 )
                 Box(
                     modifier = Modifier
@@ -354,7 +378,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         focusedTextColor = primaryTextColor,
                         unfocusedTextColor = secondaryPurple,
                     ),
-                    modifier = Modifier.fillMaxWidth()
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .testTag("on${purpose}End")
                 )
                 Box(
                     modifier = Modifier
@@ -403,7 +429,10 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                 .fillMaxWidth()
                                 .padding(10.dp)
                         ) {
-                            CampsiteSelect(availableCampsites)
+                            CampsiteSelect(
+                                availableCampsites,
+                                selectedCampsites,
+                            )
                         }
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -416,7 +445,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                 .fillMaxWidth()
                                 .padding(10.dp)
                         ) {
-                            WinnersAndWaitlistCaps(winnersMax, waitlistMax)
+                            WinnersAndWaitlistCaps(maxWinners, maxWaitlist)
                         }
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -491,7 +520,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         contentColor = primaryTextColor,
                         shape = CircleShape,
                         onClick = {
-                            clear()
+                            reset()
                             controller.onCancel(navController)
                         },
                         icon = {
@@ -502,7 +531,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         },
                         text = {
                             Text("Cancel")
-                        }
+                        },
+                        modifier = Modifier
+                            .testTag("onCancel")
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -512,7 +543,10 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         contentColor = primaryTextColor,
                         shape = CircleShape,
                         onClick = {
-                            controller.onDelete(navController)
+                            controller.onDelete(
+                                lottery = oldLottery!!,
+                                navController = navController
+                            )
                         },
                         content = {
                             Icon(
@@ -520,6 +554,8 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                 contentDescription = "Delete Lottery",
                             )
                         },
+                        modifier = Modifier
+                            .testTag("onDelete")
                     )
 
                     Spacer(modifier = Modifier.weight(1f))
@@ -529,7 +565,15 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         contentColor = primaryGreenTextColor,
                         shape = CircleShape,
                         onClick = {
-                            // controller.onSave()
+                             controller.onSave(
+                                 campsites = selectedCampsites,
+                                 numWinners = maxWinners.value.toInt(),          // TODO: integer exception handling
+                                 waitlistCapacity = maxWaitlist.value.toInt(),   // TODO: integer exception handling
+                                 registrationStart = registrationStart.value,
+                                 registrationEnd = registrationEnd.value,
+                                 bookingStart = bookingStart.value,
+                                 bookingEnd = bookingEnd.value,
+                             )
                         },
                         icon = {
                             Icon(
@@ -543,6 +587,8 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                 fontWeight = FontWeight.Bold
                             )
                         },
+                        modifier = Modifier
+                            .testTag("onSave")
                     )
                 }
             }
@@ -555,20 +601,6 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             )
         }
     }
-
-    /**clear
-     *
-     * resets fields when cancel is pressed
-     * */
-    fun clear() {
-        if (oldLottery == null) {
-            // extract old lottery fields
-        }
-        else {
-
-        }
-    }
-
 }
 
 
