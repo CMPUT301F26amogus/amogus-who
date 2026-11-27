@@ -31,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.code.controllers.OwnerEditCampsiteController
 import com.example.code.model.AvailabilitySchedule
 import com.example.code.model.Campsite
+import com.example.code.model.DateInput
 import com.example.code.ui.theme.CodeTheme
 
 class AddEditCampsite (model: Model): View(), InputFieldFunctions {
@@ -298,7 +299,11 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
                             } else {
                                 controller.onAddCampsite(
                                     navController, name, location, description, maxOccupancy, pricePerNight,
-                                    AvailabilitySchedule(listOf(bookingPeriodStart,bookingPeriodEnd), emptyList()),
+                                    // read the Bookings Open/End boxes (saved as YYYY-MM-DD) so search can filter by date
+                                    AvailabilitySchedule(listOf(
+                                        DateInput().toSaved(bookingPeriodStartState.text.toString()),
+                                        DateInput().toSaved(bookingPeriodEndState.text.toString())
+                                    ), emptyList()),
                                     rulesAndPolicy
                                 ) { success ->
                                     val message = if (success) "Campsite registered" else "Could not register the campsite"
