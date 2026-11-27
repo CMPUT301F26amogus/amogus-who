@@ -49,7 +49,8 @@ class CampsiteDetailsView(M:Model): View() {
         if (campsite == null || campsite.lotteryId.isBlank()) {
             lottery = null
         } else {
-            model.getLottery(campsite.id) { lottery = it }
+            model.getLotteryById(campsite.lotteryId) { lottery = it }
+
         }
     }
 

@@ -56,9 +56,6 @@ open class Model: ModelUpdater<View>{
     private val imageRef by lazy { db.collection("images") }
 
     // Subcollections
-    // waitlist entries live under their lottery: lotteries/{lotId}/entrants/{deviceId}
-    // entry is a WaitlistEntry object
-    private fun waitlistRef(lotId: String) = lotteryRef.document(lotId).collection("entrants") // collection "entrants" will hold the waitlists for the entrants
     // availability lives under its campsite: campsites/{campId}/availability/{docId}
     // It could be better to make document for each date? that could be easier querying, but idk it'll bloat our database up
     private fun availabilityRef(campId: String) = campsiteRef.document(campId).collection("availability")
@@ -739,6 +736,7 @@ open class Model: ModelUpdater<View>{
     }
     //endregion
 
+    //region Lotteries
     /** Register to hold a specific lottery to be displayed, for the purposes of edit lottery
      * Ideally this is a lottery ID, which getLottery() would use to query the thing on the spot */
     var theLottery: Lottery? = null  //  "the" suggests a singular specific item I also didn't want to possibly interfere with leaveWaitlist
@@ -759,25 +757,25 @@ open class Model: ModelUpdater<View>{
     public
 
     //region Lotteries
-            /**
-             * creates a lottery for a campsite of the current user
-             *
-             * the id is made here and the current user becomes the owner
-             * the lottery starts OPEN and is saved on the lottery and on the campsite
-             * since getLottery(campsiteId) reads it from the campsite
-             *
-             * dates are strings like 2027-05-01 and the end days are exclusive like DateRange
-             * registration has to end before booking starts
-             *
-             * @param campsiteId id of the campsite, it needs to be saved already
-             * @param registrationStart first day entrants can join the waitlist
-             * @param registrationEnd day registration closes
-             * @param bookingStart first day winners can reserve their dates
-             * @param bookingEnd day booking closes
-             * @param numWinners how many entrants get drawn, more than 0
-             * @param waitlistCapacity most entrants allowed on the waitlist, 0 means no limit
-             * @param onResult gets the new lottery or the failure, eg if something wasnt valid
-             */
+    /**
+     * creates a lottery for a campsite of the current user
+     *
+     * the id is made here and the current user becomes the owner
+     * the lottery starts OPEN and is saved on the lottery and on the campsite
+     * since getLottery(campsiteId) reads it from the campsite
+     *
+     * dates are strings like 2027-05-01 and the end days are exclusive like DateRange
+     * registration has to end before booking starts
+     *
+     * @param campsiteId id of the campsite, it needs to be saved already
+     * @param registrationStart first day entrants can join the waitlist
+     * @param registrationEnd day registration closes
+     * @param bookingStart first day winners can reserve their dates
+     * @param bookingEnd day booking closes
+     * @param numWinners how many entrants get drawn, more than 0
+     * @param waitlistCapacity most entrants allowed on the waitlist, 0 means no limit
+     * @param onResult gets the new lottery or the failure, eg if something wasnt valid
+     */
     fun createLottery(
         campsiteId: String,
         registrationStart: String,
@@ -910,7 +908,7 @@ open class Model: ModelUpdater<View>{
          *
          * @param lotteryId id of the campsite
          */
-        fun getLottery(lotteryId: String, onResult: (Lottery?) -> Unit) {
+        fun getLotteryById(lotteryId: String, onResult: (Lottery?) -> Unit) {
 
             lotteryRef.document(lotteryId).get()
                 .addOnSuccessListener { lotterySnapshot ->
@@ -934,26 +932,19 @@ open class Model: ModelUpdater<View>{
         ) {
             val lotteryDocument = lotteryRef.document(lotId)
 
-            db.runTransaction<List<String>> { transaction ->
+            // returns the winners and the people who didnt win
+            db.runTransaction<Pair<List<String>, List<String>>> { transaction ->
                 val snapshot = transaction.get(lotteryDocument)
                 val lottery = snapshot.toObject(Lottery::class.java)
                 if (!snapshot.exists() || lottery == null) throw Exception("Lottery not found")
 
-                // registrationEnd is a string like 2027-05-01 and the end day is exclusive
-                // if it was never set there is nothing to wait for
-                val regEnd = lottery.registrationEnd.takeIf { it.isNotBlank() }
-                    ?.let { runCatching { LocalDate.parse(it) }.getOrNull() }
-                if (regEnd != null && LocalDate.now().isBefore(regEnd)) {
-                    throw Exception("Registration has not ended")
-                }
-
+                if (!lottery.registrationEndedOn()) throw Exception("Registration has not ended")
                 if (lottery.status != LotteryStatus.OPEN) throw Exception("Lottery has already been drawn")
                 if (lottery.numWinners <= 0) throw Exception("Invalid winner count")
 
                 val waiting = lottery.waitlist.filter { it.status == EntryStatus.WAITING }
-                if (waiting.size < lottery.numWinners) throw Exception("Not enough eligible entrants")
 
-                // an entrys id is the entrants device id
+                // fewer entrants than winners means everyone wins, take() just returns them all
                 val winnerIds = waiting.shuffled().take(lottery.numWinners).map { it.id }
                 val winnerSet = winnerIds.toSet()
                 waiting.forEach {
@@ -966,16 +957,22 @@ open class Model: ModelUpdater<View>{
                     "status", LotteryStatus.DRAWN.name,
                     "winnerIds", winnerIds
                 )
-                winnerIds
+                Pair(winnerIds, waiting.map { it.id }.filter { it !in winnerSet })
             }
-                .addOnSuccessListener { onResult(Result.success(it)) }
+                .addOnSuccessListener { (winners, others) ->
+                    // only the device whose transaction went through gets here, so nobody is notified twice
+                    winners.forEach { notifyUser("You won the lottery, you can book your dates now", it) }
+                    others.forEach { notifyUser("You were not selected in the lottery this time", it) }
+                    onResult(Result.success(winners))
+                    notifyViews()
+                }
                 .addOnFailureListener { onResult(Result.failure(it)) }
         }
         //endregion
 
 
 
-        //region Waitlist
+    //region Waitlist
         // This entire region is rewritten by claude sonnet 5.5
         // Prompt: "Can you change the Waitlist functions in model to update the waitlist in the lottery when someone joins and leaves? Should we use a whole subcollection to store waitlist entries? it is probably easier to get rid of the subcollection, yea get rid of the sub collection and change it so that all waitlist entries are just stored in the list that is in the lottery's document."
         // 2026-11-23
@@ -1075,7 +1072,7 @@ open class Model: ModelUpdater<View>{
         //endregion
 
 
-        //region Reservations
+    //region Reservations
         /**
          * Create a reservation for a campsite
          *
@@ -1420,7 +1417,7 @@ open class Model: ModelUpdater<View>{
         //endregion
 
 
-        //region Notifications
+    //region Notifications
         /**
          * Sends a notification to the user
          *
@@ -1474,7 +1471,7 @@ open class Model: ModelUpdater<View>{
         }
         //endregion
 
-        //region Deleting data
+    //region Deleting data
         // these return a Task so deleteProfile can chain them, onSuccessTask stops the chain at the first failure
 
         // firestore batches hold at most 500 writes so big lists get split up
