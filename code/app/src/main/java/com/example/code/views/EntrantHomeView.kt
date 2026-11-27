@@ -35,7 +35,7 @@ class EntrantHomeView : HomeView() {
         Option("My Reservations", Routes.RESERVATIONS),
         Option("My Lotteries", Routes.LOTTERIES),
         Option("Search", Routes.SEARCH),
-        Option("Scan QR Codes", ""),
+        Option("Scan QR Codes", Routes.SCAN_QR),
         Option("Messages", ""),
     )
 

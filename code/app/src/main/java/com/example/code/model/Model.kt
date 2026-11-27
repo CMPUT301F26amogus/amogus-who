@@ -690,7 +690,7 @@ open class Model: ModelUpdater<View>{
     fun getCampsiteDetails(onResult: (List<Campsite>, String?) -> Unit) {
         campsiteRef.get()
             .addOnSuccessListener { result ->
-                val summaries = result.documents.mapNotNull { document ->
+                val details = result.documents.mapNotNull { document ->
                     val campsite = document.toObject(Campsite::class.java)
 
                     campsite?.let {
@@ -708,7 +708,7 @@ open class Model: ModelUpdater<View>{
                         )
                     }
                 }
-                onResult(summaries, null)
+                onResult(details, null)
             }
             .addOnFailureListener { exception ->
                 onResult(emptyList(), exception.message?: "Failed to retrieve campsite details")

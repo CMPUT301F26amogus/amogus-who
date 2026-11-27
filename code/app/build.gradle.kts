@@ -62,4 +62,12 @@ dependencies {
     implementation("com.google.firebase:firebase-firestore")
     // nice ui stuff
     implementation(libs.androidx.compose.material.icons.core)
+    // For camera scanning + barcode generation on Android
+    implementation("com.journeyapps:zxing-android-embedded:4.3.0")                          // draws the QR code
+    val cameraxVersion = "1.6.2"
+    implementation("androidx.camera:camera-core:$cameraxVersion")
+    implementation("androidx.camera:camera-camera2:$cameraxVersion")
+    implementation("androidx.camera:camera-lifecycle:$cameraxVersion")
+    implementation("androidx.camera:camera-view:$cameraxVersion")
+    implementation("com.google.mlkit:barcode-scanning:17.3.0")
 }

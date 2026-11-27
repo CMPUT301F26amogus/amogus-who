@@ -12,6 +12,7 @@ data class Rating(
     val userId: String,
     val campsiteId: String,
     val score: Int,
+    val review: String
 ) {
     init {
         require(userId.isNotBlank()) { "User ID must not be blank" }
