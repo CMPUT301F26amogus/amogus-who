@@ -8,6 +8,10 @@ import com.google.firebase.firestore.FieldValue
 import com.google.firebase.firestore.firestore
 import kotlin.String
 
+import android.net.Uri
+import com.google.firebase.storage.StorageException
+import com.google.firebase.storage.storage
+
 import com.example.code.model.*
 import com.google.android.gms.tasks.Task
 import com.google.firebase.firestore.DocumentReference
@@ -29,9 +33,6 @@ interface ModelUpdater<V>{
 
 open class Model: ModelUpdater<View>{
 
-    // All the code below is refactored with Claude Sonnet 5.5
-    // Prompt: "Fix this, double tripple check, ask me if you nee help"
-    // 2026-11-23
 
     //region Properties and Firestore references
 
@@ -247,6 +248,68 @@ open class Model: ModelUpdater<View>{
         notifyViews()
 
     }
+
+
+    // profile pictures are files in firebase storage and the link to show one is kept on the user as profileImageUrl
+    // each user has one fixed path so a new picture replaces the old file and nothing is left behind
+    private val storage by lazy { Firebase.storage }
+    private fun profileImageFile() = storage.reference.child("profileImages/$currentDeviceId")
+
+    /**
+     * adds or changes the current users profile image
+     *
+     * uploads the picture and saves its link as the users profileImageUrl
+     * a new picture replaces the old one
+     *
+     * @param imageUri the picture the user picked, eg from the photo picker
+     * @param onResult gets the link to the picture or the failure
+     */
+    fun setProfileImage(imageUri: Uri, onResult: (Result<String>) -> Unit) {
+        if (currentDeviceId.isBlank()) {
+            onResult(Result.failure(IllegalStateException("No device id set")))
+            return
+        }
+        val file = profileImageFile()
+        file.putFile(imageUri)
+            .onSuccessTask { file.downloadUrl }
+            .onSuccessTask { url ->
+                usersRef.document(currentDeviceId).update("profileImageUrl", url.toString())
+                    .onSuccessTask { Tasks.forResult(url.toString()) }
+            }
+            .addOnSuccessListener { link ->
+                onResult(Result.success(link))
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(Result.failure(it)) }
+    }
+
+    /**
+     * removes the current users profile image, does nothing if they never had one
+     *
+     * @param onResult true if the picture is gone, false if it failed
+     */
+    fun removeProfileImage(onResult: (Boolean) -> Unit = {}) {
+        deleteStoredProfileImage()
+            .onSuccessTask { usersRef.document(currentDeviceId).delete() }
+            .addOnSuccessListener {
+                onResult(true)
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(false) }
+    }
+
+    // deletes the file, no file there counts as success since the goal is that its gone
+    private fun deleteStoredProfileImage(): Task<Void> =
+        profileImageFile().delete().continueWithTask { task ->
+            val error = task.exception
+            if (error == null ||
+                (error is StorageException && error.errorCode == StorageException.ERROR_OBJECT_NOT_FOUND)
+            ) {
+                Tasks.forResult<Void>(null)
+            } else {
+                Tasks.forException<Void>(error)
+            }
+        }
 
     /**
      * delete a profile (any role) and everything that belongs to it
@@ -713,7 +776,7 @@ open class Model: ModelUpdater<View>{
      *
      * the id is made here and the current user becomes the owner
      * the lottery starts OPEN and is saved on the lottery and on the campsite
-     * since getLottery(campsiteId) reads it from the campsite
+     *
      *
      * dates are strings like 2027-05-01 and the end days are exclusive like DateRange
      * registration has to end before booking starts
