@@ -33,7 +33,13 @@ import Model
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Star
+import androidx.compose.material3.Checkbox
+import androidx.compose.material3.Icon
+import androidx.compose.ui.draw.blur
 import androidx.compose.ui.unit.sp
 
     class RegistrationView(M:Model): View() {
@@ -73,21 +79,26 @@ import androidx.compose.ui.unit.sp
             Row(modifier = Modifier.weight(1f)){  //  Body Row
                 if (showInputs) {
                     InputBody(
+                        acceptPolicy = acceptPolicy,
                         onSuccess = {
                             goToHome(navController, Routes.OWNER_HOME)
                         },
                         onTos = {
-                            showInputs != showInputs
+                            showInputs = !showInputs
                         }
                     )
                 }
                 else {
                     TosBody (
+                        acceptPolicy = acceptPolicy,
                         onAccept = {
                             acceptPolicy = true
-                            showInputs != showInputs
+                            showInputs = !showInputs
                         },
-
+                        onDecline = {
+                            acceptPolicy = false
+                            showInputs = !showInputs
+                        }
                     )
                 }
             }
@@ -117,7 +128,7 @@ import androidx.compose.ui.unit.sp
     }
 
     @Composable
-    fun TosBody(onAccept: () -> Unit) {
+    fun TosBody(acceptPolicy: Boolean, onAccept: () -> Unit, onDecline: () -> Unit) {
         Column(
             modifier = Modifier
                 .padding(top = 50.dp, start = 20.dp, end = 20.dp),
@@ -126,30 +137,55 @@ import androidx.compose.ui.unit.sp
             Row (
                 modifier = Modifier
                     .background(
-                        color = cardPrimary,
+                        color = cardAccent,
                         shape = RoundedCornerShape(8.dp)
                     )
                     .border(
-                        width = 3.dp,
-                        color = adminHeaderBackgroundColor,
+                        width = 2.dp,
+                        color = primaryGreenTextColor,
                         shape = RoundedCornerShape(8.dp)
                     )
             ){
                 Text(
                     tos,
+                    modifier = Modifier.padding(16.dp),
                     fontSize = 14.sp,
-                    fontWeight = FontWeight.Bold,
                     color = primaryTextColor
                 )
             }
-            Row () {
+            Row (
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween
+            ) {
+                ActionButton(
+                    onPress = onDecline,
+                    textColor = textColor,
+                    label = "Decline",
+                    tag = "DeclineButton"
+                ).Draw()
 
+                Row (
+                    modifier = Modifier.padding (horizontal = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp)
+                ){
+                    ActionButton(
+                        onPress = onAccept,
+                        textColor = textColor,
+                        label = "Accept",
+                        tag = "AcceptButton"
+                    ).Draw()
+                    Checkbox(
+                        checked = acceptPolicy,
+                        onCheckedChange = {},
+                        enabled = false,
+                    )
+                }
             }
         }
     }
 
     @Composable
-    fun InputBody(onSuccess: () -> Unit, onTos: () -> Unit) {
+    fun InputBody(acceptPolicy: Boolean, onSuccess: () -> Unit, onTos: () -> Unit) {
         var name by remember {
             mutableStateOf("")
         }
@@ -233,6 +269,7 @@ import androidx.compose.ui.unit.sp
                     fontWeight = FontWeight.Bold
                 )
                 Row (
+                    modifier = Modifier.fillMaxWidth(),
                     horizontalArrangement = Arrangement.spacedBy(20.dp)
                 ){
                     ElevatedButton(
@@ -244,21 +281,35 @@ import androidx.compose.ui.unit.sp
                     ) {
                         Text(text = "View Terms and Conditions", color = Color(0xff40139a))
                     }
+                    Checkbox(
+                        modifier = Modifier.height(45.dp).width(45.dp),
+                        checked = acceptPolicy,
+                        onCheckedChange = {},
+                        enabled = false,
+                    )
                 }
             }
 
             Row(
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween
             ) {
                 ElevatedButton(
                     onClick = {
                         errorMessage = controller.register(name = name, email = email, phoneNumber = number)
                         if (errorMessage == null) {
-                            onSuccess()
+                            if (!acceptPolicy) {
+                                errorMessage = "Please Read and Accept TOS"
+                            }
+                            else {
+                                onSuccess()
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
-                    modifier = Modifier.width(160.dp).height(60.dp)
+                    modifier = Modifier
+                        .width(160.dp)
+                        .height(60.dp)
                          ,
                 ) {
                     Text(text = "Register As Entrant", color = Color(0xff40139a))
@@ -267,11 +318,18 @@ import androidx.compose.ui.unit.sp
                     onClick = {
                         errorMessage = controller.register(name = name, email = email, phoneNumber = number, role = Role.OWNER)
                         if (errorMessage == null) {
-                            onSuccess()
+                            if (!acceptPolicy) {
+                                errorMessage = "Please Read and Accept TOS"
+                            }
+                            else {
+                                onSuccess()
+                            }
                         }
                     },
                     colors = ButtonDefaults.buttonColors(containerColor = Color(0xffe8def8)),
-                    modifier = Modifier.width(160.dp).height(60.dp) ,
+                    modifier = Modifier
+                        .width(160.dp)
+                        .height(60.dp) ,
                 ) {
                     Text(text = "Register As Owner", color = Color(0xff40139a))
                 }
