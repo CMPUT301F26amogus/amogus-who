@@ -1,6 +1,5 @@
 package com.example.code.views
 
-import com.example.code.Routes
 import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import View
@@ -11,6 +10,7 @@ import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.ui.platform.testTag
 import androidx.compose.foundation.layout.width
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ElevatedButton
@@ -42,6 +42,20 @@ class SearchView(M: Model): View() {
         var campsite by remember {mutableStateOf("")}
         var guests by remember { mutableStateOf("") }
         var tags by remember {mutableStateOf("")}
+        // shown under the buttons if a filter isn't valid, eg a bad date
+        var errorMessage by remember { mutableStateOf<String?>(null) }
+        // both Search buttons do the same search with every filter (US 01.01.02)
+        val runSearch = {
+            errorMessage = null
+            controller.search(
+                name = campsite.ifBlank { search },
+                navController = navController,
+                location = park,
+                guests = guests,
+                arrival = arrival,
+                departure = departure,
+            ) { errorMessage = it }
+        }
         Column() {
             Row() {
                 Header(
@@ -59,7 +73,7 @@ class SearchView(M: Model): View() {
                                         .background(color = creamBG).padding(20.dp).width(200.dp)
                                 )
                                 ElevatedButton(
-                                    onClick = {},
+                                    onClick = { runSearch() },
                                     colors = ButtonDefaults.buttonColors(containerColor = light),
                                     modifier = Modifier.width(100.dp).height(90.dp),
                                 ) {
@@ -235,15 +249,20 @@ class SearchView(M: Model): View() {
                     Text(text = "X CLEAR", color = Color(0xff5530a4), fontSize = 13.sp)
                 }
                 ElevatedButton(
-                    onClick = { navController.navigate(Routes.SEARCH_RESULTS) },
+                    onClick = { runSearch() },
                     colors = ButtonDefaults.buttonColors(containerColor = light),
                     modifier = Modifier.width(130.dp).height(50.dp).padding(horizontal = 15.dp),
                 ) {
                     Text(text = "Search", color = Color(0xff5530a4), fontSize = 13.sp,
-                        modifier = Modifier.clickable(enabled = true, onClick = {
-                            controller.search(name = campsite, navController = navController)
-                        }))
+                        modifier = Modifier.clickable(enabled = true, onClick = { runSearch() }))
                 }
+            }
+            errorMessage?.let {
+                Text(
+                    text = it,
+                    color = Color(0xffb3261e),
+                    modifier = Modifier.padding(horizontal = 20.dp).testTag("searchError"),
+                )
             }
             HorizontalDivider(modifier = Modifier.height(2.dp).background(dark))
             Row() {
