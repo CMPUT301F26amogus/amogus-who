@@ -35,6 +35,7 @@ import androidx.compose.material3.FloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
@@ -149,7 +150,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         "Selected Campsite(s)"
                     },
                     modifier = Modifier.weight(1f),
-                    color = primaryTextColor
+                    color = secondaryPurple
                 )
                 Icon(
                     imageVector = Icons.Filled.ArrowDropDown,
@@ -209,7 +210,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                 },
                                 colors = CheckboxDefaults.colors(
                                     checkedColor = primaryTextColor,
-                                    uncheckedColor = primaryTextColor,
+                                    uncheckedColor = secondaryPurple,
                                     checkmarkColor = fieldColor
                                 )
                             )
@@ -232,6 +233,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             TextField(
                 value = "Max winners*", // required field
                 onValueChange = {},
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = tertiaryPurple,
+                    unfocusedContainerColor = tertiaryPurple,
+                    focusedTextColor = primaryTextColor,
+                    unfocusedTextColor = secondaryPurple,
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -240,6 +247,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             TextField(
                 value = "Waitlist",
                 onValueChange = {},
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = tertiaryPurple,
+                    unfocusedContainerColor = tertiaryPurple,
+                    focusedTextColor = primaryTextColor,
+                    unfocusedTextColor = secondaryPurple,
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -294,15 +307,24 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
         }
 
         Row {
-            Column(modifier = Modifier.weight(1f)) {
+            Box(modifier = Modifier.weight(1f)) {
                 TextField(
                     value = startDate,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("Start Date*") },
                     placeholder = { Text("Select date") },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = tertiaryPurple,
+                        unfocusedContainerColor = tertiaryPurple,
+                        focusedTextColor = primaryTextColor,
+                        unfocusedTextColor = secondaryPurple,
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .matchParentSize()
                         .clickable {
                             openDatePicker(startDate) {
                                 startDate = it
@@ -312,15 +334,24 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                 )
             }
             Spacer(modifier = Modifier.width(10.dp))
-            Column(modifier = Modifier.weight(1f)) {
+            Box(modifier = Modifier.weight(1f)) {
                 TextField(
                     value = endDate,
                     onValueChange = {},
                     readOnly = true,
                     label = { Text("End Date*") },
                     placeholder = { Text("Select date") },
+                    colors = TextFieldDefaults.colors(
+                        focusedContainerColor = tertiaryPurple,
+                        unfocusedContainerColor = tertiaryPurple,
+                        focusedTextColor = primaryTextColor,
+                        unfocusedTextColor = secondaryPurple,
+                    ),
+                    modifier = Modifier.fillMaxWidth()
+                )
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .matchParentSize()
                         .clickable {
                             openDatePicker(endDate) {
                                 endDate = it
@@ -338,6 +369,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             TextField(
                 value = "Start Date*", // required field
                 onValueChange = {},
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = tertiaryPurple,
+                    unfocusedContainerColor = tertiaryPurple,
+                    focusedTextColor = primaryTextColor,
+                    unfocusedTextColor = secondaryPurple,
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
@@ -346,6 +383,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             TextField(
                 value = "End Date*", // required field
                 onValueChange = {},
+                colors = TextFieldDefaults.colors(
+                    focusedContainerColor = tertiaryPurple,
+                    unfocusedContainerColor = tertiaryPurple,
+                    focusedTextColor = primaryTextColor,
+                    unfocusedTextColor = secondaryPurple,
+                ),
                 modifier = Modifier
                     .fillMaxWidth()
                     .weight(1f)
