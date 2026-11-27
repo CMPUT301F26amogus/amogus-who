@@ -35,6 +35,8 @@ import com.example.code.views.RegistrationView
 import com.example.code.views.ReservationsView
 import com.example.code.views.SearchResultsView
 import com.example.code.views.SearchView
+import com.example.code.views.OwnerQRView
+import com.example.code.views.ScanQRView
 
 /**
  * The names of every screen in the app.
@@ -59,6 +61,7 @@ object Routes {
     const val LOTTERIES = "lotteries"
     const val SEARCH = "search"
     const val SEARCH_RESULTS = "search_results"
+    const val SCAN_QR = "scan_qr"
 
     // owner screens
     const val OWNER_CAMPSITES = "owner_campsites"
@@ -67,6 +70,7 @@ object Routes {
     const val ADD_EDIT_CAMPSITE = "add_edit_campsite"
 
     const val ADD_EDIT_LOTTERY = "add_edit_lottery"
+    const val OWNER_QR = "owner_qr"
 
 }
 
@@ -120,6 +124,8 @@ fun App(id: String, model: Model) {
     val ownerLotteriesView = remember { OwnerLotteriesView(model) }
     val addEditCampsiteView = remember { AddEditCampsite(model) }
     val addEditLotteryView = remember { AddEditLottery(model) }
+    val scanQRView = remember { ScanQRView(model) }
+    val ownerQRView = remember { OwnerQRView(model) }
 
     LaunchedEffect(Unit) {
         model.getUserObj { user -> startDestination = startRouteFor(user) }
@@ -187,5 +193,8 @@ fun App(id: String, model: Model) {
         model.addView(addEditLotteryView)
         composable(Routes.ADD_EDIT_LOTTERY) { addEditLotteryView.ShowScreen(navController) }
 
+        composable(Routes.SCAN_QR) { scanQRView.ShowScreen(navController) }
+
+        composable(Routes.OWNER_QR) { ownerQRView.ShowScreen(navController) }
     }
 }
