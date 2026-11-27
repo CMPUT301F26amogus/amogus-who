@@ -12,7 +12,7 @@ class OwnerLotteriesController(
     /**
      * Navigates to the owner lottery screen.
      */
-    fun navigateToOwnerLottery(navController: NavController, lotteryToDisplay: Lottery? = null) {  // Needs to take a NavController and Lottery object
+    fun onEditLottery(navController: NavController, lotteryToDisplay: Lottery? = null) {  // Needs to take a NavController and Lottery object
         model.settTheLottery(lotteryToDisplay)
         navController.navigate(ADD_EDIT_LOTTERY)
     }
@@ -25,5 +25,17 @@ class OwnerLotteriesController(
             model.drawLotteryWinner(lottery.id) { }
 
         }
+    }
+
+    fun onDrawLottery() {
+
+    }
+
+    fun onViewWinners() {
+
+    }
+
+    fun onWaitlist() {
+
     }
 }

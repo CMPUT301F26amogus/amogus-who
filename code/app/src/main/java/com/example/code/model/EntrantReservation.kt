@@ -11,4 +11,26 @@ package com.example.code.model
 data class EntrantReservation(
     val reservation: Reservation,
     val campsite: Campsite?,
-)
+) {
+    /**
+     * the whole csv file for this reservation with the header and one row
+     *
+     * works for active and cancelled ones since the status column says which it is
+     *
+     * @return the csv text ending in a newline
+     */
+    fun toCsv(): String =
+        Reservation.CSV_HEADER + "\n" + reservation.toCsvRow(campsite?.name ?: "") + "\n"
+
+    /**
+     * a file name to save [toCsv] as
+     *
+     * cancelled ones are called cancellation so the entrant can tell them apart
+     *
+     * @return something like reservation-abc123.csv or cancellation-abc123.csv
+     */
+    fun csvFileName(): String {
+        val kind = if (reservation.isCancelled()) "cancellation" else "reservation"
+        return "$kind-${reservation.id}.csv"
+    }
+}

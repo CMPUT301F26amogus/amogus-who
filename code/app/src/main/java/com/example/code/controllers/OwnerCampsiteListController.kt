@@ -20,8 +20,10 @@ class OwnerCampsiteListController(
         model.getCampsite(
             campId = cID){ result ->
             model.settTempCampsite(result)
+            if (result != null) {
+                navController.navigate("campsite_details")
+            }
         }
-        navController.navigate("campsite_details")
     }
 
     fun onRegisterCampsite(navController : NavController) {

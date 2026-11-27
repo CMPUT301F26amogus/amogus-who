@@ -3,7 +3,7 @@ package com.example.code.views
 import androidx.navigation.compose.rememberNavController
 import androidx.navigation.NavController
 import View
-import android.util.Log
+import Model
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -33,24 +33,25 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.code.controllers.NotificationsController
 import com.example.code.ui.theme.CodeTheme
-import com.google.firebase.Firebase
-import com.google.firebase.firestore.firestore
 
 /**
  * Displays the notifications that belong to the current user.
  *
- * When [uid] is given, the screen loads that user's notifications from Firestore
- * with [getMyNotifications] when it first appears.
+ * When [model] is given, the screen loads the user's notifications through
+ * [NotificationsController] when it opens. This is where reservation and
+ * cancellation confirmations show up (US 01.05.01, 01.07.02).
  *
- * @param uid the current user's id (their deviceId), or null to skip loading
+ * @param model the app's model, or null to skip loading (used by the preview)
  * @param initialNotifications messages to show before anything is loaded (used by the preview)
  */
 class NotificationsView(
-    private val uid: String? = null,
+    model: Model? = null,
     initialNotifications: List<String> = emptyList(),
 ) : View() {
     private val notifications = mutableStateListOf<String>().apply { addAll(initialNotifications) }
+    private val controller = model?.let { NotificationsController(it) }
 
     private val bgColor = secondaryGreenColor
     private val headerbgColor = entrantHeaderBackgroundColor
@@ -60,32 +61,26 @@ class NotificationsView(
     private val footerButtonColor = entrantFooterButtonColor
 
     /**
-     * Loads every notification whose recipientId matches [uid] and shows their messages.
+     * Loads the current user's notifications, newest first, and shows their messages.
      *
-     * Does nothing if [uid] is null. The query runs asynchronously, so [onResult]
+     * Does nothing if there's no model. The query runs asynchronously, so [onResult]
      * is called with the messages once they arrive.
      *
      * @param onResult called with the loaded messages
      */
     fun getMyNotifications(onResult: (List<String>) -> Unit = {}) {
-        val id = uid ?: return
-        Firebase.firestore.collection(NOTIFICATIONS_COLLECTION)
-            .whereEqualTo("recipientId", id)
-            .get()
-            .addOnSuccessListener { snapshot ->
-                val messages = snapshot.documents.mapNotNull { it.getString("message") }
-                notifications.clear()
-                notifications.addAll(messages)
-                onResult(messages)
-            }
-            .addOnFailureListener { e ->
-                Log.e(TAG, "Failed to load notifications for $id", e)
-            }
+        val c = controller ?: return
+        c.onNotifications { loaded ->
+            val messages = loaded.map { it.content }.filter { it.isNotBlank() }
+            notifications.clear()
+            notifications.addAll(messages)
+            onResult(messages)
+        }
     }
 
     @Composable
     fun ShowScreen(navController: NavController) {
-        LaunchedEffect(uid) { getMyNotifications() }
+        LaunchedEffect(Unit) { getMyNotifications() }
         Column {
             Row {
                 Header(
@@ -157,10 +152,6 @@ class NotificationsView(
         }
     }
 
-    private companion object {
-        const val TAG = "NotificationsView"
-        const val NOTIFICATIONS_COLLECTION = "Notification Data"
-    }
 }
 
 @Preview(showBackground = true)

@@ -195,6 +195,27 @@ class ReservationTest {
         assertFalse(r.isCancelled())
     }
 
+    // US 02.08.01 rejected ones go in the owners cancelled tab with their own label
+
+    @Test
+    fun isRejected_newReservationIsNotRejected() {
+        assertFalse(reservation().isRejected())
+    }
+
+    @Test
+    fun isRejected_rejectedIsRejected() {
+        val r = reservation()
+        r.status = ReservationStatus.REJECTED
+        assertTrue(r.isRejected())
+    }
+
+    @Test
+    fun isRejected_cancelledIsNotRejected() {
+        val r = reservation()
+        r.status = ReservationStatus.CANCELLED
+        assertFalse(r.isRejected())
+    }
+
     @Test
     fun isCancelled_pastIsNotCancelled() {
         val r = reservation()
@@ -208,5 +229,49 @@ class ReservationTest {
         val r = Reservation()
         r.status = ReservationStatus.CANCELLED
         assertTrue(r.isCancelled())
+    }
+
+    // US 01.05.02 entrant downloads their reservation as a csv
+    @Test
+    fun toCsvRow_matchesHeaderColumns() {
+        val row = reservation().toCsvRow("Pine Ridge")
+        assertEquals("res-1,Pine Ridge,site-1,lottery-1,2027-05-01,2027-05-03,4,ACTIVE", row)
+        assertEquals(Reservation.CSV_HEADER.split(",").size, row.split(",").size)
+    }
+
+    @Test
+    fun toCsvRow_quotesCommasAndQuotes() {
+        val row = reservation().toCsvRow("Lake \"North\", Site 2")
+        assertTrue(row.contains("\"Lake \"\"North\"\", Site 2\""))
+    }
+
+    @Test
+    fun entrantReservationCsv_hasHeaderAndOneRow() {
+        val csv = EntrantReservation(reservation(), Campsite(name = "Pine Ridge")).toCsv()
+        val lines = csv.trimEnd().lines()
+        assertEquals(2, lines.size)
+        assertEquals(Reservation.CSV_HEADER, lines[0])
+        assertTrue(lines[1].startsWith("res-1,Pine Ridge,"))
+    }
+
+    @Test
+    fun entrantReservationCsv_missingCampsiteLeavesNameBlank() {
+        val csv = EntrantReservation(reservation(), null).toCsv()
+        assertTrue(csv.lines()[1].startsWith("res-1,,site-1"))
+    }
+
+    @Test
+    fun csvFileName_activeIsReservation() {
+        assertEquals("reservation-res-1.csv", EntrantReservation(reservation(), null).csvFileName())
+    }
+
+    // US 01.07.02 entrant downloads their cancellation as a csv
+    @Test
+    fun csvFileName_cancelledIsCancellation() {
+        val r = reservation()
+        r.status = ReservationStatus.CANCELLED
+        val entrantReservation = EntrantReservation(r, null)
+        assertEquals("cancellation-res-1.csv", entrantReservation.csvFileName())
+        assertTrue(entrantReservation.toCsv().trimEnd().endsWith(",CANCELLED"))
     }
 }

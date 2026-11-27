@@ -19,7 +19,6 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.mutableStateMapOf
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.getValue
@@ -72,7 +71,6 @@ class LotteriesView(M: Model): View() {
         }
     }
     val controller = EntrantLotteriesController(M)
-    private val model = M
     val bgColor = secondaryGreenColor
     val headerbgColor = entrantHeaderBackgroundColor
     val headerTextColor = entrantHeaderTextColor
@@ -82,9 +80,6 @@ class LotteriesView(M: Model): View() {
     @Composable
     public fun ShowScreen(navController: NavController) {
         var state by remember {mutableStateOf("Current")}
-        // update() only runs when data changes, so also run it once when the screen opens
-        // (small break from the UML so the list isn't empty on first open)
-        LaunchedEffect(Unit) { update(model) }
         val tabs = mutableListOf<Tab>(
             Tab(name = "Current", color = entrantFooterBackgroundColor, option = {state="Current"}),
             Tab(name = "Previous", color = secondaryGreenColor, option = {state="Previous"}),

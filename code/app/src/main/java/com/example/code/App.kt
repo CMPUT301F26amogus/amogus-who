@@ -33,6 +33,7 @@ import com.example.code.views.OwnerReservationsView
 import com.example.code.views.ProfileSettingsView
 import com.example.code.views.RegistrationView
 import com.example.code.views.ReservationsView
+import com.example.code.views.ReserveCampsite
 import com.example.code.views.SearchResultsView
 import com.example.code.views.SearchView
 import com.example.code.views.OwnerQRView
@@ -61,6 +62,7 @@ object Routes {
     const val LOTTERIES = "lotteries"
     const val SEARCH = "search"
     const val SEARCH_RESULTS = "search_results"
+    const val RESERVE_CAMPSITE = "reserve_campsite"
     const val SCAN_QR = "scan_qr"
 
     // owner screens
@@ -112,10 +114,11 @@ fun App(id: String, model: Model) {
     val ownerHomeView = remember { CampsiteOwnerHomeView() }
     val adminHomeView = remember { AdminHomeView() }
     val profileView = remember { ProfileSettingsView(model) }
-    val notificationsView = remember { NotificationsView(id) }
+    val notificationsView = remember { NotificationsView(model) }
     val campsiteDetailsView = remember { CampsiteDetailsView(model) }
     val mapView = remember { MapView() }
     val reservationsView = remember { ReservationsView(model) }
+    val reserveCampsiteView = remember { ReserveCampsite(model) }
     val lotteriesView = remember { LotteriesView(model) }
     val searchView = remember { SearchView(model) }
     val searchResultsView = remember { SearchResultsView(model) }
@@ -169,6 +172,9 @@ fun App(id: String, model: Model) {
         model.addView(reservationsView)
         composable(Routes.RESERVATIONS) { reservationsView.ShowScreen(navController) }
 
+        model.addView(reserveCampsiteView)
+        composable(Routes.RESERVE_CAMPSITE) { reserveCampsiteView.ShowScreen(navController) }
+
         model.addView(lotteriesView)
         composable(Routes.LOTTERIES) { lotteriesView.ShowScreen(navController) }
 
@@ -197,4 +203,8 @@ fun App(id: String, model: Model) {
 
         composable(Routes.OWNER_QR) { ownerQRView.ShowScreen(navController) }
     }
+
+    // the views are registered above, so give them their data once now.
+    // otherwise update() only runs after something changes and screens start out empty
+    LaunchedEffect(start) { model.loadViews() }
 }
