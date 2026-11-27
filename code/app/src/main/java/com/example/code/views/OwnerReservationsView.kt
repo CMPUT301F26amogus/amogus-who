@@ -8,6 +8,7 @@ import View
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
@@ -19,12 +20,13 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.outlined.Check
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.VerticalDivider
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -36,6 +38,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
@@ -55,10 +58,31 @@ class OwnerReservationsView(model : Model) : View() {
     val pastReservations = mutableStateListOf<OwnerReservation>()
     val cancelledReservations = mutableStateListOf<OwnerReservation>()
 
+    // the reservation the owner tapped reject on so the confirm popup can show (US 02.08.01)
+    var toReject by mutableStateOf<OwnerReservation?>(null)
+    // why the last reject didnt work or null
+    var rejectError by mutableStateOf<String?>(null)
+
     // swaps a lists contents with what firestore sent back
     private fun replaceWith(list: MutableList<OwnerReservation>, result: List<OwnerReservation>) {
         list.clear()
         list.addAll(result)
+    }
+
+    // asks the controller for every tab so they all match whats saved
+    private fun reload() {
+        controller.onActiveReservations { replaceWith(activeReservations, it) }
+        controller.onPastReservations { replaceWith(pastReservations, it) }
+        controller.onCancelledReservations { replaceWith(cancelledReservations, it) }
+    }
+
+    /**
+     * reloads every tab when the model changes like after a reservation is rejected
+     *
+     * @param model the model, passed in when it notifies its views
+     */
+    override fun update(model: Model) {
+        reload()
     }
 
     // This component is to be used in each reservation card
@@ -127,6 +151,7 @@ class OwnerReservationsView(model : Model) : View() {
     // reservation
     //
     // One card per reservation in a given list will display in a lazy column
+    // onReject is null when the card cant be rejected so theres no button
     @Composable
     private fun CampsiteCard(
         name: String,
@@ -136,7 +161,8 @@ class OwnerReservationsView(model : Model) : View() {
         endDate: String,
         guests: Int,
         nights: Int,
-        state: String,
+        rejectTag: String,
+        onReject: (() -> Unit)?,
     ) {
         Column(
             modifier = Modifier
@@ -210,37 +236,26 @@ class OwnerReservationsView(model : Model) : View() {
                     .background(color = cardAccent)
                     .padding(10.dp),
             ) {
-                if (state == "ACTIVE") {
-                    ExtendedFloatingActionButton(
-                        onClick = { controller.onReservationReject() },
+                // theres no accept since reservations are already booked when theyre made
+                // a plain button not an extended fab since the fab hides its label from screen readers
+                if (onReject != null) {
+                    Button(
+                        onClick = onReject,
                         shape = CircleShape,
-                        containerColor = cardAccent,
-                        contentColor = primaryTextColor,
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Clear,
-                                contentDescription = "Reject",
-                            )
-                        },
-                        text = { Text("Reject") }
-                    )
-                    Spacer(
-                        modifier = Modifier.weight(1f)
-                    )
-                    ExtendedFloatingActionButton(
-                        onClick = { controller.onReservationAccept() },
-                        shape = CircleShape,
-                        containerColor = cardAccent,
-                        contentColor = primaryTextColor,
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Check,
-                                contentDescription = "Accept",
-                            )
-                        },
-                        text = { Text("Accept") }
-                    )
-
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = cardAccent,
+                            contentColor = primaryTextColor,
+                        ),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        modifier = Modifier.testTag(rejectTag),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Clear,
+                            contentDescription = null,
+                        )
+                        Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+                        Text("Reject")
+                    }
                 }
 
             }
@@ -273,7 +288,9 @@ class OwnerReservationsView(model : Model) : View() {
                     guests = row.reservation.numGuests,
                     // 0 if the dates were saved wrong instead of crashing
                     nights = runCatching { row.reservation.nights().toInt() }.getOrDefault(0),
-                    state = state,
+                    rejectTag = "rejectReservation-${row.reservation.id}",
+                    // only active ones can be rejected (US 02.08.01)
+                    onReject = if (state == "Active") ({ toReject = row }) else null,
                 )
                 if (reservation != reservations.size - 1) {
                     Spacer(
@@ -303,12 +320,8 @@ class OwnerReservationsView(model : Model) : View() {
                 Tab(name = "Cancelled", color = cancelledColor, option = {state = "Cancelled"}),
             )
         }
-        // load every tab when the screen opens since nothing calls update for reservations
-        LaunchedEffect(Unit) {
-            controller.onActiveReservations { replaceWith(activeReservations, it) }
-            controller.onPastReservations { replaceWith(pastReservations, it) }
-            controller.onCancelledReservations { replaceWith(cancelledReservations, it) }
-        }
+        // load every tab when the screen opens so its fresh even if nothing notified the views
+        LaunchedEffect(Unit) { reload() }
         Column(
             modifier = Modifier.fillMaxSize(),
         ) {
@@ -342,6 +355,44 @@ class OwnerReservationsView(model : Model) : View() {
                 backgroundColor = ownerFooterBackgroundColor,
                 textColor = ownerFooterTextColor,
                 buttonColor = ownerFooterButtonColor,
+            )
+        }
+
+        // asks before rejecting since the entrant loses their stay (US 02.08.01)
+        toReject?.let { row ->
+            AlertDialog(
+                onDismissRequest = { toReject = null },
+                title = { Text("Reject reservation?") },
+                text = {
+                    Text(
+                        "${row.entrantName.ifBlank { "This camper" }} will lose their stay at " +
+                            "${row.campsite?.name ?: "your campsite"} from ${row.reservation.checkIn} " +
+                            "to ${row.reservation.checkOut} and get a notification."
+                    )
+                },
+                confirmButton = {
+                    TextButton(onClick = {
+                        toReject = null
+                        // the model notifies the views so update reloads the lists
+                        controller.onReservationReject(row) { result ->
+                            rejectError = result.exceptionOrNull()?.let { it.message ?: "Couldn't reject the reservation" }
+                        }
+                    }) { Text("Yes, reject") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { toReject = null }) { Text("Keep it") }
+                },
+            )
+        }
+
+        rejectError?.let { message ->
+            AlertDialog(
+                onDismissRequest = { rejectError = null },
+                title = { Text("Couldn't reject") },
+                text = { Text(message) },
+                confirmButton = {
+                    TextButton(onClick = { rejectError = null }) { Text("OK") }
+                },
             )
         }
     }

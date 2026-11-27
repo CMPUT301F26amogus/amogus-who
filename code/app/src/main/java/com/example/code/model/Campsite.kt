@@ -125,6 +125,15 @@ class Campsite(
     fun canHold(guests: Int): Boolean = guests in 1..maxOccupancy
 
     /**
+     * checks if the owner wrote rules entrants have to agree to before reserving (US 02.11.01)
+     *
+     * not called isSomething or getSomething so firestore doesnt try to save it
+     *
+     * @return true if [rulesAndPolicy] isnt blank
+     */
+    fun hasRules(): Boolean = rulesAndPolicy.isNotBlank()
+
+    /**
      * total cost of a stay
      *
      * @param stay the dates being booked

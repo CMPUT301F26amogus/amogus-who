@@ -5,6 +5,8 @@ import android.annotation.SuppressLint
 import android.provider.Settings
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsOff
+import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.createComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -30,6 +32,7 @@ import com.google.firebase.firestore.CollectionReference
 import com.google.firebase.firestore.firestore
 import org.junit.After
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Before
 import org.junit.Rule
@@ -60,6 +63,9 @@ class ReserveCampsiteUserStoryTests {
     private val notificationRef by lazy { Firebase.firestore.collection("notifications") }
     private val userDoc by lazy { usersRef.document(deviceId) }
 
+    // what the owner wrote that entrants have to agree to (US 02.11.01)
+    private val rules = "No campfires after 10pm. Pack out all garbage."
+
     // fits 4 and has nothing booked so any future dates work
     private val campsite = Campsite(
         id = "us-01-05-screen-site-$deviceId",
@@ -67,7 +73,20 @@ class ReserveCampsiteUserStoryTests {
         name = "US 01.05.01 Screen Campsite",
         location = "Test Park",
         maxOccupancy = 4,
+        rulesAndPolicy = rules,
     )
+
+    // the owner didnt write any rules so theres nothing to agree to
+    private val noRulesCampsite = Campsite(
+        id = "us-02-11-no-rules-site-$deviceId",
+        ownerId = "us-01-owner-$deviceId",
+        name = "US 02.11.01 No Rules Campsite",
+        location = "Test Park",
+        maxOccupancy = 4,
+    )
+
+    // kept so a test can swap which campsite the screen is reserving
+    private lateinit var model: Model
 
     private val checkIn = LocalDate.now().plusDays(60)
     private val checkOut = checkIn.plusDays(2)
@@ -97,13 +116,16 @@ class ReserveCampsiteUserStoryTests {
         notificationsBefore = myDocIds(notificationRef)
         await(userDoc.set(User(deviceId = deviceId, name = "US Test ENTRANT", role = Role.ENTRANT)))
         await(campsiteRef.document(campsite.id).set(campsite))
+        await(campsiteRef.document(noRulesCampsite.id).set(noRulesCampsite))
 
         // the screen reserves whatever campsite the model has picked
-        val model = Model().apply {
+        model = Model().apply {
             setDeviceInformation(deviceId)
             settTempCampsite(campsite)
         }
         val view = ReserveCampsite(model)
+        // registered so picking another campsite redraws the screen like in the app
+        model.addView(view)
         composeTestRule.setContent {
             val navController = rememberNavController()
             NavHost(navController = navController, startDestination = "reserve") {
@@ -122,15 +144,18 @@ class ReserveCampsiteUserStoryTests {
                 .forEach { await(it.reference.delete()) }
         }
         await(campsiteRef.document(campsite.id).delete())
+        await(campsiteRef.document(noRulesCampsite.id).delete())
         savedUser?.let { await(userDoc.set(it)) } ?: await(userDoc.delete())
     }
 
     // types into the reserve form like an entrant would and presses the button
-    private fun fillAndReserve(arrival: LocalDate, departure: LocalDate, guests: String) {
+    // ticks the rules box first unless told not to (US 02.11.01)
+    private fun fillAndReserve(arrival: LocalDate, departure: LocalDate, guests: String, acceptRules: Boolean = true) {
         val field = DateTimeFormatter.ofPattern("MMddyyyy")
         composeTestRule.onNodeWithTag("arrivalDateInputField").performTextInput(arrival.format(field))
         composeTestRule.onNodeWithTag("departureDateInputField").performTextInput(departure.format(field))
         composeTestRule.onNodeWithTag("numberOfGuestsInputField").performTextInput(guests)
+        if (acceptRules) composeTestRule.onNodeWithTag("acceptRulesCheckbox").performClick()
         composeTestRule.onNodeWithTag("reserveCampsiteButton").performClick()
     }
 
@@ -211,5 +236,71 @@ class ReserveCampsiteUserStoryTests {
         waitForText("Departure has to be after arrival")
         composeTestRule.onNodeWithText("Reservation confirmed").assertDoesNotExist()
         assertTrue(newReservations().isEmpty())
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    */
+    // US 02.11.01
+    // the entrant sees the owners rules with a box to agree to them that starts unticked
+    @Test
+    fun us_02_11_01_rules_shown_with_unticked_checkbox() {
+        composeTestRule.onNodeWithTag("tosBox").assertIsDisplayed()
+        composeTestRule.onNodeWithText(rules).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("acceptRulesCheckbox").assertIsDisplayed().assertIsOff()
+
+        // tapping it ticks it and tapping again unticks it
+        composeTestRule.onNodeWithTag("acceptRulesCheckbox").performClick().assertIsOn()
+        composeTestRule.onNodeWithTag("acceptRulesCheckbox").performClick().assertIsOff()
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    */
+    // US 02.11.01
+    // as a campsite owner i want entrants to confirm theyve read the rules before confirming a reservation
+    @Test
+    fun us_02_11_01_cannot_reserve_without_accepting_rules() {
+        fillAndReserve(checkIn, checkOut, "2", acceptRules = false)
+
+        waitForText("You have to agree to the campsite rules first")
+        composeTestRule.onNodeWithText("Reservation confirmed").assertDoesNotExist()
+        assertTrue(newReservations().isEmpty())
+
+        // ticking the box and trying again goes through
+        composeTestRule.onNodeWithTag("acceptRulesCheckbox").performClick()
+        composeTestRule.onNodeWithTag("reserveCampsiteButton").performClick()
+        waitForTag("reservationConfirmation")
+        assertEquals(1, newReservations().size)
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    */
+    // US 02.11.01
+    // the reservation remembers the entrant agreed to the rules
+    @Test
+    fun us_02_11_01_accepted_rules_saved_on_reservation() {
+        fillAndReserve(checkIn, checkOut, "2")
+
+        waitForTag("reservationConfirmation")
+        val saved = newReservations().single()
+        assertEquals(campsite.id, saved.campsiteId)
+        assertTrue(saved.rulesAccepted)
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    */
+    // US 02.11.01
+    // a campsite with no rules has nothing to agree to so theres no box and reserving still works
+    @Test
+    fun us_02_11_01_no_checkbox_when_campsite_has_no_rules() {
+        composeTestRule.runOnIdle { model.settTempCampsite(noRulesCampsite) }
+        composeTestRule.onNodeWithText(noRulesCampsite.name).assertIsDisplayed()
+        composeTestRule.onNodeWithTag("acceptRulesCheckbox").assertDoesNotExist()
+
+        fillAndReserve(checkIn, checkOut, "2", acceptRules = false)
+
+        waitForTag("reservationConfirmation")
+        val saved = newReservations().single()
+        assertEquals(noRulesCampsite.id, saved.campsiteId)
+        assertFalse(saved.rulesAccepted)
     }
 }

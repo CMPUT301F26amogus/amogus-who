@@ -33,11 +33,15 @@ class OwnerReservationsController(
         model.getOwnerCancelledReservations(onResult)
     }
 
-    fun onReservationReject() {
-
-    }
-
-    fun onReservationAccept() {
-
+    /**
+     * rejects a reservation at one of the owners campsites (US 02.08.01)
+     *
+     * the model tells the entrant and notifies the views so the lists reload
+     *
+     * @param reservation the reservation to reject
+     * @param onResult success once its rejected or a failure saying why it couldnt be
+     */
+    fun onReservationReject(reservation: OwnerReservation, onResult: (Result<Unit>) -> Unit = {}) {
+        model.rejectReservation(reservation.reservation, onResult)
     }
 }
