@@ -781,7 +781,7 @@ open class Model: ModelUpdater<View>{
      * dates are strings like 2027-05-01 and the end days are exclusive like DateRange
      * registration has to end before booking starts
      *
-     * @param campsiteId id of the campsite, it needs to be saved already
+     * @param campsiteIds list of id campsites, it needs to be saved already
      * @param registrationStart first day entrants can join the waitlist
      * @param registrationEnd day registration closes
      * @param bookingStart first day winners can reserve their dates
@@ -791,7 +791,7 @@ open class Model: ModelUpdater<View>{
      * @param onResult gets the new lottery or the failure, eg if something wasnt valid
      */
     fun createLottery(
-        campsiteId: String,
+        campsiteIds: List<String>,
         registrationStart: String,
         registrationEnd: String,
         bookingStart: String,
@@ -801,7 +801,7 @@ open class Model: ModelUpdater<View>{
         onResult: (Result<Lottery>) -> Unit
     ) {
         try {
-            require(campsiteId.isNotBlank()) { "A lottery needs a saved campsite" }
+            require(campsiteIds.isNotEmpty()) { "A lottery needs campsites" }
             val regStart = LocalDate.parse(registrationStart)
             val regEnd = LocalDate.parse(registrationEnd)
             val bookStart = LocalDate.parse(bookingStart)
@@ -820,7 +820,7 @@ open class Model: ModelUpdater<View>{
         val lottery = Lottery(
             id = doc.id,
             ownerId = currentDeviceId,
-            campsiteIds = listOf(campsiteId),
+            campsiteIds = campsiteIds,
             registrationStart = registrationStart,
             registrationEnd = registrationEnd,
             bookingStart = bookingStart,
@@ -833,7 +833,7 @@ open class Model: ModelUpdater<View>{
         // one batch so the lottery and the campsite pointing at it are saved together or not at all
         val batch = db.batch()
         batch.set(doc, lottery)
-        batch.update(campsiteRef.document(campsiteId), "lotteryId", doc.id)
+        campsiteIds.forEach { batch.update(campsiteRef.document(it), "lotteryId", doc.id) }
 
         batch.commit()
             .addOnSuccessListener {

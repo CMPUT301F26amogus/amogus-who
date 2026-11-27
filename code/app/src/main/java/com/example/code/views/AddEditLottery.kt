@@ -52,6 +52,7 @@ import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -75,13 +76,15 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      *      the variable versions of each field within Lottery creation
      * */
     private var oldLottery: Lottery? = null
-    private val selectedCampsites = mutableStateListOf<String>() // reference by ID
+    private val selectedCampsites = mutableStateListOf<String>()    // reference by ID
     private val maxWinners = mutableStateOf("")
     private val maxWaitlist = mutableStateOf("")
-    private val registrationStart = mutableStateOf("")  // [1]
-    private val registrationEnd = mutableStateOf("")    // [1]
+    private val registrationStart = mutableStateOf("")      // [1]
+    private val registrationEnd = mutableStateOf("")        // [1]
     private val bookingStart = mutableStateOf("")
     private val bookingEnd = mutableStateOf("")
+
+    private val errorMessage = mutableStateOf("")
 
     /** Update
      *      If this view is an edit view then it will grab the values of the lottery to be edited,
@@ -116,6 +119,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             registrationEnd.value = ""
             bookingStart.value = ""
             bookingEnd.value = ""
+            errorMessage.value = ""
         }
     }
 
@@ -252,8 +256,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
         Row {
             TextField(
                 value = winners.value, // required field
-                onValueChange = { winners.value = it },
-                label = { Text("Max winners*") },
+                onValueChange = {
+                    if (it.all { char -> char in '0'..'9' }) {
+                        winners.value = it
+                    }
+                },
+                label = { Text("Max Winners*") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone
                 ),
@@ -271,7 +279,11 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             Spacer(modifier = Modifier.width(10.dp))
             TextField(
                 value = waitlist.value,
-                onValueChange = { waitlist.value = it },
+                onValueChange = {
+                    if (it.all { char -> char in '0'..'9' }) {
+                        waitlist.value = it
+                    }
+                },
                 label = { Text("Max Waitlist") },
                 keyboardOptions = KeyboardOptions(
                     keyboardType = KeyboardType.Phone
@@ -395,6 +407,26 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
         }
     }
 
+    @Composable
+    private fun ErrorMessage(errorMessage: String = "<error message here>") {
+        if (errorMessage.isNotEmpty()) {
+            Row(
+                modifier = Modifier
+                    .clip(RoundedCornerShape(size = 6.dp))
+                    .fillMaxWidth()
+                    .background(color = dangerousActionColor)
+                    .padding(10.dp)
+            ) {
+                Text(
+                    text = errorMessage,
+                    color = primaryTextColor,
+                    textAlign = TextAlign.Center,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+
     /**
      *  This function renders this page
      *
@@ -420,7 +452,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                     .fillMaxHeight()
                     .padding(20.dp),
             ) {
-                LazyColumn {
+                LazyColumn(
+                    modifier = Modifier.weight(1f)
+                ) {
                     item {
                         Row(
                             modifier = Modifier
@@ -502,13 +536,15 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                 )
                             }
                         }
-
-                        Spacer(modifier = Modifier.height(10.dp))
                     }
                 }
 
                 // place the buttons at the bottom of the screen
-                Spacer(modifier = Modifier.weight(1f))
+                Spacer(modifier = Modifier.height(10.dp))
+
+                ErrorMessage(errorMessage.value)
+
+                Spacer(modifier = Modifier.height(10.dp))
 
                 Row(
                     modifier = Modifier
@@ -538,25 +574,27 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
 
                     Spacer(modifier = Modifier.weight(1f))
 
-                    FloatingActionButton(
-                        containerColor = dangerousActionColor,
-                        contentColor = primaryTextColor,
-                        shape = CircleShape,
-                        onClick = {
-                            controller.onDelete(
-                                lottery = oldLottery!!,
-                                navController = navController
-                            )
-                        },
-                        content = {
-                            Icon(
-                                imageVector = Icons.Filled.Delete,
-                                contentDescription = "Delete Lottery",
-                            )
-                        },
-                        modifier = Modifier
-                            .testTag("onDelete")
-                    )
+                    if (oldLottery != null) {
+                        FloatingActionButton(
+                            containerColor = dangerousActionColor,
+                            contentColor = primaryTextColor,
+                            shape = CircleShape,
+                            onClick = {
+                                controller.onDelete(
+                                    lottery = oldLottery!!,
+                                    navController = navController
+                                )
+                            },
+                            content = {
+                                Icon(
+                                    imageVector = Icons.Filled.Delete,
+                                    contentDescription = "Delete Lottery",
+                                )
+                            },
+                            modifier = Modifier
+                                .testTag("onDelete")
+                        )
+                    }
 
                     Spacer(modifier = Modifier.weight(1f))
 
@@ -565,10 +603,10 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         contentColor = primaryGreenTextColor,
                         shape = CircleShape,
                         onClick = {
-                             controller.onSave(
+                             errorMessage.value = controller.onSave(
                                  campsites = selectedCampsites,
-                                 numWinners = maxWinners.value.toInt(),          // TODO: integer exception handling
-                                 waitlistCapacity = maxWaitlist.value.toInt(),   // TODO: integer exception handling
+                                 numWinners = maxWinners.value,
+                                 waitlistCapacity = maxWaitlist.value,
                                  registrationStart = registrationStart.value,
                                  registrationEnd = registrationEnd.value,
                                  bookingStart = bookingStart.value,
