@@ -152,6 +152,7 @@ class OwnerReservationsView(model : Model) : View() {
     //
     // One card per reservation in a given list will display in a lazy column
     // onReject is null when the card cant be rejected so theres no button
+    // label says why its in the cancelled tab or null when theres nothing to say
     @Composable
     private fun CampsiteCard(
         name: String,
@@ -163,6 +164,8 @@ class OwnerReservationsView(model : Model) : View() {
         nights: Int,
         rejectTag: String,
         onReject: (() -> Unit)?,
+        label: String? = null,
+        labelTag: String = "",
     ) {
         Column(
             modifier = Modifier
@@ -257,6 +260,16 @@ class OwnerReservationsView(model : Model) : View() {
                         Text("Reject")
                     }
                 }
+                // rejected and cancelled both end up in the cancelled tab so the label tells them apart
+                if (label != null) {
+                    Text(
+                        text = label,
+                        fontSize = 14.sp,
+                        fontWeight = FontWeight.Bold,
+                        color = primaryTextColor,
+                        modifier = Modifier.padding(horizontal = 6.dp).testTag(labelTag),
+                    )
+                }
 
             }
         }
@@ -291,6 +304,12 @@ class OwnerReservationsView(model : Model) : View() {
                     rejectTag = "rejectReservation-${row.reservation.id}",
                     // only active ones can be rejected (US 02.08.01)
                     onReject = if (state == "Active") ({ toReject = row }) else null,
+                    label = when {
+                        row.reservation.isRejected() -> "Rejected by you"
+                        row.reservation.isCancelled() -> "Cancelled by entrant"
+                        else -> null
+                    },
+                    labelTag = "reservationLabel-${row.reservation.id}",
                 )
                 if (reservation != reservations.size - 1) {
                     Spacer(

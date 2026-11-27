@@ -195,6 +195,27 @@ class ReservationTest {
         assertFalse(r.isCancelled())
     }
 
+    // US 02.08.01 rejected ones go in the owners cancelled tab with their own label
+
+    @Test
+    fun isRejected_newReservationIsNotRejected() {
+        assertFalse(reservation().isRejected())
+    }
+
+    @Test
+    fun isRejected_rejectedIsRejected() {
+        val r = reservation()
+        r.status = ReservationStatus.REJECTED
+        assertTrue(r.isRejected())
+    }
+
+    @Test
+    fun isRejected_cancelledIsNotRejected() {
+        val r = reservation()
+        r.status = ReservationStatus.CANCELLED
+        assertFalse(r.isRejected())
+    }
+
     @Test
     fun isCancelled_pastIsNotCancelled() {
         val r = reservation()
