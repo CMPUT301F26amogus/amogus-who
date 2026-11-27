@@ -30,11 +30,15 @@ import androidx.compose.ui.unit.dp
 import com.example.code.controllers.RegistrationController
 import com.example.code.ui.theme.CodeTheme
 import Model
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.gestures.scrollable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.material3.Checkbox
@@ -62,6 +66,33 @@ import androidx.compose.ui.unit.sp
         Barry?
         Adam?
         Can you believe this is happening?
+        I can't.
+        I'll pick you up.
+        Looking sharp.
+        Use the stairs, Your father paid good money for those.
+        Sorry. I'm excited.
+        Here's the graduate.
+        We're very proud of you, son.
+        A perfect report card, all B's.
+        Very proud.
+        Ma! I got a thing going here.
+        You got lint on your fuzz.
+        Ow! That's me!
+        Wave to us! We'll be in row 118,000.
+        Bye!
+        Barry, I told you, stop flying in the house!
+        Hey, Adam.
+        Hey, Barry.
+        Is that fuzz gel?
+        A little. Special day, graduation.
+        Never thought I'd make it.
+        Three days grade school, three days high school.
+        Those were awkward.
+        Three days college. I'm glad I took a day and hitchhiked around The Hive.
+        You did come back different.
+        Hi, Barry. Artie, growing a mustache? Looks good.
+        Hear about Frankie?
+        Yeah.
     """.trimIndent()
 
     @Composable
@@ -134,7 +165,7 @@ import androidx.compose.ui.unit.sp
                 .padding(top = 50.dp, start = 20.dp, end = 20.dp),
             verticalArrangement = Arrangement.spacedBy(20.dp)
         ) {
-            Row (
+            Column (
                 modifier = Modifier
                     .background(
                         color = cardAccent,
@@ -145,6 +176,9 @@ import androidx.compose.ui.unit.sp
                         color = primaryGreenTextColor,
                         shape = RoundedCornerShape(8.dp)
                     )
+                    .height(500.dp)
+                    .verticalScroll(rememberScrollState())
+
             ){
                 Text(
                     tos,
