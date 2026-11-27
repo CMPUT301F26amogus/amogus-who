@@ -44,6 +44,22 @@ class EntrantIntegrationTests {
             .assertExists()
     }
     @Test
+    fun assert_test_results_show() {
+        entrant_navigate_to_search()
+        composeTestRule
+            .onNodeWithTag("Card")
+            .assertExists()
+        composeTestRule
+            .onNodeWithTag("detailsButton")
+            .assertExists()
+        composeTestRule
+            .onNodeWithTag("maxOccupantsDetail")
+            .assertExists()
+        composeTestRule
+            .onNodeWithTag("addressDetail")
+            .assertExists()
+    }
+    @Test
     fun entrant_navigate_to_lotteries() {
         // navigate to lotteries
         composeTestRule

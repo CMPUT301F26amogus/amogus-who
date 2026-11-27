@@ -29,12 +29,29 @@ import androidx.navigation.compose.rememberNavController
 import com.example.code.controllers.CampsiteDetailsController
 import com.example.code.ui.theme.CodeTheme
 import com.example.code.model.Campsite
+import com.example.code.model.Lottery
 
 class CampsiteDetailsView(M:Model): View() {
     var campsiteToView: Campsite? = null
+    // the campsite only stores its lotteryId, so the lottery is loaded in update()
+    // state so the screen redraws when it loads
+    var lottery by mutableStateOf<Lottery?>(null)
     val controller = CampsiteDetailsController(M)
+
+    /** update
+     * gets the campsite to show and its lottery (UML: views only call model get-functions here)
+     *
+     * @param model the model, passed in when it notifies its views
+     */
     override fun update(model: Model) {
         campsiteToView = model.tempCampsite
+        val campsite = campsiteToView
+        if (campsite == null || campsite.lotteryId.isBlank()) {
+            lottery = null
+        } else {
+            model.getLotteryById(campsite.lotteryId) { lottery = it }
+
+        }
     }
 
     @Composable
@@ -134,7 +151,8 @@ class CampsiteDetailsView(M:Model): View() {
                         Column(Modifier.width(200.dp).background(bgColor)) {
                             // joining the lottery puts the entrant on its waitlist (US 01.02.01)
                             ElevatedButton(
-                                onClick = { controller.joinLottery(campsiteToView!!.lottery) { lotteryMessage = it } },
+                                // no lottery loaded = empty Lottery(), the controller says "no lottery yet"
+                                onClick = { controller.joinLottery(lottery ?: Lottery()) { lotteryMessage = it } },
                                 colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp).testTag("joinLotteryButton"),
                             ) {
@@ -142,7 +160,7 @@ class CampsiteDetailsView(M:Model): View() {
                             }
                             // leaving takes the entrant off the waitlist (US 01.02.02)
                             ElevatedButton(
-                                onClick = { controller.leaveLottery(campsiteToView!!.lottery) { lotteryMessage = it } },
+                                onClick = { controller.leaveLottery(lottery ?: Lottery()) { lotteryMessage = it } },
                                 colors = ButtonDefaults.buttonColors(containerColor = light),
                                 modifier = Modifier.width(140.dp).testTag("leaveLotteryButton"),
                             ) {

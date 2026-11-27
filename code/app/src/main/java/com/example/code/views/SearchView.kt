@@ -29,7 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.ui.theme.CodeTheme
 import Model
-import com.example.code.Controllers.SearchController
+import com.example.code.controllers.SearchController
 
 class SearchView(M: Model): View() {
     var controller = SearchController(M)
