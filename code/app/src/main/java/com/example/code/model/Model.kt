@@ -1576,7 +1576,7 @@ open class Model: ModelUpdater<View>{
 
     //region Messages
     // The following functions are from Google, Gemini, "Implement entrant and owner reservation messaging in Model.kt", 2026-11-26
-
+    // [1]
     /**
      * sends a message from the current entrant to the campsite owner for an active reservation
      *
