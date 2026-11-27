@@ -98,6 +98,17 @@ open class Model: ModelUpdater<View>{
     protected fun notifyViews(){
         views.forEach { it.update(this) }
     }
+
+    /**
+     * gives every registered view its data once, called by App right after the app starts.
+     *
+     * update() normally only runs when data changes, so without this screens like
+     * My Campsites are empty on a fresh launch until something changes.
+     * safe to call because get functions never call notifyViews (no loop)
+     */
+    fun loadViews() {
+        notifyViews()
+    }
     //endregion
 
 
@@ -698,7 +709,6 @@ open class Model: ModelUpdater<View>{
                     return@addOnSuccessListener
                 }
                 onResult(Result.success(current.waitlist.filter { it.status == EntryStatus.WAITING }))
-                notifyViews()
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
