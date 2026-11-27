@@ -285,6 +285,9 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
                                 .onFailure { error = it.message ?: "Couldn't make the reservation" }
                         }
                     },
+                    // greyed out until the rules box is ticked when there are rules (US 02.11.01)
+                    // the controller and model still check it too
+                    enabled = campsite?.hasRules() != true || rulesAccepted,
                     modifier = Modifier.testTag("reserveCampsiteButton")
                 ) {
                     Text(" Make Reservation")
