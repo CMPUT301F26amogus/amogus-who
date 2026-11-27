@@ -457,6 +457,21 @@ class UserStoryTests {
             .assertDoesNotExist()
     }
 
+    /*
+    * ==============================================================================================
+    * ==============================================================================================
+    *
+    * USER STORY UNIT TESTS START HERE
+    *
+    * Each dev should implement or generate their own tests for each user story.
+    * Organize them in numerical order so that they're easy to find.
+    * Use the user_stories.md file found at the root of this project as reference.
+    * Consider edge cases where applicable.
+    *
+    * ==============================================================================================
+    * ==============================================================================================
+    */
+
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.02", 2026-11-23
     */
     // US 02.07.02
