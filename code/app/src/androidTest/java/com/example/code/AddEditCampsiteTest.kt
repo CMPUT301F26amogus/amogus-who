@@ -21,6 +21,6 @@ class AddEditCampsiteTest {
     @Test
     fun Check() {
         val model = Model()
-        val aView = AddEditCampsite(model, false)
+        val aView = AddEditCampsite(model)
     }
 }
