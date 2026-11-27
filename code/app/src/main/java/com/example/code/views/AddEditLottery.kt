@@ -21,7 +21,7 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.foundation.text.input.rememberTextFieldState
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -37,6 +37,7 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.MutableState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateListOf
 import androidx.compose.runtime.mutableStateOf
@@ -47,9 +48,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -73,14 +74,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      *      the variable versions of each field within Lottery creation
      * */
     var oldLottery : Lottery? = null
-    var lotteryCampsiteID = listOf<String>("")
-    var waitListCapacity: Int? = 0  //  can be empty, its optional: US 02.04.07
-    var drawDate = ""  // the day winners are decided
-    var numberOfWinners = 0  // number of winners a lottery can have
-//    var registrationDuration = 0  // the period after winning entrants get to register their bookings?
-    // US 02.04.03 As a campsite owner, I want to set a registration period.
-    var registrationStart = ""
-    var registrationEnd = ""
+    val winnersMax = mutableStateOf("")
+    val waitlistMax = mutableStateOf("")
+    val registrationStart = mutableStateOf("")  // [1]
+    val registrationEnd = mutableStateOf("")    // [1]
+    val bookingStart = mutableStateOf("")
+    val bookingEnd = mutableStateOf("")
 
     /** Update
      *      If this view is an edit view then it will grab the values of the lottery to be edited,
@@ -95,8 +94,10 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
 //                waitListCapacity = oldLottery!!.waitlistCapacity
                 // TODO: Lotteries need some variable to represent the date in which it is automatically drawn
 //                drawDate = oldLottery!!.drawDate
-                registrationStart = oldLottery!!.registrationStart
-                registrationEnd = oldLottery!!.registrationEnd
+                registrationStart.value = oldLottery!!.registrationStart  // [1]
+                registrationEnd.value = oldLottery!!.registrationEnd      // [1]
+                bookingStart.value = oldLottery!!.bookingStart
+                bookingEnd.value = oldLottery!!.bookingEnd
             }
             else {
                 clear()
@@ -228,11 +229,18 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     }
 
     @Composable
-    private fun WinnersAndWaitlistCaps() {
+    private fun WinnersAndWaitlistCaps(
+        winners: MutableState<String>,
+        waitlist: MutableState<String>,
+    ) {
         Row {
             TextField(
-                value = "Max winners*", // required field
-                onValueChange = {},
+                value = winners.value, // required field
+                onValueChange = { winners.value = it },
+                label = { Text("Max winners*") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone
+                ),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = tertiaryPurple,
                     unfocusedContainerColor = tertiaryPurple,
@@ -245,8 +253,12 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             )
             Spacer(modifier = Modifier.width(10.dp))
             TextField(
-                value = "Waitlist",
-                onValueChange = {},
+                value = waitlist.value,
+                onValueChange = { waitlist.value = it },
+                label = { Text("Max Waitlist") },
+                keyboardOptions = KeyboardOptions(
+                    keyboardType = KeyboardType.Phone
+                ),
                 colors = TextFieldDefaults.colors(
                     focusedContainerColor = tertiaryPurple,
                     unfocusedContainerColor = tertiaryPurple,
@@ -272,13 +284,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      * 2026-11-26
      */
     @Composable
-    private fun RegistrationPeriod() {
-        var startDate by remember(registrationStart) {
-            mutableStateOf(registrationStart)
-        }
-        var endDate by remember(registrationEnd) {
-            mutableStateOf(registrationEnd)
-        }
+    private fun PeriodSelect(start: MutableState<String>, end: MutableState<String>) {  // [1]
+        var startDate by start                                                          // [1]
+        var endDate by end                                                              // [1]
         val context = LocalContext.current
 
         fun openDatePicker(currentDate: String, onDateSelected: (String) -> Unit) {
@@ -328,7 +336,6 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         .clickable {
                             openDatePicker(startDate) {
                                 startDate = it
-                                registrationStart = it
                             }
                         }
                 )
@@ -355,44 +362,10 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         .clickable {
                             openDatePicker(endDate) {
                                 endDate = it
-                                registrationEnd = it
                             }
                         }
                 )
             }
-        }
-    }
-
-    @Composable
-    private fun BookingPeriod() {
-        Row {
-            TextField(
-                value = "Start Date*", // required field
-                onValueChange = {},
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = tertiaryPurple,
-                    unfocusedContainerColor = tertiaryPurple,
-                    focusedTextColor = primaryTextColor,
-                    unfocusedTextColor = secondaryPurple,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
-            Spacer(modifier = Modifier.width(10.dp))
-            TextField(
-                value = "End Date*", // required field
-                onValueChange = {},
-                colors = TextFieldDefaults.colors(
-                    focusedContainerColor = tertiaryPurple,
-                    unfocusedContainerColor = tertiaryPurple,
-                    focusedTextColor = primaryTextColor,
-                    unfocusedTextColor = secondaryPurple,
-                ),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-            )
         }
     }
 
@@ -443,7 +416,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                 .fillMaxWidth()
                                 .padding(10.dp)
                         ) {
-                            WinnersAndWaitlistCaps()
+                            WinnersAndWaitlistCaps(winnersMax, waitlistMax)
                         }
 
                         Spacer(modifier = Modifier.height(10.dp))
@@ -466,7 +439,10 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                             Row(
                                 modifier = Modifier
                             ) {
-                                RegistrationPeriod()
+                                PeriodSelect(
+                                    start = registrationStart,    // [1]
+                                    end = registrationEnd,        // [1]
+                                )
                             }
 
                         }
@@ -491,7 +467,10 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                             Row(
                                 modifier = Modifier
                             ) {
-                                BookingPeriod()
+                                PeriodSelect(
+                                    start = bookingStart,
+                                    end = bookingEnd,
+                                )
                             }
                         }
 
@@ -586,10 +565,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             // extract old lottery fields
         }
         else {
-            lotteryCampsiteID = listOf("")
-            waitListCapacity = 0
-            drawDate = ""
-            numberOfWinners = 0
+
         }
     }
 
