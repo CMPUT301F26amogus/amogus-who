@@ -1,4 +1,5 @@
 
+import android.util.Log
 import com.google.android.gms.tasks.Tasks
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.DocumentSnapshot
@@ -196,7 +197,7 @@ open class Model: ModelUpdater<View>{
         name: String,
         phoneNumber: String,
         email: String,
-        roleOf: Role= Role.ENTRANT,
+        roleOf: Role = Role.ENTRANT,
         onSuccess: () -> Unit,
     ) {
         // deviceId has to be set on the user so the saved user has it, User equality is based on it
@@ -278,31 +279,316 @@ open class Model: ModelUpdater<View>{
 
 
     //region Campsites
-    fun createCampsite(campsite: Campsite, onResult: (Boolean) -> Unit) {
+    fun createCampsite(
+        campName: String,
+        location: String,
+        desc: String,
+        maxOcc: Int,
+        price: Double,
+        availability: AvailabilitySchedule,
+        onResult: (Boolean) -> Unit
+    ) {
+        if (currentDeviceId.isBlank()) {
+            onResult(false)
+            return
+        }
+        val campsiteId = campsiteRef.document().id
+        val campsite = try {
+            Campsite(
+                id = campsiteId,
+                ownerId = currentDeviceId,
+                name = campName,
+                location = location,
+                description = desc,
+                maxOccupancy = maxOcc,
+                pricePerNight = price,
+                availability = availability
+            )
+        } catch (e: IllegalArgumentException) {
+            Log.e("Model", "Invalid campsite: ${e.message}")
+            onResult(false)
+            return
+        }
+        try {
+            campsiteRef.document(campsiteId).set(campsite)
+                .addOnSuccessListener { onResult(true) }
+                .addOnFailureListener { onResult(false) }
+        } catch (e: RuntimeException) {
+            Log.e("Model", "Could not save campsite", e)
+            onResult(false)
+        }
+    }
+    //fun createCampsite(campsite: Campsite, onResult: (Boolean) -> Unit) {
 
-        val doc = campsiteRef.document()
-        campsite.id = doc.id
+    //    val doc = campsiteRef.document()
+    //        campsite.id = doc.id
 
-        doc.set(campsite)
-            .addOnSuccessListener {
-                onResult(true)
-                notifyViews()
+    //        doc.set(campsite)
+    //        .addOnSuccessListener {
+    //            onResult(true)
+    //        }
+    //}
+
+    //fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double, onResult: (Boolean) -> Unit) {
+    //    campsite.name = campName
+    //    campsite.location = location
+    //    campsite.description = desc
+    //    campsite.maxOccupancy = maxOcc
+    //    campsite.pricePerNight = price
+    //    campsiteRef.document(campsite.id).set(campsite)
+    //        .addOnSuccessListener {
+    //            onResult(true)
+    //        }
+    //        .addOnFailureListener {
+    //            onResult(false)
+    //        }
+    //    notifyViews()
+    //}
+
+    private fun validateCampsiteUpdate(updates: Map<String, Any>): String? {
+        if (updates.isEmpty()) {
+            return "No changes were provided"
+        }
+
+        val allowedValues = setOf(
+            "name", "location", "description", "rulesAndPolicy",
+            "maxOccupancy", "pricePerNight", "imageUrl", "amenities", "tags"
+        )
+
+        for (value in updates.keys) {
+            if (value !in allowedValues) {
+                return "You cannot update the field: $value"
             }
+        }
+
+        //Validate name
+        if (updates.containsKey("name")) {
+            val name = updates["name"] as? String
+
+            if (name.isNullOrBlank()) {
+                return "Campsite name cannot be blank"
+            }
+        }
+
+        //Validate description type
+        if (updates.containsKey("description") && updates["description"] !is String) {
+            return "Description must be text"
+        }
+
+        //Validate location type
+        if (updates.containsKey("location") && updates["location"] !is String) {
+            return "Location must be text"
+        }
+
+        //Validate rules and policy type
+        if (updates.containsKey("rulesAndPolicy") && updates["rulesAndPolicy"] !is String) {
+            return "Rules and Policy must be text"
+        }
+
+        //Validate max Occupancy
+        if (updates.containsKey("maxOccupancy")) {
+            val occupancy = updates["maxOccupancy"] as? Int
+
+            if (occupancy == null || occupancy <= 0) {
+                return "Max Occupancy must be greater than 0"
+            }
+        }
+
+        //Validate price
+        if (updates.containsKey("pricePerNight")) {
+            val price = updates["pricePerNight"] as? Number
+
+            if (price == null || !price.toDouble().isFinite() || price.toDouble() < 0) {
+                return "Price must be a finite number greater than or equal to 0"
+            }
+        }
+
+        //Validate image URL
+        if (updates.containsKey("imageUrl")) {
+            val imageUrl = updates["imageUrl"]
+
+            if (imageUrl != null && imageUrl !is String) {
+                return "Image URL must be a text or null"
+            }
+        }
+
+        //Validate amenities
+        if (updates.containsKey("amenities")) {
+            val amenities = updates["amenities"] as? List<*>
+
+            if (amenities == null || amenities.any { it !is String }) {
+                return "Amenities must be a list of strings"
+            }
+        }
+
+        // Validates tags
+        if (updates.containsKey("tags")) {
+            val tags = updates["tags"] as? Collection<*>
+
+            if (tags == null || tags.any { it !is String }) {
+                return "Tags must be a collection of strings"
+            }
+        }
+
+        return null
     }
 
-    fun updateCampsite(campsite: Campsite, campName: String, location: String, desc: String, maxOcc: Int, price: Double) {
-        campsite.name = campName
-        campsite.location = location
-        campsite.description = desc
-        campsite.maxOccupancy = maxOcc
-        campsite.pricePerNight = price
-        campsiteRef.document(campsite.id).set(campsite)
-        notifyViews()
+    fun updateCampsite(
+        campsiteId: String,
+        deviceId: String,
+        updates: Map<String, Any>,
+        onResult: (Boolean, String?) -> Unit
+    ) {
+        // Check that the campsite ID is valid
+        if (campsiteId.isBlank()) {
+            onResult(false, "Invalid campsite ID.")
+            return
+        }
+
+        // Check that the device ID is valid
+        if (deviceId.isBlank()) {
+            onResult(false, "Invalid device ID.")
+            return
+        }
+
+        // Validate the fields being updated
+        val validationError = validateCampsiteUpdate(updates)
+
+        if (validationError != null) {
+            onResult(false, validationError)
+            return
+        }
+
+        // Prepare the updates for Firestore
+        val firestoreUpdates = updates.toMutableMap()
+
+        // Trim the campsite name
+        if (firestoreUpdates.containsKey("name")) {
+            firestoreUpdates["name"] =
+                (firestoreUpdates["name"] as String).trim()
+        }
+
+        // Trim the location
+        if (firestoreUpdates.containsKey("location")) {
+            firestoreUpdates["location"] =
+                (firestoreUpdates["location"] as String).trim()
+        }
+
+        // Clean amenities
+        if (firestoreUpdates.containsKey("amenities")) {
+            val amenities = firestoreUpdates["amenities"] as List<String>
+
+            firestoreUpdates["amenities"] = amenities
+                .map { it.trim() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+        }
+
+        // Clean tags and convert Set to List for Firestore
+        if (firestoreUpdates.containsKey("tags")) {
+            val tags = firestoreUpdates["tags"] as Collection<*>
+
+            firestoreUpdates["tagList"] = tags
+                .map { (it as String).trim().lowercase() }
+                .filter { it.isNotEmpty() }
+                .distinct()
+        }
+
+        // Convert price to Double
+        if (firestoreUpdates.containsKey("pricePerNight")) {
+            firestoreUpdates["pricePerNight"] =
+                (firestoreUpdates["pricePerNight"] as Number).toDouble()
+        }
+
+        // Check ownership and update in a transaction
+        db.runTransaction { transaction ->
+
+            // Retrieve the existing campsite
+            val document = transaction.get(campsiteRef.document(campsiteId))
+
+            // Check that the campsite exists
+            if (!document.exists()) {
+                throw Exception("Campsite does not exist.")
+            }
+
+            // Check that the user owns the campsite
+            val ownerId = document.getString("ownerId")
+
+            if (ownerId != deviceId) {
+                throw Exception("You do not own this campsite.")
+            }
+
+            // Apply each update
+            for ((field, value) in firestoreUpdates) {
+                transaction.update(campsiteRef.document(campsiteId), field, value)
+            }
+
+            null
+        }.addOnSuccessListener {
+            onResult(true, null)
+        }.addOnFailureListener { exception ->
+            onResult(false, exception.message ?: "Failed to update campsite")
+        }
     }
 
-    fun deleteCampsite(campsite: Campsite) {
-        campsiteRef.document(campsite.id).delete()
-        notifyViews()
+    fun deleteCampsite(campId: String, deviceId: String, onResult: (Boolean, String?) -> Unit) {
+        //Check that the campsite ID is valid
+        if (campId.isBlank()) {
+            onResult(false, "Invalid campsite ID.")
+            return
+        }
+
+        //Check that the device ID is valid
+        if (deviceId.isBlank()) {
+            onResult(false, "Invalid device ID.")
+            return
+        }
+
+        //Check ownership and delete in a transaction
+        db.runTransaction { transaction ->
+
+            // Retrieve the campsite
+            val document = transaction.get(campsiteRef.document(campId))
+
+            //Check that the campsite exists
+            if (!document.exists()) {
+                throw Exception("Campsite does not exist.")
+            }
+
+            //Check that the user owns the campsite
+            val ownerId = document.getString("ownerId")
+
+            if (ownerId != deviceId) {
+                throw Exception("You do not own this campsite.")
+            }
+
+            // Check that the stored campsite ID matches
+            // the document ID
+            val storedId = document.getString("id")
+
+            if (storedId != campId) {
+                throw Exception("Campsite ID does not match its document ID.")
+            }
+
+            //Delete the campsite
+            transaction.delete(campsiteRef.document(campId))
+
+            null
+
+        }.addOnSuccessListener {
+
+            //Deletion successful
+            notifyViews()
+            onResult(true, null)
+
+        }.addOnFailureListener { exception ->
+
+            //Deletion failed
+            onResult(
+                false,
+                exception.message ?: "Failed to delete campsite."
+            )
+        }
     }
 
     /**
@@ -314,23 +600,27 @@ open class Model: ModelUpdater<View>{
     fun getCampsite(campId: String, onResult: (Campsite?) -> Unit) {
         campsiteRef.document(campId).get()
             .addOnSuccessListener { document ->
-                val campsite = document.toObject(Campsite::class.java)
-                onResult(campsite)
+                if (document.exists()) {
+                    val campsite = try {
+                        document.toObject(Campsite::class.java)
+                    } catch (e: RuntimeException) {
+                        Log.e("Model", "Could not read campsite ${document.id}", e)
+                        null
+                    }
+                    onResult(campsite)
+                } else {
+                    onResult(null)
+                }
             }
             .addOnFailureListener {
                 onResult(null)
             }
     }
 
-    /**
-     * gets the campsites the current user owns
-     *
-     * @param onResult gets the campsites or an empty list if it failed
-     */
-    fun getCampsiteByOwner(onResult: (List<Campsite>) -> Unit) {
-        campsiteRef.whereEqualTo("ownerId", currentDeviceId).get()
+    fun getCampsiteByOwner(ownerId: String, onResult: (List<Campsite>) -> Unit) {
+        campsiteRef.whereEqualTo("ownerId", ownerId).get()
             .addOnSuccessListener { documents ->
-                val campsites = documents.toObjects(Campsite::class.java)
+                val campsites = documents.toCampsites()
                 onResult(campsites)
             }
             .addOnFailureListener {
@@ -341,7 +631,7 @@ open class Model: ModelUpdater<View>{
     fun getAllCampsites(onResult: (List<Campsite>) -> Unit) {
         campsiteRef.get()
             .addOnSuccessListener { documents ->
-                val campsites = documents.toObjects(Campsite::class.java)
+                val campsites = documents.toCampsites()
                 onResult(campsites)
             }
             .addOnFailureListener {
@@ -349,19 +639,49 @@ open class Model: ModelUpdater<View>{
             }
     }
 
-    fun searchCampsite(campName: String, onResult: (List<Campsite>) -> Unit) {
-        // the campsite field is "name" now, it used to be "campName"
-        campsiteRef.whereEqualTo("name", campName).get()
+    fun searchCampsite(query: String, onResult: (List<Campsite>) -> Unit) {
+        campsiteRef.get()
             .addOnSuccessListener { documents ->
-                val campsite = documents.toObjects(Campsite::class.java)
-                onResult(campsite)
+                val campsite = documents.toCampsites()
+
+                val filter = campsite.filter {
+                    it.name.contains(query, ignoreCase = true) ||
+                            it.location.contains(query, ignoreCase = true) ||
+                            it.description.contains(query, ignoreCase = true)
+                }
+                onResult(filter)
             }
             .addOnFailureListener {
                 onResult(emptyList())
             }
     }
 
-    fun getCampId(campName: String, onResult: (String) -> Unit){
+    private fun QuerySnapshot.toCampsites(): List<Campsite> = documents.mapNotNull { d ->
+        try {
+            d.toObject(Campsite::class.java)
+        } catch (e: RuntimeException) {
+            Log.e("Model", "Skipping unreadable campsite ${d.id}", e)
+            null
+        }
+    }
+
+    fun getUserByDevice(deviceId: String, onResult: (User?) -> Unit) {
+        usersRef.whereEqualTo("deviceId", deviceId)
+            .get()
+            .addOnSuccessListener { documents ->
+                if (!documents.isEmpty) {
+                    val user = documents.documents[0].toObject(User::class.java)
+                    onResult(user)
+                } else {
+                    onResult(null)
+                }
+            }
+            .addOnFailureListener {
+                onResult(null)
+            }
+    }
+
+    fun getCampId(campName: String, onResult: (String) -> Unit) {
         campsiteRef.whereEqualTo("name", campName).get()
             .addOnSuccessListener { documents ->
                 val campsite = documents.toObjects(Campsite::class.java)
@@ -369,7 +689,6 @@ open class Model: ModelUpdater<View>{
             }
     }
     //endregion
-
 
     /** Register to hold a specific lottery to be displayed, for the purposes of edit lottery
      * Ideally this is a lottery ID, which getLottery() would use to query the thing on the spot */
@@ -391,25 +710,25 @@ open class Model: ModelUpdater<View>{
     public
 
     //region Lotteries
-    /**
-     * creates a lottery for a campsite of the current user
-     *
-     * the id is made here and the current user becomes the owner
-     * the lottery starts OPEN and is saved on the lottery and on the campsite
-     * since getLottery(campsiteId) reads it from the campsite
-     *
-     * dates are strings like 2027-05-01 and the end days are exclusive like DateRange
-     * registration has to end before booking starts
-     *
-     * @param campsiteId id of the campsite, it needs to be saved already
-     * @param registrationStart first day entrants can join the waitlist
-     * @param registrationEnd day registration closes
-     * @param bookingStart first day winners can reserve their dates
-     * @param bookingEnd day booking closes
-     * @param numWinners how many entrants get drawn, more than 0
-     * @param waitlistCapacity most entrants allowed on the waitlist, 0 means no limit
-     * @param onResult gets the new lottery or the failure, eg if something wasnt valid
-     */
+            /**
+             * creates a lottery for a campsite of the current user
+             *
+             * the id is made here and the current user becomes the owner
+             * the lottery starts OPEN and is saved on the lottery and on the campsite
+             * since getLottery(campsiteId) reads it from the campsite
+             *
+             * dates are strings like 2027-05-01 and the end days are exclusive like DateRange
+             * registration has to end before booking starts
+             *
+             * @param campsiteId id of the campsite, it needs to be saved already
+             * @param registrationStart first day entrants can join the waitlist
+             * @param registrationEnd day registration closes
+             * @param bookingStart first day winners can reserve their dates
+             * @param bookingEnd day booking closes
+             * @param numWinners how many entrants get drawn, more than 0
+             * @param waitlistCapacity most entrants allowed on the waitlist, 0 means no limit
+             * @param onResult gets the new lottery or the failure, eg if something wasnt valid
+             */
     fun createLottery(
         campsiteId: String,
         registrationStart: String,
@@ -742,33 +1061,68 @@ open class Model: ModelUpdater<View>{
         }
 
         /**
-         * removes user from reservation, this allows user to decline reservation
+         * lets an owner reject a booked reservation eg when a fire closes the campsite
          *
-         *@param reservation the Reservation object that the user is declining
+         * only stays that are active and not over yet can be rejected
+         *
+         * @param reservation the reservation to reject
+         * @param onResult success once its rejected or a failure if it wasnt found wasnt active or saving failed
          */
-        fun rejectReservation(reservation: Reservation) {
-            // I'm assuming that view people will pass in the reservation, because the user needs to click
-            // on the reservation that they will cancel from a list of reservations.
-
-            reservationRef.document(reservation.id).update(
-                "status", ReservationStatus.REJECTED
-            )
-            notifyViews()
+        fun rejectReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
+            endActiveReservation(reservation.id, ReservationStatus.REJECTED, onResult)
         }
 
-        // models need a way to cancel reservation, I guess a canceled reservation is
-        // one where the lottery winner's havent been decided yet?
+        /**
+         * lets an entrant cancel one of their reservations
+         *
+         * only stays that are active and not over yet can be cancelled
+         * cancelling frees the dates since booked dates only count active reservations
+         *
+         * @param reservation the reservation to cancel
+         * @param onResult success once its cancelled or a failure if it wasnt found wasnt active or saving failed
+         */
+        fun cancelReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
+            endActiveReservation(reservation.id, ReservationStatus.CANCELLED, onResult)
+        }
 
         /**
-         * Cancels the user's reservation
+         * moves an active reservation to cancelled or rejected
          *
-         * @param reservation The reservation object
+         * reads the saved reservation first since the one the view has might be out of date
+         *
+         * @param reservationId id of the reservation
+         * @param newStatus what to set it to
+         * @param onResult success once its saved or a failure if it wasnt found wasnt active or saving failed
          */
-        fun cancelReservation(reservation: Reservation) {
-            reservationRef.document(reservation.id).update(
-                "status", ReservationStatus.CANCELLED
-            )
-            notifyViews()
+        private fun endActiveReservation(
+            reservationId: String,
+            newStatus: ReservationStatus,
+            onResult: (Result<Unit>) -> Unit,
+        ) {
+            val reservationDoc = reservationRef.document(reservationId)
+
+            reservationDoc.get()
+                .addOnSuccessListener { document ->
+                    val saved = document.toObject(Reservation::class.java)
+                    if (saved == null) {
+                        onResult(Result.failure(Exception("Reservation not found")))
+                        return@addOnSuccessListener
+                    }
+
+                    // a stay thats already over cant be cancelled or rejected even if its still saved as active
+                    if (!runCatching { saved.isActive() }.getOrDefault(false)) {
+                        onResult(Result.failure(Exception("Reservation is not active")))
+                        return@addOnSuccessListener
+                    }
+
+                    reservationDoc.update("status", newStatus.name)
+                        .addOnSuccessListener {
+                            onResult(Result.success(Unit))
+                            notifyViews()
+                        }
+                        .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
+                }
+                .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
         }
 
         /**
@@ -928,6 +1282,70 @@ open class Model: ModelUpdater<View>{
         }
 
         /**
+         * gets every reservation an entrant made with the campsite for each card
+         *
+         * reservations only keep the campsite id so this looks the campsites up after
+         * whereIn takes at most 30 values so the ids are asked for in chunks
+         *
+         * @param entrantId device id of the entrant
+         * @param onResult gets the reservations or an empty list if anything failed
+         */
+        private fun getEntrantReservations(entrantId: String, onResult: (List<EntrantReservation>) -> Unit) {
+            reservationRef.whereEqualTo("entrantId", entrantId).get()
+                .addOnSuccessListener { reservationDocs ->
+                    val reservations = reservationDocs.toObjects(Reservation::class.java)
+                    val campsiteIds = reservations.map { it.campsiteId }.filter { it.isNotBlank() }.distinct()
+
+                    // campsite docs are keyed by campsite id so look them up by document id
+                    val campsiteQueries = campsiteIds.chunked(30).map {
+                        campsiteRef.whereIn(FieldPath.documentId(), it).get()
+                    }
+                    Tasks.whenAllSuccess<QuerySnapshot>(campsiteQueries)
+                        .addOnSuccessListener { campsiteSnaps ->
+                            val campsites = campsiteSnaps.flatMap { it.toObjects(Campsite::class.java) }
+                                .associateBy { it.id }
+                            onResult(reservations.map { EntrantReservation(it, campsites[it.campsiteId]) })
+                        }
+                        .addOnFailureListener { onResult(emptyList()) }
+                }
+                .addOnFailureListener { onResult(emptyList()) }
+        }
+
+        /**
+         * gets an entrants reservations that are coming up or happening now
+         *
+         * stays whose check out has passed are left out even though theyre still saved as active
+         *
+         * @param entrantId device id of the entrant
+         * @param onResult gets the reservations sorted by check in or an empty list if it failed
+         */
+        fun getEntrantActiveReservations(entrantId: String, onResult: (List<EntrantReservation>) -> Unit) {
+            getEntrantReservations(entrantId) { all ->
+                val today = LocalDate.now()
+                // skip any reservation saved with bad dates instead of crashing
+                onResult(all.filter { runCatching { it.reservation.isActive(today) }.getOrDefault(false) }
+                    .sortedBy { it.reservation.checkIn })
+            }
+        }
+
+        /**
+         * gets an entrants reservations that are over
+         *
+         * nothing sets PAST yet so finished stays still saved as active count too
+         *
+         * @param entrantId device id of the entrant
+         * @param onResult gets the reservations newest first or an empty list if it failed
+         */
+        fun getEntrantPastReservations(entrantId: String, onResult: (List<EntrantReservation>) -> Unit) {
+            getEntrantReservations(entrantId) { all ->
+                val today = LocalDate.now()
+                // skip any reservation saved with bad dates instead of crashing
+                onResult(all.filter { runCatching { it.reservation.isPast(today) }.getOrDefault(false) }
+                    .sortedByDescending { it.reservation.checkIn })
+            }
+        }
+
+        /**
          * gets the booked dates of a campsite for its owner
          *
          * a date is booked when an active reservation covers it
@@ -1044,54 +1462,54 @@ open class Model: ModelUpdater<View>{
         fun deleteMyReservations(): Task<Void> =
             deleteQuery(reservationRef.whereEqualTo("entrantId", currentDeviceId))
 
-        /**
-         * removes the current user from every waitlist they are on, even lotteries they already lost
-         *
-         * @param onResult true if they were removed, false if it failed
-         */
-        fun deleteWaitlistEntries(onResult: (Boolean) -> Unit = {}) {
-            deleteMyWaitlistEntries().reportTo(onResult)
-        }
+    /**
+     * removes the current user from every waitlist they are on, even lotteries they already lost
+     *
+     * @param onResult true if they were removed, false if it failed
+     */
+    fun deleteWaitlistEntries(onResult: (Boolean) -> Unit = {}) {
+        deleteMyWaitlistEntries().reportTo(onResult)
+    }
 
-        /**
-         * deletes every reservation the current user made
-         *
-         * @param onResult true if they were deleted, false if it failed
-         */
-        fun deleteReservations(onResult: (Boolean) -> Unit = {}) {
-            deleteMyReservations().reportTo(onResult)
-        }
+    /**
+     * deletes every reservation the current user made
+     *
+     * @param onResult true if they were deleted, false if it failed
+     */
+    fun deleteReservations(onResult: (Boolean) -> Unit = {}) {
+        deleteMyReservations().reportTo(onResult)
+    }
 
     // lotteries the user runs, their waitlists are inside them so they go too
     fun deleteOwnedLotteries(): Task<Void> =
         deleteQuery(lotteryRef.whereEqualTo("ownerId", currentDeviceId))
 
-        // campsites the user owns
-        fun deleteOwnedCampsites(): Task<Void> =
-            campsiteRef.whereEqualTo("ownerId", currentDeviceId).get().onSuccessTask { snapshot ->
-                val campsites = snapshot.documents
-                Tasks.whenAll(campsites.map { rejectActiveReservationsAt(it.id) })
-                    .onSuccessTask { Tasks.whenAll(campsites.map { deleteQuery(availabilityRef(it.id)) }) }
-                    .onSuccessTask { deleteDocs(campsites.map { it.reference }) }
-            }
+    // campsites the user owns
+    fun deleteOwnedCampsites(): Task<Void> =
+        campsiteRef.whereEqualTo("ownerId", currentDeviceId).get().onSuccessTask { snapshot ->
+            val campsites = snapshot.documents
+            Tasks.whenAll(campsites.map { rejectActiveReservationsAt(it.id) })
+                .onSuccessTask { Tasks.whenAll(campsites.map { deleteQuery(availabilityRef(it.id)) }) }
+                .onSuccessTask { deleteDocs(campsites.map { it.reference }) }
+        }
 
-        // other people booked these stays so reject them and tell them instead of just deleting
-        fun rejectActiveReservationsAt(campsiteId: String): Task<Void> =
-            reservationRef.whereEqualTo("campsiteId", campsiteId)
-                .whereEqualTo("status", ReservationStatus.ACTIVE.name).get()
-                .onSuccessTask { snapshot ->
-                    val batch = db.batch()
-                    snapshot.documents.forEach {
-                        batch.update(it.reference, "status", ReservationStatus.REJECTED.name)
-                    }
-                    snapshot.documents.mapNotNull { it.getString("entrantId") }.distinct().forEach {
-                        notifyUser(
-                            "Your reservation was cancelled because the owner removed their campsite",
-                            it
-                        )
-                    }
-                    batch.commit()
+    // other people booked these stays so reject them and tell them instead of just deleting
+    fun rejectActiveReservationsAt(campsiteId: String): Task<Void> =
+        reservationRef.whereEqualTo("campsiteId", campsiteId)
+            .whereEqualTo("status", ReservationStatus.ACTIVE.name).get()
+            .onSuccessTask { snapshot ->
+                val batch = db.batch()
+                snapshot.documents.forEach {
+                    batch.update(it.reference, "status", ReservationStatus.REJECTED.name)
                 }
+                snapshot.documents.mapNotNull { it.getString("entrantId") }.distinct().forEach {
+                    notifyUser(
+                        "Your reservation was cancelled because the owner removed their campsite",
+                        it
+                    )
+                }
+                batch.commit()
+            }
 
 
     //endregion

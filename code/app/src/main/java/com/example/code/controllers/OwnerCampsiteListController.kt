@@ -7,17 +7,25 @@ class OwnerCampsiteListController(
     private val model : Model
 ) {
     fun onEditCampsite(navController : NavController, cID: String) {
-        model.campId = cID
-        navController.navigate("add_edit_campsite")
+        model.getCampsite(
+            campId = cID){ result ->
+            model.settTempCampsite(result)
+            if (result != null) {
+                navController.navigate("add_edit_campsite")
+            }
+        }
     }
 
     fun onCampsiteDetails(navController : NavController, cID: String) {
-        model.campId = cID
+        model.getCampsite(
+            campId = cID){ result ->
+            model.settTempCampsite(result)
+        }
         navController.navigate("campsite_details")
     }
 
     fun onRegisterCampsite(navController : NavController) {
-        model.campId = ""
+        model.settTempCampsite(null)
         navController.navigate("add_edit_campsite")
     }
 }
