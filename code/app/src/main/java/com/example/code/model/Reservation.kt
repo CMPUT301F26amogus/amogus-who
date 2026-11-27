@@ -81,4 +81,31 @@ class Reservation(
      */
     @Exclude
     fun isCancelled(): Boolean = status == ReservationStatus.CANCELLED
+
+    /**
+     * one line of a csv file for this reservation
+     *
+     * goes under [CSV_HEADER] so entrants can download their booking or cancellation
+     * takes the name since reservations only keep the campsite id
+     * it has a param so firestore doesnt try to save it
+     *
+     * @param campsiteName name of the campsite to put in the row
+     * @return the cells in the same order as [CSV_HEADER] with no newline at the end
+     */
+    fun toCsvRow(campsiteName: String = ""): String =
+        listOf(id, campsiteName, campsiteId, lotteryId, checkIn, checkOut, numGuests.toString(), status.name)
+            .joinToString(",") { csvCell(it) }
+
+    companion object {
+        /** the column names for [toCsvRow] */
+        const val CSV_HEADER = "reservationId,campsite,campsiteId,lotteryId,checkIn,checkOut,guests,status"
+
+        // quotes a cell if it has a comma quote or newline in it so the columns dont shift
+        private fun csvCell(value: String): String =
+            if (value.any { it == ',' || it == '"' || it == '\n' || it == '\r' }) {
+                "\"" + value.replace("\"", "\"\"") + "\""
+            } else {
+                value
+            }
+    }
 }

@@ -97,6 +97,17 @@ open class Model: ModelUpdater<View>{
     protected fun notifyViews(){
         views.forEach { it.update(this) }
     }
+
+    /**
+     * gives every registered view its data once, called by App right after the app starts.
+     *
+     * update() normally only runs when data changes, so without this screens like
+     * My Campsites are empty on a fresh launch until something changes.
+     * safe to call because get functions never call notifyViews (no loop)
+     */
+    fun loadViews() {
+        notifyViews()
+    }
     //endregion
 
 
@@ -716,6 +727,55 @@ open class Model: ModelUpdater<View>{
             }
     }
 
+    fun filterCampsite(filter: Campsite, onResult: (List<Campsite>) -> Unit) {
+        campsiteRef.get()
+            .addOnSuccessListener { result ->
+                val campsites = result.toCampsites()
+
+                val filtered = campsites.filter { campsite ->
+
+                    val matchesLocation = filter.location.isBlank() ||
+                            campsite.location.contains(filter.location, ignoreCase = true)
+
+                    val matchesGuest = campsite.maxOccupancy >= filter.maxOccupancy
+
+                    matchesLocation && matchesGuest
+                }
+                onResult(filtered)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    fun getCampsiteDetails(onResult: (List<Campsite>, String?) -> Unit) {
+        campsiteRef.get()
+            .addOnSuccessListener { result ->
+                val summaries = result.documents.mapNotNull { document ->
+                    val campsite = document.toObject(Campsite::class.java)
+
+                    campsite?.let {
+                        Campsite(
+                            name = it.name,
+                            location = it.location,
+                            maxOccupancy = it.maxOccupancy,
+                            pricePerNight = it.pricePerNight,
+                            description = it.description,
+                            rulesAndPolicy = it.rulesAndPolicy,
+                            imageUrl = it.imageUrl,
+                            amenities = it.amenities,
+                            availability = it.availability,
+                            ratings = it.ratings
+                        )
+                    }
+                }
+                onResult(summaries, null)
+            }
+            .addOnFailureListener { exception ->
+                onResult(emptyList(), exception.message?: "Failed to retrieve campsite details")
+            }
+    }
+
     private fun QuerySnapshot.toCampsites(): List<Campsite> = documents.mapNotNull { d ->
         try {
             d.toObject(Campsite::class.java)
@@ -1077,7 +1137,6 @@ open class Model: ModelUpdater<View>{
                     return@addOnSuccessListener
                 }
                 onResult(Result.success(current.waitlist.filter { it.status == EntryStatus.WAITING }))
-                notifyViews()
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
@@ -1091,19 +1150,22 @@ open class Model: ModelUpdater<View>{
          * Create a reservation for a campsite
          *
          * the current user is the entrant and the lottery is the one the campsite is in
+         * once its saved the entrant gets a confirmation notification (US 01.05.01)
          *
          * @param checkIn check in date like 2027-05-01
          * @param checkOut check out date like 2027-05-03
          * @param guests number of guests
          * @param campsite the campsite to book
          * @param rulesAccepted true if the entrant agreed to the campsite rules
+         * @param onResult gets the saved reservation or a failure if saving failed
          */
         fun makeReservation(
             checkIn: String,
             checkOut: String,
             guests: Int,
             campsite: Campsite,
-            rulesAccepted: Boolean = false
+            rulesAccepted: Boolean = false,
+            onResult: (Result<Reservation>) -> Unit = {}
         ) {
             val doc = reservationRef.document()
             val newReservation = Reservation(
@@ -1117,7 +1179,17 @@ open class Model: ModelUpdater<View>{
                 rulesAccepted = rulesAccepted,
                 lotteryId = campsite.lotteryId
             )
-            doc.set(newReservation).addOnSuccessListener { notifyViews() }
+            doc.set(newReservation)
+                .addOnSuccessListener {
+                    // notifyUser skips it if they opted out so the csv download is the backup (US 01.05.02)
+                    notifyUser(
+                        "Your reservation at ${campsite.name} from $checkIn to $checkOut is confirmed",
+                        currentDeviceId
+                    )
+                    onResult(Result.success(newReservation))
+                    notifyViews()
+                }
+                .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
         }
 
         /**
@@ -1138,11 +1210,28 @@ open class Model: ModelUpdater<View>{
          * only stays that are active and not over yet can be cancelled
          * cancelling frees the dates since booked dates only count active reservations
          *
+         * once its cancelled the entrant gets a confirmation notification (US 01.07.02)
+         *
          * @param reservation the reservation to cancel
          * @param onResult success once its cancelled or a failure if it wasnt found wasnt active or saving failed
          */
         fun cancelReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
-            endActiveReservation(reservation.id, ReservationStatus.CANCELLED, onResult)
+            endActiveReservation(reservation.id, ReservationStatus.CANCELLED) { result ->
+                if (result.isSuccess) {
+                    // reservations only keep the campsite id so look up the name for the message
+                    val sendNotification = { campsite: Campsite? ->
+                        val where = campsite?.name ?: "your campsite"
+                        notifyUser(
+                            "Your reservation at $where from ${reservation.checkIn} to ${reservation.checkOut} was cancelled",
+                            reservation.entrantId.ifBlank { currentDeviceId }
+                        )
+                    }
+                    // firestore throws on a blank document id so skip the lookup then
+                    if (reservation.campsiteId.isBlank()) sendNotification(null)
+                    else getCampsite(reservation.campsiteId, sendNotification)
+                }
+                onResult(result)
+            }
         }
 
         /**

@@ -29,6 +29,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -76,6 +77,13 @@ class ReservationsView(model: Model): View() {
         var toCancel by remember { mutableStateOf<EntrantReservation?>(null) }
         // tells the entrant if their cancel worked or why it didnt
         var message by remember { mutableStateOf<String?>(null) }
+        // the reservation that was just cancelled so the confirmation popup can show (US 01.07.02)
+        var cancelled by remember { mutableStateOf<EntrantReservation?>(null) }
+        // saves a reservation or cancellation as a csv (US 01.05.02 01.07.02)
+        val downloadCsv = rememberCsvDownloader { message = it }
+        val saveCsv = { reservation: EntrantReservation ->
+            downloadCsv(controller.csvFileName(reservation), controller.reservationCsv(reservation))
+        }
 
         // load every tab when the screen opens since nothing calls update for reservations
         LaunchedEffect(Unit) { loadReservations() }
@@ -120,6 +128,7 @@ class ReservationsView(model: Model): View() {
                                 reservation = reservation,
                                 navController = navController,
                                 onCancel = { toCancel = reservation },
+                                onCsv = { saveCsv(reservation) },
                             )
                         }
                     }
@@ -132,7 +141,8 @@ class ReservationsView(model: Model): View() {
                         itemsIndexed(previousReservations) { index, reservation ->
                             PreviousReservationRow(
                                 reservation = reservation,
-                                navController = navController
+                                navController = navController,
+                                onCsv = { saveCsv(reservation) },
                             )
                         }
                     }
@@ -159,10 +169,11 @@ class ReservationsView(model: Model): View() {
                 confirmButton = {
                     TextButton(onClick = {
                         toCancel = null
-                        controller.cancelReservation(pending.reservation) { result ->
+                        controller.cancelReservation(pending) { result ->
                             result
                                 .onSuccess {
-                                    message = "Your reservation at $campsiteName was cancelled"
+                                    message = null
+                                    cancelled = it
                                     loadReservations()
                                 }
                                 .onFailure { message = "Couldn't cancel: ${it.message}" }
@@ -171,6 +182,36 @@ class ReservationsView(model: Model): View() {
                 },
                 dismissButton = {
                     TextButton(onClick = { toCancel = null }) { Text("Keep it") }
+                },
+            )
+        }
+
+        // confirms the cancel and offers the csv (US 01.07.02)
+        // the notification only goes out if they havent turned notifications off
+        cancelled?.let { done ->
+            val campsiteName = done.campsite?.name ?: "this campsite"
+            val stay = "${formatDate(done.reservation.checkIn)} to ${formatDate(done.reservation.checkOut)}"
+            AlertDialog(
+                onDismissRequest = { cancelled = null },
+                modifier = Modifier.testTag("cancelConfirmation"),
+                title = { Text("Reservation cancelled") },
+                text = {
+                    Text(
+                        "Your stay at $campsiteName from $stay was cancelled. " +
+                            "You'll get a notification if they're turned on, or you can download a CSV copy."
+                    )
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            cancelled = null
+                            saveCsv(done)
+                        },
+                        modifier = Modifier.testTag("downloadCancellationCsv"),
+                    ) { Text("Download CSV") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { cancelled = null }) { Text("OK") }
                 },
             )
         }
@@ -227,6 +268,7 @@ class ReservationsView(model: Model): View() {
         reservation: EntrantReservation,
         navController: NavController,
         onCancel: () -> Unit,
+        onCsv: () -> Unit,
     ) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
@@ -239,7 +281,15 @@ class ReservationsView(model: Model): View() {
                         fontWeight = FontWeight.Bold,
                         modifier = Modifier.clickable { onCancel() },
                     )
-                    Spacer(modifier = Modifier.width(105.dp))
+                    Spacer(modifier = Modifier.width(20.dp))
+                    // download this reservation as a csv (US 01.05.02)
+                    Text(
+                        "CSV", color = Color(0xff5530a4),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onCsv() }.testTag("reservationCsv"),
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
@@ -253,12 +303,24 @@ class ReservationsView(model: Model): View() {
         }
     }
     @Composable
-    private fun PreviousReservationRow(reservation: EntrantReservation, navController: NavController) {
+    private fun PreviousReservationRow(
+        reservation: EntrantReservation,
+        navController: NavController,
+        onCsv: () -> Unit,
+    ) {
         Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
             Column() {
                 ReservationInfo(reservation, Color(0xffcadac8))
                 Row(modifier = Modifier.height(30.dp).background(light).width(500.dp)) {
-                    Spacer(modifier = Modifier.width(180.dp))
+                    Spacer(modifier = Modifier.width(10.dp))
+                    // download this reservation as a csv (US 01.05.02)
+                    Text(
+                        "CSV", color = Color(0xff5530a4),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable { onCsv() }.testTag("reservationCsv"),
+                    )
+                    Spacer(modifier = Modifier.width(120.dp))
                     Text(
                         "> Details", color = Color(0xff5530a4),
                         fontSize = 20.sp,
