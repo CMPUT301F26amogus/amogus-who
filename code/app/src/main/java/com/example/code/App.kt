@@ -188,4 +188,8 @@ fun App(id: String, model: Model) {
         composable(Routes.ADD_EDIT_LOTTERY) { addEditLotteryView.ShowScreen(navController) }
 
     }
+
+    // the views are registered above, so give them their data once now.
+    // otherwise update() only runs after something changes and screens start out empty
+    LaunchedEffect(start) { model.loadViews() }
 }
