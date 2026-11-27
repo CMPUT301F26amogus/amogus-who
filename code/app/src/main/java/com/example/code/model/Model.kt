@@ -1485,6 +1485,214 @@ open class Model: ModelUpdater<View>{
         }
         //endregion
 
+    //region Messages
+    // The following functions are from Google, Gemini, "Implement entrant and owner reservation messaging in Model.kt", 2026-11-26
+
+    /**
+     * sends a message from the current entrant to the campsite owner for an active reservation
+     *
+     * @param reservation the reservation the entrant is messaging about
+     * @param contents the message text (must not be blank)
+     * @param onResult gets the saved message or the failure
+     */
+    fun sendMessageToOwner(
+        reservation: Reservation,
+        contents: String,
+        onResult: (Result<Message>) -> Unit = {},
+    ) {
+        sendReservationMessage(
+            reservation = reservation,
+            contents = contents,
+            expectedRole = Role.ENTRANT,
+            onResult = onResult,
+        )
+    }
+
+    /**
+     * sends a message from the current campsite owner to the entrant for an active reservation
+     *
+     * @param reservation the reservation the owner is messaging about
+     * @param contents the message text (must not be blank)
+     * @param onResult gets the saved message or the failure
+     */
+    fun sendMessageToEntrant(
+        reservation: Reservation,
+        contents: String,
+        onResult: (Result<Message>) -> Unit = {},
+    ) {
+        sendReservationMessage(
+            reservation = reservation,
+            contents = contents,
+            expectedRole = Role.OWNER,
+            onResult = onResult,
+        )
+    }
+
+    /**
+     * sends a message to the other party on an active reservation
+     *
+     * automatically routes entrant -> owner or owner -> entrant based on [currentDeviceId]
+     *
+     * @param reservation the reservation the message is about
+     * @param contents the message text (must not be blank)
+     * @param onResult gets the saved message or the failure
+     */
+    fun sendMessage(
+        reservation: Reservation,
+        contents: String,
+        onResult: (Result<Message>) -> Unit = {},
+    ) {
+        sendReservationMessage(
+            reservation = reservation,
+            contents = contents,
+            expectedRole = null,
+            onResult = onResult,
+        )
+    }
+
+    /**
+     * shared helper that validates the reservation, checks that [currentDeviceId] is either the
+     * entrant or the campsite owner, saves the message, and notifies the recipient
+     *
+     * @param expectedRole if set, enforces that [currentDeviceId] is acting in that role
+     */
+    private fun sendReservationMessage(
+        reservation: Reservation,
+        contents: String,
+        expectedRole: Role?,
+        onResult: (Result<Message>) -> Unit,
+    ) {
+        if (currentDeviceId.isBlank()) {
+            onResult(Result.failure(IllegalStateException("No device id set")))
+            return
+        }
+        if (reservation.id.isBlank()) {
+            onResult(Result.failure(IllegalArgumentException("Invalid reservation ID")))
+            return
+        }
+        val trimmedContents = contents.trim()
+        if (trimmedContents.isBlank()) {
+            onResult(Result.failure(IllegalArgumentException("Message cannot be blank")))
+            return
+        }
+
+        reservationRef.document(reservation.id).get()
+            .addOnSuccessListener { resDoc ->
+                val savedReservation = resDoc.toObject(Reservation::class.java)
+                if (savedReservation == null) {
+                    onResult(Result.failure(Exception("Reservation not found")))
+                    return@addOnSuccessListener
+                }
+                if (!runCatching { savedReservation.isActive() }.getOrDefault(false)) {
+                    onResult(Result.failure(IllegalStateException("Can only message about an active reservation")))
+                    return@addOnSuccessListener
+                }
+
+                campsiteRef.document(savedReservation.campsiteId).get()
+                    .addOnSuccessListener { campDoc ->
+                        val campsite = campDoc.toObject(Campsite::class.java)
+                        if (campsite == null || campsite.ownerId.isBlank()) {
+                            onResult(Result.failure(Exception("Campsite owner not found")))
+                            return@addOnSuccessListener
+                        }
+
+                        val recipientId = when {
+                            currentDeviceId == savedReservation.entrantId && expectedRole != Role.OWNER ->
+                                campsite.ownerId
+                            currentDeviceId == campsite.ownerId && expectedRole != Role.ENTRANT ->
+                                savedReservation.entrantId
+                            else -> {
+                                onResult(Result.failure(IllegalStateException("You are not authorized to message on this reservation")))
+                                return@addOnSuccessListener
+                            }
+                        }
+
+                        if (recipientId.isBlank()) {
+                            onResult(Result.failure(Exception("Recipient not found")))
+                            return@addOnSuccessListener
+                        }
+
+                        val doc = messageRef.document()
+                        val message = Message(
+                            id = doc.id,
+                            senderId = currentDeviceId,
+                            recipientId = recipientId,
+                            reservationId = savedReservation.id,
+                            contents = trimmedContents,
+                            timestamp = LocalDateTime.now().truncatedTo(ChronoUnit.SECONDS)
+                                .format(DateTimeFormatter.ISO_LOCAL_DATE_TIME)
+                        )
+
+                        doc.set(message)
+                            .addOnSuccessListener {
+                                notifyUser("New message about ${campsite.name}: $trimmedContents", recipientId)
+                                notifyViews()
+                                onResult(Result.success(message))
+                            }
+                            .addOnFailureListener { onResult(Result.failure(it)) }
+                    }
+                    .addOnFailureListener { onResult(Result.failure(it)) }
+            }
+            .addOnFailureListener { onResult(Result.failure(it)) }
+    }
+
+    /**
+     * gets all messages for a specific reservation, oldest first
+     *
+     * @param reservationId id of the reservation
+     * @param onResult gets the messages or an empty list if it failed
+     */
+    fun getMessagesForReservation(
+        reservationId: String,
+        onResult: (List<Message>) -> Unit,
+    ) {
+        if (reservationId.isBlank()) {
+            onResult(emptyList())
+            return
+        }
+        messageRef.whereEqualTo("reservationId", reservationId).get()
+            .addOnSuccessListener { documents ->
+                val messages = documents.toObjects(Message::class.java)
+                    .sortedBy { it.timestamp }
+                onResult(messages)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    /**
+     * gets all messages sent or received by a user, oldest first
+     *
+     * @param userId device id of the user, defaults to [currentDeviceId]
+     * @param onResult gets the messages or an empty list if it failed
+     */
+    fun getMessages(
+        userId: String = currentDeviceId,
+        onResult: (List<Message>) -> Unit,
+    ) {
+        if (userId.isBlank()) {
+            onResult(emptyList())
+            return
+        }
+        val sentQuery = messageRef.whereEqualTo("senderId", userId).get()
+        val receivedQuery = messageRef.whereEqualTo("recipientId", userId).get()
+
+        Tasks.whenAllSuccess<QuerySnapshot>(sentQuery, receivedQuery)
+            .addOnSuccessListener { snapshots ->
+                val messages = snapshots
+                    .flatMap { it.toObjects(Message::class.java) }
+                    .distinctBy { it.id }
+                    .sortedBy { it.timestamp }
+                onResult(messages)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+    //endregion
+
+
     //region Deleting data
         // these return a Task so deleteProfile can chain them, onSuccessTask stops the chain at the first failure
 
