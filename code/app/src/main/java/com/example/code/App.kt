@@ -18,13 +18,13 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.code.model.Role
 import com.example.code.model.User
-import com.example.code.views.AddEditCampsite
-import com.example.code.views.AddEditLottery
+import com.example.code.views.AddEditCampsiteView
+import com.example.code.views.AddEditLotteryView
 import com.example.code.views.AdminHomeView
 import com.example.code.views.CampsiteDetailsView
-import com.example.code.views.CampsiteOwnerHomeView
+import com.example.code.views.OwnerHomeView
 import com.example.code.views.EntrantHomeView
-import com.example.code.views.LotteriesView
+import com.example.code.views.EntrantLotteriesView
 import com.example.code.views.MapView
 import com.example.code.views.NotificationsView
 import com.example.code.views.OwnerCampsiteListView
@@ -32,7 +32,7 @@ import com.example.code.views.OwnerLotteriesView
 import com.example.code.views.OwnerReservationsView
 import com.example.code.views.ProfileSettingsView
 import com.example.code.views.RegistrationView
-import com.example.code.views.ReservationsView
+import com.example.code.views.EntrantReservationsView
 import com.example.code.views.SearchResultsView
 import com.example.code.views.SearchView
 
@@ -105,21 +105,21 @@ fun App(id: String, model: Model) {
     // make each view once so the model and the nav graph share the same object
     val registrationView = remember { RegistrationView(model) }
     val entrantHomeView = remember { EntrantHomeView() }
-    val ownerHomeView = remember { CampsiteOwnerHomeView() }
+    val ownerHomeView = remember { OwnerHomeView() }
     val adminHomeView = remember { AdminHomeView() }
     val profileView = remember { ProfileSettingsView(model) }
     val notificationsView = remember { NotificationsView(id) }
     val campsiteDetailsView = remember { CampsiteDetailsView(model) }
     val mapView = remember { MapView() }
-    val reservationsView = remember { ReservationsView(model) }
-    val lotteriesView = remember { LotteriesView(model) }
+    val entrantReservationsView = remember { EntrantReservationsView(model) }
+    val entrantLotteriesView = remember { EntrantLotteriesView(model) }
     val searchView = remember { SearchView(model) }
     val searchResultsView = remember { SearchResultsView(model) }
     val ownerCampsitesView = remember { OwnerCampsiteListView(model) }
     val ownerReservationsView = remember { OwnerReservationsView(model) }
     val ownerLotteriesView = remember { OwnerLotteriesView(model) }
-    val addEditCampsiteView = remember { AddEditCampsite(model) }
-    val addEditLotteryView = remember { AddEditLottery(model) }
+    val addEditCampsiteView = remember { AddEditCampsiteView(model) }
+    val addEditLotteryView = remember { AddEditLotteryView(model) }
 
     LaunchedEffect(Unit) {
         model.getUserObj { user -> startDestination = startRouteFor(user) }
@@ -160,11 +160,11 @@ fun App(id: String, model: Model) {
         model.addView(mapView)
         composable(Routes.MAP) { mapView.ShowScreen(navController) }
 
-        model.addView(reservationsView)
-        composable(Routes.RESERVATIONS) { reservationsView.ShowScreen(navController) }
+        model.addView(entrantReservationsView)
+        composable(Routes.RESERVATIONS) { entrantReservationsView.ShowScreen(navController) }
 
-        model.addView(lotteriesView)
-        composable(Routes.LOTTERIES) { lotteriesView.ShowScreen(navController) }
+        model.addView(entrantLotteriesView)
+        composable(Routes.LOTTERIES) { entrantLotteriesView.ShowScreen(navController) }
 
         model.addView(searchView)
         composable(Routes.SEARCH) { searchView.ShowScreen(navController) }

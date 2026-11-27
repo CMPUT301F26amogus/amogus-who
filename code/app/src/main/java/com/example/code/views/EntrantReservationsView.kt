@@ -40,7 +40,7 @@ import com.example.code.ui.theme.CodeTheme
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 
-class ReservationsView(model: Model): View() {
+class EntrantReservationsView(model: Model): View() {
     // one list per tab so each tab only shows its own reservations
     val currentReservations = mutableStateListOf<EntrantReservation>()
     val previousReservations = mutableStateListOf<EntrantReservation>()
@@ -275,8 +275,8 @@ class ReservationsView(model: Model): View() {
 
 @Preview(showBackground = true)
 @Composable
-fun ReservationsViewPreview() {
-    val mp = ReservationsView(Model())
+fun EntrantReservationsViewPreview() {
+    val mp = EntrantReservationsView(Model())
     CodeTheme {
         (
             mp.ShowScreen(rememberNavController())

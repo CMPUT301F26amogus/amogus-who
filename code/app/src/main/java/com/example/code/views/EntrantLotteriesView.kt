@@ -40,7 +40,7 @@ import com.example.code.model.Lottery
 import com.example.code.model.Reservation
 import com.example.code.ui.theme.CodeTheme
 
-class LotteriesView(M: Model): View() {
+class EntrantLotteriesView(M: Model): View() {
     // state so the screen redraws when the data loads
     val currentLotteries = mutableStateListOf<Lottery>()
     // a lottery only stores campsite ids, so the campsites are kept here by id
@@ -267,8 +267,8 @@ class LotteriesView(M: Model): View() {
 
 @Preview(showBackground = true)
 @Composable
-fun LotteriesViewPreview() {
-    val mp = LotteriesView(Model())
+fun EntrantLotteriesViewPreview() {
+    val mp = EntrantLotteriesView(Model())
     CodeTheme {
         (
             mp.ShowScreen(rememberNavController())

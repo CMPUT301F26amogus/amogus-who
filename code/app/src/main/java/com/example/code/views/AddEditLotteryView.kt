@@ -23,7 +23,7 @@ import androidx.navigation.NavController
 import androidx.navigation.compose.rememberNavController
 import com.example.code.ui.theme.CodeTheme
 
-class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), InputFieldFunctions{
+class AddEditLotteryView(model: Model, val isEdit : Boolean = false) : View(), InputFieldFunctions{
 
     /** View Values
      *      the colors, values, and predefined Modifiers used in the drawing of the visual elements
@@ -208,7 +208,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
 @Composable
 fun AddLotteryViewPreview() {
     val m = Model()
-    val mp = AddEditLottery(m, false)
+    val mp = AddEditLotteryView(m, false)
     CodeTheme {
         (
                 mp.ShowScreen(rememberNavController())

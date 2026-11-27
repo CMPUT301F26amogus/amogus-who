@@ -15,7 +15,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 
-class CampsiteOwnerHomeView : HomeView() {
+class OwnerHomeView : HomeView() {
     override val bgColor = secondaryGreenColor
     override val headerColor = ownerHeaderBackgroundColor
     override val headerTextColor = ownerHeaderTextColor
@@ -54,7 +54,7 @@ class CampsiteOwnerHomeView : HomeView() {
 
 @Preview(showBackground = true)
 @Composable
-fun CampsiteOwnerHomeViewPreview() {
-    val homeView = CampsiteOwnerHomeView()
+fun OwnerHomeViewPreview() {
+    val homeView = OwnerHomeView()
     homeView.ShowScreen(rememberNavController())
 }

@@ -3,13 +3,13 @@ package com.example.code
 import Model
 import androidx.test.ext.junit.rules.ActivityScenarioRule
 import androidx.test.ext.junit.runners.AndroidJUnit4
-import com.example.code.views.AddEditCampsite
+import com.example.code.views.AddEditCampsiteView
 import org.junit.Rule
 import org.junit.Test
 import org.junit.runner.RunWith
 
 @RunWith(AndroidJUnit4::class)
-class AddEditCampsiteTest {
+class AddEditCampsiteViewTest {
 
     @get:Rule
     val activityRule = ActivityScenarioRule(MainActivity::class.java)
@@ -21,6 +21,6 @@ class AddEditCampsiteTest {
     @Test
     fun Check() {
         val model = Model()
-        val aView = AddEditCampsite(model, false)
+        val aView = AddEditCampsiteView(model, false)
     }
 }
