@@ -27,9 +27,15 @@ class OwnerEditCampsiteController (
         }
     }
 
+    /**
+     * lists a new campsite for the current owner
+     *
+     * @param rules rules and policies entrants have to agree to before reserving or blank for none (US 02.11.01)
+     * @param onResult true if it was saved
+     */
     fun onAddCampsite (navController: NavController,campName: String, location: String, desc: String, maxOcc: Int,
-                       price: Double, availability: AvailabilitySchedule, onResult: (Boolean) -> Unit) {
-        model.createCampsite(campName, location, desc, maxOcc, price, availability) { success ->
+                       price: Double, availability: AvailabilitySchedule, rules: String = "", onResult: (Boolean) -> Unit) {
+        model.createCampsite(campName, location, desc, maxOcc, price, availability, rules) { success ->
             onResult(success)
             if (success) {
                 navController.popBackStack()

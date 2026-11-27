@@ -25,7 +25,7 @@ class OwnerReservationsController(
     }
 
     /**
-     * loads the cancelled reservations at the owners campsites
+     * loads the cancelled and rejected reservations at the owners campsites
      *
      * @param onResult gets the reservations sorted by check in or an empty list if it failed
      */
@@ -33,11 +33,15 @@ class OwnerReservationsController(
         model.getOwnerCancelledReservations(onResult)
     }
 
-    fun onReservationReject() {
-
-    }
-
-    fun onReservationAccept() {
-
+    /**
+     * rejects a reservation at one of the owners campsites (US 02.08.01)
+     *
+     * the model tells the entrant and notifies the views so the lists reload
+     *
+     * @param reservation the reservation to reject
+     * @param onResult success once its rejected or a failure saying why it couldnt be
+     */
+    fun onReservationReject(reservation: OwnerReservation, onResult: (Result<Unit>) -> Unit = {}) {
+        model.rejectReservation(reservation.reservation, onResult)
     }
 }

@@ -12,13 +12,18 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
-import androidx.compose.foundation.text.input.TextFieldState
+import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Button
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.key
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.testTag
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavController
@@ -26,6 +31,7 @@ import androidx.navigation.compose.rememberNavController
 import com.example.code.controllers.OwnerEditCampsiteController
 import com.example.code.model.AvailabilitySchedule
 import com.example.code.model.Campsite
+import com.example.code.model.DateInput
 import com.example.code.ui.theme.CodeTheme
 
 class AddEditCampsite (model: Model): View(), InputFieldFunctions {
@@ -46,11 +52,15 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
         .background(color = creamBG)
         .padding(15.dp).width(135.dp)
 
-    var oldCampsite : Campsite? = null
+    // state so the screen redraws and resets its fields when update picks a different campsite
+    var oldCampsite : Campsite? by mutableStateOf(null)
     var campsiteName : String = ""
     var parkName : String = ""
 
     var campDescription : String = ""
+
+    // rules and policies entrants have to agree to before reserving (US 02.11.01)
+    var rules : String = ""
 
     var address : String = ""
 
@@ -64,7 +74,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
 
 //    var tags : String = ""
 
-    var headerName = ""
+    var headerName by mutableStateOf("")
 
     override fun update(model: Model) {
         val tempCampsite = model.gettTempCampsite()
@@ -73,6 +83,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
             oldCampsite = tempCampsite
             campsiteName = tempCampsite.name
             campDescription = tempCampsite.description
+            rules = tempCampsite.rulesAndPolicy
             parkName = tempCampsite.location
             maxGuests = tempCampsite.maxOccupancy.toString()
             pricePerNight = tempCampsite.pricePerNight.toString()
@@ -86,17 +97,28 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
 
     @Composable
     public fun ShowScreen(navController: NavController) {
+        // keyed on the campsite so picking a different one starts the fields over from it
+        // but redrawing the same one keeps what was typed
+        key(oldCampsite?.id) {
+            Form(navController)
+        }
+    }
+
+    @Composable
+    private fun Form(navController: NavController) {
 
         val context = LocalContext.current
 
-        val campsiteNameState = TextFieldState(campsiteName)
-        val parkNameState = TextFieldState(parkName)
-        val campDescriptionState = TextFieldState(campDescription)
-        val addressState = TextFieldState(address)
-        val maxGuestsState = TextFieldState(maxGuests)
-        val pricePerNightState = TextFieldState(pricePerNight)
-        val bookingPeriodStartState = TextFieldState("")
-        val bookingPeriodEndState = TextFieldState("")
+        // remembered so typing isnt lost when the screen redraws or the phone rotates
+        val campsiteNameState = rememberTextFieldState(campsiteName)
+        val parkNameState = rememberTextFieldState(parkName)
+        val campDescriptionState = rememberTextFieldState(campDescription)
+        val rulesState = rememberTextFieldState(rules)
+        val addressState = rememberTextFieldState(address)
+        val maxGuestsState = rememberTextFieldState(maxGuests)
+        val pricePerNightState = rememberTextFieldState(pricePerNight)
+        val bookingPeriodStartState = rememberTextFieldState("")
+        val bookingPeriodEndState = rememberTextFieldState("")
 
         Column() {
             Row() {
@@ -145,6 +167,17 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
                         fieldModifier
                     )
                 } // end of description input
+
+                // rules and policies input field (US 02.11.01)
+                Row(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    StringField(
+                        rulesState,
+                        "Rules & Policies",
+                        fieldModifier.testTag("campsiteRulesInputField")
+                    )
+                }
 
                 Spacer(modifier = Modifier.height(10.dp))
 
@@ -224,6 +257,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
                         onClick = {
                             val name = campsiteNameState.text.toString().trim()
                             val description = campDescriptionState.text.toString().trim()
+                            val rulesAndPolicy = rulesState.text.toString().trim()
                             val location = addressState.text.toString().trim()
                                 .ifBlank { parkNameState.text.toString().trim() }
 
@@ -251,6 +285,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
                                         "name" to name,
                                         "location" to location,
                                         "description" to description,
+                                        "rulesAndPolicy" to rulesAndPolicy,
                                         "maxOccupancy" to maxOccupancy,
                                         "pricePerNight" to pricePerNight
                                     )
@@ -264,7 +299,12 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
                             } else {
                                 controller.onAddCampsite(
                                     navController, name, location, description, maxOccupancy, pricePerNight,
-                                    AvailabilitySchedule(listOf(bookingPeriodStart,bookingPeriodEnd), emptyList())
+                                    // read the Bookings Open/End boxes (saved as YYYY-MM-DD) so search can filter by date
+                                    AvailabilitySchedule(listOf(
+                                        DateInput().toSaved(bookingPeriodStartState.text.toString()),
+                                        DateInput().toSaved(bookingPeriodEndState.text.toString())
+                                    ), emptyList()),
+                                    rulesAndPolicy
                                 ) { success ->
                                     val message = if (success) "Campsite registered" else "Could not register the campsite"
                                     Toast.makeText(context, message, Toast.LENGTH_SHORT).show()
@@ -296,6 +336,7 @@ class AddEditCampsite (model: Model): View(), InputFieldFunctions {
         campsiteName = ""
         parkName = ""
         campDescription = ""
+        rules = ""
         address = ""
         maxGuests = ""
         pricePerNight = ""

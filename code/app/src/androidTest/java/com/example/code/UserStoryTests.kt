@@ -4,6 +4,7 @@ import Model
 import android.annotation.SuppressLint
 import android.provider.Settings
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -109,7 +110,7 @@ class UserStoryTests {
     // so dates are picked so each test's cards are at the top of their tab
     private val cancelledReservation =
         seededReservation("cancelled", "US 02.07.03 Cancelled Entrant", 30, ReservationStatus.CANCELLED)
-    // the owner rejected this one so it shouldnt show as cancelled
+    // the owner rejected this one so it shows in the cancelled tab labelled rejected (US 02.08.01)
     private val rejectedReservation =
         seededReservation("rejected", "US 02.07.03 Rejected Entrant", 7, ReservationStatus.REJECTED)
     // start active and get cancelled or declined by the entrant during the test
@@ -118,6 +119,10 @@ class UserStoryTests {
         seededReservation("to-cancel", "US 02.07.03 Cancels Entrant", 8, ReservationStatus.ACTIVE)
     private val toDeclineReservation =
         seededReservation("to-decline", "US 02.07.03 Declines Entrant", 9, ReservationStatus.ACTIVE)
+    // starts active and the owner rejects it during the 02.08.01 tests
+    // checks in before every other active one so its card is first under active
+    private val toRejectReservation =
+        seededReservation("to-reject", "US 02.08.01 Rejected Entrant", 6, ReservationStatus.ACTIVE)
 
     private val seededReservations = listOf(
         activeReservation,
@@ -127,6 +132,7 @@ class UserStoryTests {
         rejectedReservation,
         toCancelReservation,
         toDeclineReservation,
+        toRejectReservation,
     )
 
     // entrant cards show the campsite not the entrant so each entrant reservation gets its own campsite
@@ -231,7 +237,11 @@ class UserStoryTests {
                     (seededReservations + entrantReservations).forEach {
                         await(reservationRef.document(it.id).delete())
                     }
-                    seededEntrants.forEach { await(usersRef.document(it.deviceId).delete()) }
+                    seededEntrants.forEach {
+                        // rejecting sends the seeded entrant a notification (US 02.08.01)
+                        deleteNewDocs(notificationRef, emptySet(), it.deviceId)
+                        await(usersRef.document(it.deviceId).delete())
+                    }
                     entrantCampsites.forEach { await(campsiteRef.document(it.id).delete()) }
                     await(campsiteRef.document(testCampsite.id).delete())
                     deleteNewDocs(reservationRef, reservationsBefore)
@@ -253,22 +263,26 @@ class UserStoryTests {
         await(ref.whereEqualTo("entrantId", deviceId).get()).documents.map { it.id }.toSet()
 
     // deletes this devices docs the test made and leaves the ones that were there before
-    private fun deleteNewDocs(ref: CollectionReference, before: Set<String>) {
-        await(ref.whereEqualTo("entrantId", deviceId).get()).documents
+    // or a seeded entrants docs when given their id
+    private fun deleteNewDocs(ref: CollectionReference, before: Set<String>, entrantId: String = deviceId) {
+        await(ref.whereEqualTo("entrantId", entrantId).get()).documents
             .filter { it.id !in before }
             .forEach { await(it.reference.delete()) }
     }
 
-    // what every notification sent to this device says
-    private fun myNotifications(): List<String> =
-        await(notificationRef.whereEqualTo("entrantId", deviceId).get()).documents
+    // what every notification sent to this device says or to a seeded entrant when given their id
+    private fun myNotifications(entrantId: String = deviceId): List<String> =
+        await(notificationRef.whereEqualTo("entrantId", entrantId).get()).documents
             .mapNotNull { it.getString("content") }
 
     // the model sends notifications without handing back a task so keep checking until one shows up
-    private fun waitForNotification(vararg parts: String): String {
+    private fun waitForNotification(vararg parts: String): String = waitForNotificationTo(deviceId, *parts)
+
+    // same as waitForNotification but for someone other than this device like a seeded entrant
+    private fun waitForNotificationTo(entrantId: String, vararg parts: String): String {
         val giveUpAt = System.currentTimeMillis() + 10_000
         while (true) {
-            myNotifications().firstOrNull { message -> parts.all { it in message } }?.let { return it }
+            myNotifications(entrantId).firstOrNull { message -> parts.all { it in message } }?.let { return it }
             check(System.currentTimeMillis() < giveUpAt) { "No notification saying ${parts.toList()}" }
             Thread.sleep(250)
         }
@@ -434,14 +448,30 @@ class UserStoryTests {
             .onFirst()
             .assertIsDisplayed()
 
-        // active ones are already booked so theres nothing to accept or reject
+        // active ones can be rejected (US 02.08.01) but theyre already booked so theres nothing to accept
         composeTestRule
-            .onNodeWithText("Reject")
-            .assertDoesNotExist()
+            .onAllNodesWithText("Reject")
+            .onFirst()
+            .assertIsDisplayed()
         composeTestRule
             .onNodeWithText("Accept")
             .assertDoesNotExist()
     }
+
+    /*
+    * ==============================================================================================
+    * ==============================================================================================
+    *
+    * USER STORY UNIT TESTS START HERE
+    *
+    * Each dev should implement or generate their own tests for each user story.
+    * Organize them in numerical order so that they're easy to find.
+    * Use the user_stories.md file found at the root of this project as reference.
+    * Consider edge cases where applicable.
+    *
+    * ==============================================================================================
+    * ==============================================================================================
+    */
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.02", 2026-11-23
     */
@@ -488,9 +518,16 @@ class UserStoryTests {
 
         waitForText(nameOf(cancelledReservation))
         assertShown(nameOf(cancelledReservation))
+        composeTestRule
+            .onNodeWithTag("reservationLabel-${cancelledReservation.id}")
+            .assertTextEquals("Cancelled by entrant")
 
-        // rejected is the owner turning someone down not a cancellation
-        assertNotShown(nameOf(rejectedReservation))
+        // rejected ones are here too but labelled so the owner can tell them apart (US 02.08.01)
+        assertShown(nameOf(rejectedReservation))
+        composeTestRule
+            .onNodeWithTag("reservationLabel-${rejectedReservation.id}")
+            .assertTextEquals("Rejected by you")
+
         assertNotShown(testEntrant.name)
         assertNotShown(nameOf(finishedReservation))
 
@@ -527,6 +564,114 @@ class UserStoryTests {
         waitForText(testEntrant.name)
         assertNotShown(nameOf(toCancelReservation))
         assertNotShown(nameOf(toDeclineReservation))
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.08.01), 2026-11-26
+    */
+    // US 02.08.01
+    // as a campsite owner i want to reject a reservation
+    @Test
+    fun us_02_08_01_owner_rejects_reservation() {
+        openOwnerReservations("Active")
+        waitForText(nameOf(toRejectReservation))
+        val rejectButton = "rejectReservation-${toRejectReservation.id}"
+
+        // backing out of the popup leaves the reservation alone
+        composeTestRule
+            .onNodeWithTag(rejectButton)
+            .performClick()
+        composeTestRule
+            .onNodeWithText("Reject reservation?")
+            .assertIsDisplayed()
+        composeTestRule
+            .onNodeWithText("Keep it")
+            .performClick()
+        composeTestRule
+            .onNodeWithText("Reject reservation?")
+            .assertDoesNotExist()
+        assertEquals(
+            ReservationStatus.ACTIVE.name,
+            await(reservationRef.document(toRejectReservation.id).get()).getString("status"),
+        )
+
+        // confirming actually rejects it
+        composeTestRule
+            .onNodeWithTag(rejectButton)
+            .performClick()
+        composeTestRule
+            .onNodeWithText("Yes, reject")
+            .performClick()
+        waitForStatus(toRejectReservation.id, ReservationStatus.REJECTED)
+
+        // the active list reloads without it but the other active stays are still there
+        composeTestRule.waitUntil(10_000) {
+            composeTestRule.onAllNodesWithText(nameOf(toRejectReservation))
+                .fetchSemanticsNodes().isEmpty()
+        }
+        assertShown(testEntrant.name)
+        assertEquals(
+            ReservationStatus.ACTIVE.name,
+            await(reservationRef.document(activeReservation.id).get()).getString("status"),
+        )
+
+        // and it moves to the cancelled tab labelled rejected instead of disappearing
+        composeTestRule
+            .onNodeWithText("Cancelled")
+            .performClick()
+        waitForText(nameOf(toRejectReservation))
+        composeTestRule
+            .onNodeWithTag("reservationLabel-${toRejectReservation.id}")
+            .assertTextEquals("Rejected by you")
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.08.01), 2026-11-26
+    */
+    // US 02.08.01
+    // the entrant gets told when the owner rejects their reservation
+    @Test
+    fun us_02_08_01_entrant_notified_of_rejection() {
+        var result: Result<Unit>? = null
+        val done = CountDownLatch(1)
+        Model().apply { setDeviceInformation(deviceId) }.rejectReservation(toRejectReservation) {
+            result = it
+            done.countDown()
+        }
+        assertTrue("reject never answered", done.await(10, TimeUnit.SECONDS))
+        assertTrue(result!!.isSuccess)
+
+        // the notification goes to whoever booked it not the owner and names the campsite and dates
+        val message = waitForNotificationTo(
+            toRejectReservation.entrantId,
+            "rejected",
+            testCampsite.name,
+            toRejectReservation.checkIn,
+            toRejectReservation.checkOut,
+        )
+        assertTrue(message.isNotBlank())
+        assertFalse(myNotifications().any { "rejected" in it })
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.08.01), 2026-11-26
+    */
+    // US 02.08.01
+    // a stay thats already over cant be rejected even though its still saved as active
+    @Test
+    fun us_02_08_01_owner_cannot_reject_finished_stay() {
+        var result: Result<Unit>? = null
+        val done = CountDownLatch(1)
+        Model().apply { setDeviceInformation(deviceId) }.rejectReservation(finishedReservation) {
+            result = it
+            done.countDown()
+        }
+        assertTrue("reject never answered", done.await(10, TimeUnit.SECONDS))
+
+        assertTrue(result!!.isFailure)
+        assertEquals(
+            ReservationStatus.ACTIVE.name,
+            await(reservationRef.document(finishedReservation.id).get()).getString("status"),
+        )
+        // and nobody gets told it was rejected
+        assertTrue(myNotifications(finishedReservation.entrantId).none { "rejected" in it })
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.06.01", 2026-11-24

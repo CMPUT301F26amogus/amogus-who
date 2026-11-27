@@ -16,6 +16,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.input.rememberTextFieldState
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
+import androidx.compose.material3.Checkbox
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -41,6 +42,7 @@ import com.example.code.model.EntrantReservation
 /**
  * Screen where an entrant picks dates and guests and books the campsite in the model's temp campsite.
  * Shows a confirmation with a CSV download once it's booked (US 01.05.01, 01.05.02).
+ * If the campsite has rules the entrant has to tick that they agree before booking (US 02.11.01).
  *
  * @param model the app's model
  */
@@ -97,6 +99,9 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
         // the reservation that was just made so the confirmation popup can show (US 01.05.01)
         var confirmed by remember { mutableStateOf<EntrantReservation?>(null) }
         val downloadCsv = rememberCsvDownloader { error = it }
+        // if they ticked that they agree to the rules (US 02.11.01)
+        // keyed on the campsite so ticking it for one campsite doesnt count for another
+        var rulesAccepted by remember(campsite?.id) { mutableStateOf(false) }
 
         Column() {
             Row() {  //  Header of screen
@@ -241,6 +246,17 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
                             fontSize = 14.sp,
                             modifier = Modifier.testTag("tosBox")
                         )
+                        // only when theres rules to agree to (US 02.11.01)
+                        if (campsite?.hasRules() == true) {
+                            Row(verticalAlignment = Alignment.CenterVertically) {
+                                Checkbox(
+                                    checked = rulesAccepted,
+                                    onCheckedChange = { rulesAccepted = it },
+                                    modifier = Modifier.testTag("acceptRulesCheckbox")
+                                )
+                                Text("I've read and agree to the rules", fontSize = 14.sp)
+                            }
+                        }
                     }
 
                 }
@@ -259,6 +275,7 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
                             arrival = arrivalDateState.text.toString(),
                             departure = departureDateState.text.toString(),
                             guests = numberOfGuestsState.text.toString(),
+                            rulesAccepted = rulesAccepted,
                         ) { result ->
                             result
                                 .onSuccess {
@@ -268,6 +285,9 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
                                 .onFailure { error = it.message ?: "Couldn't make the reservation" }
                         }
                     },
+                    // greyed out until the rules box is ticked when there are rules (US 02.11.01)
+                    // the controller and model still check it too
+                    enabled = campsite?.hasRules() != true || rulesAccepted,
                     modifier = Modifier.testTag("reserveCampsiteButton")
                 ) {
                     Text(" Make Reservation")

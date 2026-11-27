@@ -33,7 +33,7 @@ class ReserveCampsiteController(
         today: LocalDate = LocalDate.now(),
         onResult: (Result<EntrantReservation>) -> Unit,
     ) {
-        val error = validate(campsite, arrival, departure, guests, today)
+        val error = validate(campsite, arrival, departure, guests, today, rulesAccepted)
         if (error != null || campsite == null) {
             onResult(Result.failure(IllegalArgumentException(error ?: "No campsite picked")))
             return
@@ -72,6 +72,9 @@ class ReserveCampsiteController(
     /**
      * checks the typed fields without saving anything
      *
+     * if the campsite has rules the entrant has to tick that they agree to them (US 02.11.01)
+     *
+     * @param rulesAccepted true if the entrant ticked the rules box
      * @return what to tell the entrant or null if its all fine
      */
     fun validate(
@@ -80,6 +83,7 @@ class ReserveCampsiteController(
         departure: String,
         guests: String,
         today: LocalDate = LocalDate.now(),
+        rulesAccepted: Boolean = false,
     ): String? {
         if (campsite == null || campsite.id.isBlank()) return "No campsite picked"
         val checkIn = parseDate(arrival) ?: return "Arrival date should look like MM/DD/YYYY"
@@ -89,6 +93,7 @@ class ReserveCampsiteController(
         val count = guests.trim().toIntOrNull() ?: return "Number of guests has to be a number"
         if (count < 1) return "You need at least 1 guest"
         if (count > campsite.maxOccupancy) return "This campsite fits at most ${campsite.maxOccupancy} guests"
+        if (campsite.hasRules() && !rulesAccepted) return "You have to agree to the campsite rules first"
         return null
     }
 

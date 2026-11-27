@@ -20,7 +20,14 @@ class ReserveCampsiteControllerTest {
         departure: String = "05032027",
         guests: String = "2",
         site: Campsite? = campsite,
-    ) = controller.validate(site, arrival, departure, guests, today)
+        rulesAccepted: Boolean = false,
+    ) = controller.validate(site, arrival, departure, guests, today, rulesAccepted)
+
+    // US 02.11.01 a campsite whose owner wrote rules
+    private val rulesCampsite = Campsite(
+        id = "camp-2", ownerId = "owner-1", name = "Aspen Flats", maxOccupancy = 4,
+        rulesAndPolicy = "No campfires after 10pm",
+    )
 
     @Test
     fun validInput_hasNoError() {
@@ -67,5 +74,33 @@ class ReserveCampsiteControllerTest {
             message = it.exceptionOrNull()?.message
         }
         assertEquals("Departure has to be after arrival", message)
+    }
+
+    // US 02.11.01
+    @Test
+    fun rulesNotAccepted_isError() {
+        assertEquals("You have to agree to the campsite rules first", validate(site = rulesCampsite))
+    }
+
+    // US 02.11.01
+    @Test
+    fun rulesAccepted_hasNoError() {
+        assertNull(validate(site = rulesCampsite, rulesAccepted = true))
+    }
+
+    // US 02.11.01 blank rules have nothing to agree to
+    @Test
+    fun noRules_doesntNeedAccepting() {
+        assertNull(validate(site = Campsite(id = "camp-3", ownerId = "owner-1", maxOccupancy = 4, rulesAndPolicy = "   ")))
+    }
+
+    // US 02.11.01
+    @Test
+    fun rulesNotAccepted_failsWithoutTouchingFirebase() {
+        var message: String? = null
+        controller.makeReservation(rulesCampsite, "05012027", "05032027", "2", today = today) {
+            message = it.exceptionOrNull()?.message
+        }
+        assertEquals("You have to agree to the campsite rules first", message)
     }
 }
