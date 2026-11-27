@@ -3,6 +3,7 @@ package com.example.code.controllers
 import Model
 import com.example.code.model.Campsite
 import com.example.code.model.EntrantReservation
+import com.example.code.model.Lottery
 import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.time.format.ResolverStyle
@@ -22,6 +23,7 @@ class ReserveCampsiteController(
      * @param guests what was typed in the guests field
      * @param rulesAccepted true if the entrant agreed to the campsite rules
      * @param today the date to compare against so tests can pick one
+     * @param lottery the lottery they won to get this campsite or null to book without one
      * @param onResult the saved reservation with its campsite or a failure saying whats wrong
      */
     fun makeReservation(
@@ -31,6 +33,7 @@ class ReserveCampsiteController(
         guests: String,
         rulesAccepted: Boolean = false,
         today: LocalDate = LocalDate.now(),
+        lottery: Lottery? = null,
         onResult: (Result<EntrantReservation>) -> Unit,
     ) {
         val error = validate(campsite, arrival, departure, guests, today, rulesAccepted)
@@ -40,6 +43,23 @@ class ReserveCampsiteController(
         }
         val checkIn = parseDate(arrival)!!.toString()
         val checkOut = parseDate(departure)!!.toString()
+
+        // a lottery win has to fit the available dates and can only be used once (US 01.04.01 01.04.02)
+        // the model checks all that so the controller just hands it over
+        if (lottery != null) {
+            model.reserveLotteryWin(
+                lottery = lottery,
+                campsite = campsite,
+                checkIn = checkIn,
+                checkOut = checkOut,
+                guests = guests.trim().toInt(),
+                rulesAccepted = rulesAccepted,
+                today = today,
+            ) { result ->
+                onResult(result.map { EntrantReservation(it, campsite) })
+            }
+            return
+        }
 
         // someone else might have booked these dates first
         // not a transaction so two people at the exact same time could still both get it
@@ -59,6 +79,67 @@ class ReserveCampsiteController(
                 onResult(result.map { EntrantReservation(it, campsite) })
             }
         }
+    }
+
+    /**
+     * books the days a lottery winner picked on the calendar (US 01.04.01 01.04.02)
+     *
+     * the calendar only lets them tap free days but a stay can still run over a booked night
+     * in between so the model checks the whole stay
+     *
+     * @param campsite the campsite being reserved
+     * @param lottery the lottery they won to get it
+     * @param checkIn the first day they picked or null if they havent
+     * @param checkOut the second day they picked or null if they havent
+     * @param guests what was typed in the guests field
+     * @param rulesAccepted true if the entrant agreed to the campsite rules
+     * @param today the date to compare against so tests can pick one
+     * @param onResult the saved reservation with its campsite or a failure saying whats wrong
+     */
+    fun makeLotteryReservation(
+        campsite: Campsite?,
+        lottery: Lottery?,
+        checkIn: LocalDate?,
+        checkOut: LocalDate?,
+        guests: String,
+        rulesAccepted: Boolean = false,
+        today: LocalDate = LocalDate.now(),
+        onResult: (Result<EntrantReservation>) -> Unit,
+    ) {
+        val missing = when {
+            lottery == null -> "There's no lottery win to reserve from"
+            checkIn == null -> "Pick your check in day on the calendar"
+            checkOut == null -> "Pick your check out day on the calendar"
+            else -> null
+        }
+        if (missing != null) {
+            onResult(Result.failure(IllegalArgumentException(missing)))
+            return
+        }
+        makeReservation(
+            campsite = campsite,
+            arrival = checkIn.toString(),
+            departure = checkOut.toString(),
+            guests = guests,
+            rulesAccepted = rulesAccepted,
+            today = today,
+            lottery = lottery,
+            onResult = onResult,
+        )
+    }
+
+    /**
+     * says no to a lottery win eg none of the available dates work (US 01.04.03)
+     *
+     * @param lottery the lottery they won
+     * @param onResult success once its declined or a failure saying why
+     */
+    fun declineLotteryWin(lottery: Lottery?, onResult: (Result<Unit>) -> Unit) {
+        if (lottery == null) {
+            onResult(Result.failure(IllegalArgumentException("There's no lottery win to decline")))
+            return
+        }
+        model.declineLotteryWin(lottery, onResult)
     }
 
     /**

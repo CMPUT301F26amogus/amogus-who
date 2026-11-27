@@ -2,6 +2,7 @@ package com.example.code.controllers
 
 import Model
 import com.example.code.model.Campsite
+import com.example.code.model.Lottery
 import org.junit.Assert.assertEquals
 import org.junit.Assert.assertNull
 import org.junit.Test
@@ -102,5 +103,31 @@ class ReserveCampsiteControllerTest {
             message = it.exceptionOrNull()?.message
         }
         assertEquals("You have to agree to the campsite rules first", message)
+    }
+
+    // US 01.04.01 lottery winners pick their days on the calendar and get told if one is missing
+    private fun lotteryReserve(lottery: Lottery?, checkIn: LocalDate?, checkOut: LocalDate?): String? {
+        var message: String? = null
+        controller.makeLotteryReservation(campsite, lottery, checkIn, checkOut, "2", today = today) {
+            message = it.exceptionOrNull()?.message
+        }
+        return message
+    }
+
+    @Test
+    fun calendar_needsBothDaysPicked() {
+        val lottery = Lottery(id = "lottery-1", campsiteIds = listOf(campsite.id))
+        val may1 = LocalDate.of(2027, 5, 1)
+        assertEquals("Pick your check in day on the calendar", lotteryReserve(lottery, null, null))
+        assertEquals("Pick your check out day on the calendar", lotteryReserve(lottery, may1, null))
+        assertEquals("There's no lottery win to reserve from", lotteryReserve(null, may1, may1.plusDays(2)))
+    }
+
+    @Test
+    fun calendar_daysStillGetChecked() {
+        val lottery = Lottery(id = "lottery-1", campsiteIds = listOf(campsite.id))
+        val may3 = LocalDate.of(2027, 5, 3)
+        // picked the same day twice so its not a real stay
+        assertEquals("Departure has to be after arrival", lotteryReserve(lottery, may3, may3))
     }
 }

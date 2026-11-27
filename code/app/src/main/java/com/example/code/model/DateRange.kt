@@ -64,4 +64,20 @@ data class DateRange(val start: String = "", val end: String = "") {
 
 
     //the above code used to work for LocalDate, in UML we agreeed to change it to String cause of firebase.
+
+    /**
+     * every day a stay inside this range could check in or check out on (US 01.04.01)
+     *
+     * thats start up to and including end since end is the last check out day
+     * the calendar on the reserve screen greys out every other day
+     * not called getSomething so firestore doesnt try to save it
+     *
+     * @return the days in order or empty if a date doesnt parse or end isnt after start
+     */
+    fun checkInAndOutDays(): List<LocalDate> {
+        val first = runCatching { LocalDate.parse(start) }.getOrNull() ?: return emptyList()
+        val last = runCatching { LocalDate.parse(end) }.getOrNull() ?: return emptyList()
+        if (!last.isAfter(first)) return emptyList()
+        return generateSequence(first) { it.plusDays(1) }.takeWhile { !it.isAfter(last) }.toList()
+    }
 }
