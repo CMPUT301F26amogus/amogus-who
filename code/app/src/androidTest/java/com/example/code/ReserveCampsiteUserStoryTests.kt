@@ -5,6 +5,8 @@ import android.annotation.SuppressLint
 import android.provider.Settings
 import androidx.compose.material3.Text
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertIsEnabled
+import androidx.compose.ui.test.assertIsNotEnabled
 import androidx.compose.ui.test.assertIsOff
 import androidx.compose.ui.test.assertIsOn
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -148,13 +150,18 @@ class ReserveCampsiteUserStoryTests {
         savedUser?.let { await(userDoc.set(it)) } ?: await(userDoc.delete())
     }
 
-    // types into the reserve form like an entrant would and presses the button
-    // ticks the rules box first unless told not to (US 02.11.01)
-    private fun fillAndReserve(arrival: LocalDate, departure: LocalDate, guests: String, acceptRules: Boolean = true) {
+    // types into the reserve form like an entrant would without pressing the button
+    private fun fill(arrival: LocalDate, departure: LocalDate, guests: String) {
         val field = DateTimeFormatter.ofPattern("MMddyyyy")
         composeTestRule.onNodeWithTag("arrivalDateInputField").performTextInput(arrival.format(field))
         composeTestRule.onNodeWithTag("departureDateInputField").performTextInput(departure.format(field))
         composeTestRule.onNodeWithTag("numberOfGuestsInputField").performTextInput(guests)
+    }
+
+    // fills the form and presses the button
+    // ticks the rules box first unless told not to (US 02.11.01)
+    private fun fillAndReserve(arrival: LocalDate, departure: LocalDate, guests: String, acceptRules: Boolean = true) {
+        fill(arrival, departure, guests)
         if (acceptRules) composeTestRule.onNodeWithTag("acceptRulesCheckbox").performClick()
         composeTestRule.onNodeWithTag("reserveCampsiteButton").performClick()
     }
@@ -264,15 +271,22 @@ class ReserveCampsiteUserStoryTests {
     // as a campsite owner i want entrants to confirm theyve read the rules before confirming a reservation
     @Test
     fun us_02_11_01_cannot_reserve_without_accepting_rules() {
-        fillAndReserve(checkIn, checkOut, "2", acceptRules = false)
+        fill(checkIn, checkOut, "2")
 
-        waitForText("You have to agree to the campsite rules first")
+        // the button is greyed out so tapping it does nothing
+        composeTestRule.onNodeWithTag("reserveCampsiteButton").assertIsNotEnabled().performClick()
         composeTestRule.onNodeWithText("Reservation confirmed").assertDoesNotExist()
         assertTrue(newReservations().isEmpty())
 
-        // ticking the box and trying again goes through
+        // unticking greys it out again
         composeTestRule.onNodeWithTag("acceptRulesCheckbox").performClick()
-        composeTestRule.onNodeWithTag("reserveCampsiteButton").performClick()
+        composeTestRule.onNodeWithTag("reserveCampsiteButton").assertIsEnabled()
+        composeTestRule.onNodeWithTag("acceptRulesCheckbox").performClick()
+        composeTestRule.onNodeWithTag("reserveCampsiteButton").assertIsNotEnabled()
+
+        // ticking the box turns it on and reserving goes through
+        composeTestRule.onNodeWithTag("acceptRulesCheckbox").performClick()
+        composeTestRule.onNodeWithTag("reserveCampsiteButton").assertIsEnabled().performClick()
         waitForTag("reservationConfirmation")
         assertEquals(1, newReservations().size)
     }
@@ -302,6 +316,8 @@ class ReserveCampsiteUserStoryTests {
         composeTestRule.runOnIdle { model.settTempCampsite(noRulesCampsite) }
         composeTestRule.onNodeWithText(noRulesCampsite.name).assertIsDisplayed()
         composeTestRule.onNodeWithTag("acceptRulesCheckbox").assertDoesNotExist()
+        // nothing to agree to so the button isnt greyed out
+        composeTestRule.onNodeWithTag("reserveCampsiteButton").assertIsEnabled()
 
         fillAndReserve(checkIn, checkOut, "2", acceptRules = false)
 

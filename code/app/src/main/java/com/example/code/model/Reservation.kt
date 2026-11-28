@@ -83,6 +83,16 @@ class Reservation(
     fun isCancelled(): Boolean = status == ReservationStatus.CANCELLED
 
     /**
+     * checks if the owner rejected this stay (US 02.08.01)
+     *
+     * excluded so firestore doesnt save it as a rejected field
+     *
+     * @return true if its rejected
+     */
+    @Exclude
+    fun isRejected(): Boolean = status == ReservationStatus.REJECTED
+
+    /**
      * one line of a csv file for this reservation
      *
      * goes under [CSV_HEADER] so entrants can download their booking or cancellation

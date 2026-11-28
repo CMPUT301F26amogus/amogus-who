@@ -1517,13 +1517,16 @@ open class Model: ModelUpdater<View>{
         }
 
         /**
-         * gets the cancelled reservations at all of the current owners campsites
+         * gets the cancelled and rejected reservations at all of the current owners campsites
+         *
+         * rejected ones are in here too so they dont disappear after the owner rejects them (US 02.08.01)
          *
          * @param onResult gets the reservations sorted by check in or an empty list if it failed
          */
         fun getOwnerCancelledReservations(onResult: (List<OwnerReservation>) -> Unit) {
             getOwnerReservations { all ->
-                onResult(all.filter { it.reservation.isCancelled() }.sortedBy { it.reservation.checkIn })
+                onResult(all.filter { it.reservation.isCancelled() || it.reservation.isRejected() }
+                    .sortedBy { it.reservation.checkIn })
             }
         }
 

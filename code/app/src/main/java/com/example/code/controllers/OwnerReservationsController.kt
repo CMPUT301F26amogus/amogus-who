@@ -25,7 +25,7 @@ class OwnerReservationsController(
     }
 
     /**
-     * loads the cancelled reservations at the owners campsites
+     * loads the cancelled and rejected reservations at the owners campsites
      *
      * @param onResult gets the reservations sorted by check in or an empty list if it failed
      */

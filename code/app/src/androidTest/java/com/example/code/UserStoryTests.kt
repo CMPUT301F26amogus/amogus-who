@@ -4,6 +4,7 @@ import Model
 import android.annotation.SuppressLint
 import android.provider.Settings
 import androidx.compose.ui.test.assertIsDisplayed
+import androidx.compose.ui.test.assertTextEquals
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onAllNodesWithTag
 import androidx.compose.ui.test.onAllNodesWithText
@@ -109,7 +110,7 @@ class UserStoryTests {
     // so dates are picked so each test's cards are at the top of their tab
     private val cancelledReservation =
         seededReservation("cancelled", "US 02.07.03 Cancelled Entrant", 30, ReservationStatus.CANCELLED)
-    // the owner rejected this one so it shouldnt show as cancelled
+    // the owner rejected this one so it shows in the cancelled tab labelled rejected (US 02.08.01)
     private val rejectedReservation =
         seededReservation("rejected", "US 02.07.03 Rejected Entrant", 7, ReservationStatus.REJECTED)
     // start active and get cancelled or declined by the entrant during the test
@@ -458,6 +459,21 @@ class UserStoryTests {
             .assertDoesNotExist()
     }
 
+    /*
+    * ==============================================================================================
+    * ==============================================================================================
+    *
+    * USER STORY UNIT TESTS START HERE
+    *
+    * Each dev should implement or generate their own tests for each user story.
+    * Organize them in numerical order so that they're easy to find.
+    * Use the user_stories.md file found at the root of this project as reference.
+    * Consider edge cases where applicable.
+    *
+    * ==============================================================================================
+    * ==============================================================================================
+    */
+
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.02", 2026-11-23
     see [2] in Citation.md
     */
@@ -505,9 +521,16 @@ class UserStoryTests {
 
         waitForText(nameOf(cancelledReservation))
         assertShown(nameOf(cancelledReservation))
+        composeTestRule
+            .onNodeWithTag("reservationLabel-${cancelledReservation.id}")
+            .assertTextEquals("Cancelled by entrant")
 
-        // rejected is the owner turning someone down not a cancellation
-        assertNotShown(nameOf(rejectedReservation))
+        // rejected ones are here too but labelled so the owner can tell them apart (US 02.08.01)
+        assertShown(nameOf(rejectedReservation))
+        composeTestRule
+            .onNodeWithTag("reservationLabel-${rejectedReservation.id}")
+            .assertTextEquals("Rejected by you")
+
         assertNotShown(testEntrant.name)
         assertNotShown(nameOf(finishedReservation))
 
@@ -595,6 +618,15 @@ class UserStoryTests {
             ReservationStatus.ACTIVE.name,
             await(reservationRef.document(activeReservation.id).get()).getString("status"),
         )
+
+        // and it moves to the cancelled tab labelled rejected instead of disappearing
+        composeTestRule
+            .onNodeWithText("Cancelled")
+            .performClick()
+        waitForText(nameOf(toRejectReservation))
+        composeTestRule
+            .onNodeWithTag("reservationLabel-${toRejectReservation.id}")
+            .assertTextEquals("Rejected by you")
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.08.01), 2026-11-26
