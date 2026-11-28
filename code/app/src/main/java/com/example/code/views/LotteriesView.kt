@@ -107,7 +107,7 @@ class LotteriesView(M: Model): View() {
                 )
             }
             Row(modifier = Modifier.height(50.dp)){
-                TabManager(tabs,state)
+                TabManager(tabs, state, backgroundColor = headerbgColor)
             }
             if (state=="Current") {
                 Row(modifier = Modifier.weight(1f).background(entrantFooterBackgroundColor)) {

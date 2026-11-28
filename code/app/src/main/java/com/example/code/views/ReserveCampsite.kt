@@ -3,6 +3,28 @@ package com.example.code.views
 import View
 import Model
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.ColumnScope
+import androidx.compose.foundation.layout.IntrinsicSize
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.text.input.clearText
+import androidx.compose.foundation.text.input.setTextAndPlaceCursorAtEnd
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.DateRange
+import androidx.compose.material.icons.outlined.Place
+import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.rememberDateRangePickerState
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextDecoration
+import java.time.temporal.ChronoUnit
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.layout.Box
@@ -88,14 +110,10 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
     val contentBackground = creamBG
     val headerName = "Reserve Site"
 
-    val fieldModifierDate = Modifier
-        .background(color = creamBG)
-        .padding(8.dp).width(135.dp)
-
     // what the boxes show, read from the campsite so they stay in sync with the model
     val name get() = campsite?.name ?: "Campsite Name"
     val park get() = campsite?.location ?: ""
-    val details get() = campsite?.amenities?.joinToString(", ") ?: ""
+    val amenities get() = campsite?.amenities ?: emptyList()
     val tos get() = campsite?.rulesAndPolicy ?: ""
     // a dash when nobody rated it yet since the box is too narrow for no ratings yet
     val rating get() = campsite?.averageRating?.let { "%.1f".format(it) } ?: "-"
@@ -126,6 +144,32 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
             },
         )
     }
+
+    // a rounded box like the ones in the mockup
+    @Composable
+    private fun Section(
+        modifier: Modifier = Modifier,
+        padding: Int = 14,
+        content: @Composable ColumnScope.() -> Unit,
+    ) {
+        Column(
+            modifier = modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(contentBackground)
+                .padding(padding.dp),
+            content = content,
+        )
+    }
+
+    // the date fields keep 8 digits like 06122027 so these go between that and a day
+    private fun typedDay(digits: String): LocalDate? =
+        if (digits.length != 8) null
+        else runCatching {
+            LocalDate.of(digits.substring(4).toInt(), digits.substring(0, 2).toInt(), digits.substring(2, 4).toInt())
+        }.getOrNull()
+
+    private fun typed(day: LocalDate): String = "%02d%02d%04d".format(day.monthValue, day.dayOfMonth, day.year)
 
     // shows 2027-05-01 as 05/01/27 like the reservation cards and leaves anything it cant read as it is
     private fun formatDate(date: String): String =
@@ -180,6 +224,10 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
         // shows the are you sure popup before declining the lottery win (US 01.04.03)
         // the decline button and popup are from [19] in Citation.md
         var askDecline by remember { mutableStateOf(false) }
+        // the calendar popup for a normal stay and whether long rules are showing in full
+        var showDatePicker by remember { mutableStateOf(false) }
+        var showAllRules by remember(campsite?.id) { mutableStateOf(false) }
+        var rulesCutOff by remember(campsite?.id) { mutableStateOf(false) }
         // every day a stay could start or end on, the calendar greys out the rest (US 01.04.01)
         // the calendar is from [21] in Citation.md
         val pickable = remember(availableDates.toList()) {
@@ -188,87 +236,66 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
         // made again when the free days change since the calendar keeps which days are pickable
         val calendarState = remember(campsite?.id, pickable) { calendarStateFor(pickable) }
 
-        Column() {
-            Row() {  //  Header of screen
-                Header(
-                    headerText = headerName,
-                    backgroundColor = headerBackgroundColor,
-                    textColor = headerTextColor,
-                )
-            }
+        // the mockup layout, see [26] in Citation.md
+        // the stay picked so far either typed in or tapped on the lottery calendar, used for the nights box
+        val pickedCheckIn = if (lottery != null) dayOf(calendarState.selectedStartDateMillis) else typedDay(arrivalDateState.text.toString())
+        val pickedCheckOut = if (lottery != null) dayOf(calendarState.selectedEndDateMillis) else typedDay(departureDateState.text.toString())
+        val nights = if (pickedCheckIn != null && pickedCheckOut != null && pickedCheckOut.isAfter(pickedCheckIn)) {
+            ChronoUnit.DAYS.between(pickedCheckIn, pickedCheckOut).toString()
+        } else {
+            "-"
+        }
+
+        Column(modifier = Modifier.fillMaxSize()) {
+            Header(
+                headerText = headerName,
+                backgroundColor = headerBackgroundColor,
+                textColor = headerTextColor,
+            )
             Column(  //  body of screen
                 modifier = Modifier.fillMaxWidth()
                     .weight(1f)
                     .background(bgColor)
-                    // scrolls so the lottery boxes dont push the buttons off small screens
-                    .verticalScroll(rememberScrollState()),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    // scrolls so the boxes dont push the button off small screens
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 20.dp, vertical = 16.dp),
+                verticalArrangement = Arrangement.spacedBy(12.dp),
             ) {
-
-                Spacer(Modifier.padding(15.dp))
-
-                Box(
-                    modifier = Modifier
-                        .clip(shape = RoundedCornerShape(8.dp))
-                        .background(color = contentBackground)
-                        .padding(20.dp)
-                        .width(320.dp),
-                ) {
-                    Row {  //  box with campsite name, location, and rating
-                        Column(
-                            modifier = Modifier
-                                .padding(horizontal = 15.dp)
-                                .padding(vertical = 10.dp)
-                        ) {
-                            // fixed width but not height so a long name wraps instead of getting cut off
-                            Box(
-                                modifier = Modifier
-                                    .width(140.dp)
-                            ) {
-                                Text(
-                                    text = name,
-                                    fontSize = 22.sp,
-                                    lineHeight = 26.sp,
-                                    maxLines = 3,
-                                    overflow = TextOverflow.Ellipsis,
-                                    modifier = Modifier.testTag("campsiteNameBox")
-                                )
-                            }
-                            Box(
-                                modifier = Modifier
-                                    .padding(vertical = 8.dp)
-                            ) {
-                                Text(
-                                    text = park,
-                                    fontSize = 20.sp,
-                                    modifier = Modifier.testTag("parkAreaBox")
-                                )
-                            }
-                        }
-                        Row(
-                            modifier = Modifier
-                                .padding(20.dp)
-                        ) {
-                            Text("Rating: ")
-                            Spacer(modifier = Modifier.padding(horizontal = 5.dp))
+                // campsite name and park with the rating pill
+                Section {
+                    Row(verticalAlignment = Alignment.Top) {
+                        Column(modifier = Modifier.weight(1f)) {
+                            // wraps instead of getting cut off when the name is long
                             Text(
-                                text = rating,
-                                modifier = Modifier.testTag("ratingBox"))
+                                text = name,
+                                fontSize = 24.sp,
+                                lineHeight = 28.sp,
+                                fontWeight = FontWeight.Bold,
+                                color = primaryGreenTextColor,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.testTag("campsiteNameBox"),
+                            )
+                            Text(
+                                text = park,
+                                fontSize = 15.sp,
+                                color = primaryGreenTextColor,
+                                modifier = Modifier.testTag("parkAreaBox"),
+                            )
                         }
+                        RatingPill(rating, tag = "ratingBox")
                     }
                 }
-
-
-                Spacer(Modifier.padding(8.dp))
 
                 // a calendar of the days still free for a lottery winner to pick from (US 01.04.01)
                 // booked past and out of window days are greyed out
                 if (lottery != null) {
                     Box(
                         modifier = Modifier
-                            .clip(shape = RoundedCornerShape(8.dp))
+                            .fillMaxWidth()
+                            .clip(shape = RoundedCornerShape(12.dp))
                             .background(color = contentBackground)
-                            .padding(vertical = 8.dp).width(360.dp)
+                            .padding(vertical = 8.dp)
                             .testTag("availableDatesBox"),
                     ) {
                         Column {
@@ -311,155 +338,231 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
                         }
                     }
                 } else {
-                    // typing the dates is only for booking without a lottery
-                    Box(
-                        modifier = Modifier
-                            .clip(shape = RoundedCornerShape(8.dp))
-                            .background(color = contentBackground)
-                            .padding(20.dp).width(320.dp),
-                    ) {
-                        Row {
-                            //  arrival date input
+                    // typed dates with a calendar button that fills them in and an x that clears them
+                    Section(padding = 8) {
+                        Row(verticalAlignment = Alignment.CenterVertically) {
                             DateField(
                                 arrivalDateState,
-                                "Arrival Date",
-                                fieldModifierDate
-                                    .testTag("arrivalDateInputField")
+                                "Arrival",
+                                Modifier.weight(1f).testTag("arrivalDateInputField"),
                             )
-
-                            //  departure date input
+                            Spacer(Modifier.width(6.dp))
                             DateField(
                                 departureDateState,
-                                "Departure Date",
-                                fieldModifierDate
-                                    .testTag("departureDateInputField")
+                                "Departure",
+                                Modifier.weight(1f).testTag("departureDateInputField"),
                             )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.padding(8.dp))
-
-                Row {
-                    //  number of guests input field
-                    VariableDigitIntField(
-                        numberOfGuestsState,
-                        "Number of Guests",
-                        2,
-                        fieldModifierDate
-                            .testTag("numberOfGuestsInputField")
-                    )
-
-                    Spacer(modifier = Modifier
-                        .padding(horizontal = 8.dp))
-
-                    Box(
-                        modifier = Modifier
-                            .clip(shape = RoundedCornerShape(8.dp))
-                            .background(color = contentBackground)
-                            .padding(20.dp).width(160.dp).height(80.dp)
-                    ) {
-                        Column {
-                            Text("Details: ")
-                            Text(
-                                text = details,
-                                fontSize = 14.sp,
-                                modifier = Modifier.testTag("detailsBox")
-                            )
-                        }
-                    }
-                }
-
-                Spacer(Modifier.padding(8.dp))
-
-                Box(
-                    modifier = Modifier
-                        .clip(shape = RoundedCornerShape(8.dp))
-                        .background(color = contentBackground)
-                        .padding(20.dp).width(290.dp)
-                ) {
-                    Column {
-                        Text("TOS: ")
-                        Text(
-                            text = tos,
-                            fontSize = 14.sp,
-                            modifier = Modifier.testTag("tosBox")
-                        )
-                        // only when theres rules to agree to (US 02.11.01)
-                        if (campsite?.hasRules() == true) {
-                            Row(verticalAlignment = Alignment.CenterVertically) {
-                                Checkbox(
-                                    checked = rulesAccepted,
-                                    onCheckedChange = { rulesAccepted = it },
-                                    modifier = Modifier.testTag("acceptRulesCheckbox")
-                                )
-                                Text("I've read and agree to the rules", fontSize = 14.sp)
+                            IconButton(
+                                onClick = { showDatePicker = true },
+                                modifier = Modifier.testTag("openDatePicker"),
+                            ) {
+                                Icon(Icons.Outlined.DateRange, contentDescription = "Pick dates on a calendar", tint = primaryGreenTextColor)
+                            }
+                            IconButton(
+                                onClick = {
+                                    arrivalDateState.clearText()
+                                    departureDateState.clearText()
+                                },
+                                modifier = Modifier.testTag("clearDates"),
+                            ) {
+                                Icon(Icons.Outlined.Clear, contentDescription = "Clear dates", tint = primaryGreenTextColor)
                             }
                         }
                     }
-
                 }
 
-                Spacer(Modifier.padding(8.dp))
+                // guests and the nights the picked dates come to
+                Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+                    Section(modifier = Modifier.weight(1f), padding = 8) {
+                        VariableDigitIntField(
+                            numberOfGuestsState,
+                            "Number of Guests",
+                            2,
+                            Modifier.fillMaxWidth().testTag("numberOfGuestsInputField"),
+                        )
+                    }
+                    Section(modifier = Modifier.weight(1f)) {
+                        Text("Nights", fontSize = 14.sp, color = primaryGreenTextColor)
+                        Text(
+                            nights,
+                            fontSize = 22.sp,
+                            fontWeight = FontWeight.Bold,
+                            color = primaryGreenTextColor,
+                            modifier = Modifier.testTag("nightsBox"),
+                        )
+                    }
+                }
+
+                // amenities as a list next to where the map goes
+                Row(
+                    modifier = Modifier.height(IntrinsicSize.Min),
+                    horizontalArrangement = Arrangement.spacedBy(12.dp),
+                ) {
+                    Section(modifier = Modifier.weight(1.4f).fillMaxHeight()) {
+                        Text("Details:", fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, color = primaryGreenTextColor)
+                        Column(modifier = Modifier.testTag("detailsBox")) {
+                            if (amenities.isEmpty()) {
+                                Text("No details listed", fontSize = 14.sp)
+                            }
+                            amenities.forEach { Text("• $it", fontSize = 14.sp) }
+                        }
+                    }
+                    // campsites dont save map coordinates yet so this just shows where it is
+                    Section(modifier = Modifier.weight(1f).fillMaxHeight().testTag("mapBox")) {
+                        Column(
+                            modifier = Modifier.fillMaxSize(),
+                            horizontalAlignment = Alignment.CenterHorizontally,
+                            verticalArrangement = Arrangement.Center,
+                        ) {
+                            Icon(Icons.Outlined.Place, contentDescription = null, tint = primaryGreenTextColor)
+                            Text("Map", fontWeight = FontWeight.Bold, color = primaryGreenTextColor)
+                            Text(park, fontSize = 12.sp, textAlign = TextAlign.Center)
+                        }
+                    }
+                }
+
+                // the campsites rules, long ones are cut short with a more button
+                Section {
+                    Text("TOS:", fontWeight = FontWeight.Bold, textDecoration = TextDecoration.Underline, color = primaryGreenTextColor)
+                    Text(
+                        text = tos.ifBlank { "This campsite has no rules listed" },
+                        fontSize = 14.sp,
+                        maxLines = if (showAllRules) Int.MAX_VALUE else 4,
+                        overflow = TextOverflow.Ellipsis,
+                        onTextLayout = { if (it.hasVisualOverflow) rulesCutOff = true },
+                        modifier = Modifier.testTag("tosBox"),
+                    )
+                    if (rulesCutOff) {
+                        TextButton(
+                            onClick = { showAllRules = !showAllRules },
+                            modifier = Modifier.align(Alignment.End),
+                        ) {
+                            Text(if (showAllRules) "Less" else "More", color = secondaryPurple)
+                        }
+                    }
+                }
+
+                // only when theres rules to agree to (US 02.11.01)
+                if (campsite?.hasRules() == true) {
+                    Row(
+                        modifier = Modifier
+                            .clip(RoundedCornerShape(12.dp))
+                            .background(contentBackground)
+                            .padding(end = 16.dp),
+                        verticalAlignment = Alignment.CenterVertically,
+                    ) {
+                        Checkbox(
+                            checked = rulesAccepted,
+                            onCheckedChange = { rulesAccepted = it },
+                            modifier = Modifier.testTag("acceptRulesCheckbox"),
+                        )
+                        Text("I accept the TOS", fontSize = 14.sp)
+                    }
+                }
 
                 error?.let {
                     Text(it, color = primaryGreenTextColor, modifier = Modifier.testTag("reserveError"))
                 }
 
-                Button(
-                    onClick = {
-                        val showResult = { result: Result<EntrantReservation> ->
-                            result
-                                .onSuccess {
-                                    error = null
-                                    confirmed = it
-                                }
-                                .onFailure { error = it.message ?: "Couldn't make the reservation" }
-                            Unit
+                Row(modifier = Modifier.fillMaxWidth(), verticalAlignment = Alignment.CenterVertically) {
+                    // none of the dates work or they changed their mind (US 01.04.03)
+                    if (lottery != null) {
+                        TextButton(
+                            onClick = { askDecline = true },
+                            modifier = Modifier.testTag("declineLotteryButton"),
+                        ) {
+                            Text("Decline this lottery win", color = primaryGreenTextColor)
                         }
-                        // the controller checks the input so the view just passes what was picked or typed
-                        if (lottery != null) {
-                            controller.makeLotteryReservation(
-                                campsite = campsite,
-                                lottery = lottery,
-                                checkIn = dayOf(calendarState.selectedStartDateMillis),
-                                checkOut = dayOf(calendarState.selectedEndDateMillis),
-                                guests = numberOfGuestsState.text.toString(),
-                                rulesAccepted = rulesAccepted,
-                                onResult = showResult,
-                            )
-                        } else {
-                            controller.makeReservation(
-                                campsite = campsite,
-                                arrival = arrivalDateState.text.toString(),
-                                departure = departureDateState.text.toString(),
-                                guests = numberOfGuestsState.text.toString(),
-                                rulesAccepted = rulesAccepted,
-                                onResult = showResult,
-                            )
-                        }
-                    },
-                    // greyed out until the rules box is ticked when there are rules (US 02.11.01)
-                    // the controller and model still check it too
-                    enabled = campsite?.hasRules() != true || rulesAccepted,
-                    modifier = Modifier.testTag("reserveCampsiteButton")
-                ) {
-                    Text(" Make Reservation")
-                }
-                // none of the dates work or they changed their mind (US 01.04.03)
-                if (lottery != null) {
-                    TextButton(
-                        onClick = { askDecline = true },
-                        modifier = Modifier.testTag("declineLotteryButton"),
+                    }
+                    Spacer(Modifier.weight(1f))
+                    Button(
+                        onClick = {
+                            val showResult = { result: Result<EntrantReservation> ->
+                                result
+                                    .onSuccess {
+                                        error = null
+                                        confirmed = it
+                                    }
+                                    .onFailure { error = it.message ?: "Couldn't make the reservation" }
+                                Unit
+                            }
+                            // the controller checks the input so the view just passes what was picked or typed
+                            if (lottery != null) {
+                                controller.makeLotteryReservation(
+                                    campsite = campsite,
+                                    lottery = lottery,
+                                    checkIn = dayOf(calendarState.selectedStartDateMillis),
+                                    checkOut = dayOf(calendarState.selectedEndDateMillis),
+                                    guests = numberOfGuestsState.text.toString(),
+                                    rulesAccepted = rulesAccepted,
+                                    onResult = showResult,
+                                )
+                            } else {
+                                controller.makeReservation(
+                                    campsite = campsite,
+                                    arrival = arrivalDateState.text.toString(),
+                                    departure = departureDateState.text.toString(),
+                                    guests = numberOfGuestsState.text.toString(),
+                                    rulesAccepted = rulesAccepted,
+                                    onResult = showResult,
+                                )
+                            }
+                        },
+                        // greyed out until the rules box is ticked when there are rules (US 02.11.01)
+                        // the controller and model still check it too
+                        enabled = campsite?.hasRules() != true || rulesAccepted,
+                        shape = CircleShape,
+                        colors = ButtonDefaults.buttonColors(containerColor = primaryPurple, contentColor = secondaryPurple),
+                        modifier = Modifier.testTag("reserveCampsiteButton"),
                     ) {
-                        Text("Decline this lottery win", color = primaryGreenTextColor)
+                        Icon(Icons.Outlined.Check, contentDescription = null)
+                        Spacer(Modifier.width(8.dp))
+                        Text("Make Reservation", fontWeight = FontWeight.Bold)
                     }
                 }
-                Footer(
-                    textColor = entrantFooterTextColor,
-                    backgroundColor = entrantFooterBackgroundColor,
-                    buttonColor = entrantFooterButtonColor,
-                    navController = navController
+            }
+            // outside the scrolling part so it stays at the bottom like every other screen
+            Footer(
+                textColor = entrantFooterTextColor,
+                backgroundColor = entrantFooterBackgroundColor,
+                buttonColor = entrantFooterButtonColor,
+                navController = navController
+            )
+        }
+
+        // a calendar for picking a normal stay that fills in the typed boxes
+        if (showDatePicker) {
+            val pickerState = rememberDateRangePickerState(
+                selectableDates = object : SelectableDates {
+                    override fun isSelectableDate(utcTimeMillis: Long): Boolean =
+                        dayOf(utcTimeMillis)?.isBefore(LocalDate.now()) == false
+                },
+            )
+            DatePickerDialog(
+                onDismissRequest = { showDatePicker = false },
+                modifier = Modifier.testTag("datePickerDialog"),
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            dayOf(pickerState.selectedStartDateMillis)?.let { arrivalDateState.setTextAndPlaceCursorAtEnd(typed(it)) }
+                            dayOf(pickerState.selectedEndDateMillis)?.let { departureDateState.setTextAndPlaceCursorAtEnd(typed(it)) }
+                            showDatePicker = false
+                        },
+                        enabled = pickerState.selectedEndDateMillis != null,
+                        modifier = Modifier.testTag("confirmDatePicker"),
+                    ) { Text("OK") }
+                },
+                dismissButton = {
+                    TextButton(onClick = { showDatePicker = false }) { Text("Cancel") }
+                },
+            ) {
+                DateRangePicker(
+                    state = pickerState,
+                    modifier = Modifier.weight(1f),
+                    title = {
+                        Text("Pick your arrival and departure", modifier = Modifier.padding(start = 24.dp, top = 16.dp))
+                    },
+                    showModeToggle = false,
                 )
             }
         }
