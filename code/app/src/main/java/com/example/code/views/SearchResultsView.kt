@@ -29,14 +29,14 @@ import com.example.code.controllers.SearchResultsController
 import com.example.code.model.Campsite
 import com.example.code.ui.theme.CodeTheme
 
-class SearchResultsView(M:Model): View() {
+open class SearchResultsView(M:Model): View() {
     var CampsiteList: List<Campsite> = emptyList()
     override fun update(model: Model) {
         CampsiteList = model.campsiteList
     }
     val controller = SearchResultsController(M)
     @Composable
-    public fun ShowScreen(navController: NavController) {
+    fun ShowScreen(navController: NavController) {
         Column() {
             Row() {
                 Header(
@@ -50,31 +50,7 @@ class SearchResultsView(M:Model): View() {
                     .weight(1f)
                     .background(color = secondaryGreenColor),
             ){
-                LazyColumn(
-                    modifier = Modifier
-                        .padding(vertical = 20.dp)
-                        .fillMaxSize(),
-                    verticalArrangement = Arrangement.spacedBy(25.dp)
-                ) {
-                    itemsIndexed(CampsiteList) { index, campsite ->
-                        EntrantCampsiteCard(
-                            campsite.name,
-                            campsite.location,
-                            campsite.maxOccupancy.toString(),
-                            campsite.location,
-                            if (campsite.averageRating != null)
-                                {campsite.averageRating.toString()}
-                            else
-                                {"0.00"},
-                            {controller.viewCampsite(campsite.id, navController)},
-                            primaryGreenTextColor,
-                            light,
-                            light,
-                            secondaryPurple,
-                            tag = campsite.name + "Card"
-                        ).Draw()
-                    }
-                }
+                Contents(navController)
             }
             Row() {
                 Footer(
@@ -83,6 +59,34 @@ class SearchResultsView(M:Model): View() {
                     backgroundColor = entrantFooterBackgroundColor,
                     buttonColor = entrantFooterButtonColor,
                 )
+            }
+        }
+    }
+
+    @Composable
+    open fun Contents(navController: NavController) {
+        LazyColumn(
+            modifier = Modifier
+                .padding(vertical = 20.dp)
+                .fillMaxSize(),
+            verticalArrangement = Arrangement.spacedBy(25.dp)
+        ) {
+            itemsIndexed(CampsiteList) { index, campsite ->
+                EntrantCampsiteCard(
+                    campsite.name,
+                    campsite.location,
+                    campsite.maxOccupancy.toString(),
+                    if (campsite.averageRating != null)
+                    {campsite.averageRating.toString()}
+                    else
+                    {"0.00"},
+                    {controller.viewCampsite(campsite.id, navController)},
+                    primaryGreenTextColor,
+                    light,
+                    light,
+                    secondaryPurple,
+                    tag = campsite.name + "Card",
+                ).Draw()
             }
         }
     }

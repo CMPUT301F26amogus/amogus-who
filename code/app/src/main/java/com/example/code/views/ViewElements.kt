@@ -1,27 +1,22 @@
 package com.example.code.views
 
-import android.R
+import android.location.Address
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.outlined.Star
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonColors
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
@@ -29,13 +24,11 @@ import androidx.compose.material3.Text
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.testTag
 import com.example.code.ui.theme.Purple80
-import androidx.compose.material3.IconButtonDefaults
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
-import androidx.compose.ui.draw.clip
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.sp
@@ -188,131 +181,6 @@ abstract class ViewCard(
     protected open fun DrawActionButtons() {}
 }  //  end of ViewCard
 
-
-/**EntrantCampsiteCard
- *
- * Subclass of ViewCard, CampsiteCard simply draws a card for a campsite with only a details button,
- *
- * @param title             the name of the campsite
- * @param subtitle          the park / area of the campsite
- * @param maxOccupants      the value for Max Occupants quick detail box
- * @param address           the address of the campsite
- * @param rating            the star rating of the campsite
- * @param onDetail          what happens when the `> Details` button is pressed, place some controller call here
- * @param colourPrimary     the colour of the card's main background (the background of the upper part of the card)
- * @param colourSecondary   the colour of the card's secondary background (quick details boxes, and the lower part of the card, were action buttons are)
- * @param colourTitleText   the text colour of the title and subtitle
- * @param colourActionText  the text colour of the `> Details` actionButton
- * */
-open class EntrantCampsiteCard(
-    title: String,
-    subtitle: String,
-    val maxOccupants: String,
-    val address: String,
-    rating: String,
-    val onDetail: () -> Unit,
-    colourPrimary: Color,
-    colourSecondary: Color,
-    colourTitleText: Color,
-    colourActionText: Color,
-    tag: String
-) : CampsiteCard(
-    title = title,
-    subtitle = subtitle,
-    rating = rating,
-    quickDetails = List<QuickDetail>(
-        size = 2,
-        init = {
-            if (it == 0){
-                QuickDetail(
-                    text = "Max Occupants: $maxOccupants",
-                    color = colourSecondary,
-                    tag = "maxOccupantsDetail"
-                )
-            } else {
-                QuickDetail(
-                    text = "Address: $address",
-                    color = colourSecondary,
-                    tag = "addressDetail"
-                )
-            }
-        }
-    ),
-    actionButtons = List<ActionButton>(
-        size = 1, init = {
-            ActionButton(
-                onPress = onDetail,
-                fillColour = colourSecondary,
-                label = "> Details",
-                tag = "DetailButton"
-            )
-        }
-    ),
-    colourPrimary = colourPrimary,
-    colourSecondary = colourSecondary,
-    colourTitleText = colourTitleText,
-    colourActionText = colourActionText,
-    tag = tag
-)  //  end of entrant campsite card
-
-/**OwnerCampsiteCard
- *
- * Subclass of ViewCard, CampsiteCard simply draws a card for an owner's campsite with edit and details button,
- *
- * @param title             the name of the campsite
- * @param subtitle          the park / area of the campsite
- * @param rating            the star rating of the campsite
- * @param onDetail          what happens when the `> Details` button is pressed, place some controller call here
- * @param colourPrimary     the colour of the card's main background (the background of the upper part of the card)
- * @param colourSecondary   the colour of the card's secondary background (quick details boxes, and the lower part of the card, were action buttons are)
- * @param colourTitleText   the text colour of the title and subtitle
- * @param colourActionText  the text colour of the `> Details` actionButton
- * */
-open class OwnerCampsiteCard(
-    title: String,
-    subtitle: String,
-    rating: String,
-    val onDetail: () -> Unit,
-    val onEdit: () -> Unit,
-    colourPrimary: Color,
-    colourSecondary: Color,
-    colourTitleText: Color,
-    colourActionText: Color,
-    tag: String
-) : CampsiteCard(
-    title = title,
-    subtitle = subtitle,
-    rating = rating,
-    quickDetails = emptyList(),
-    actionButtons = List<ActionButton>(
-        size = 2, init = {
-            if (it == 0) {
-                ActionButton(
-                    onPress = onEdit,
-                    fillColour = colourSecondary,
-                    label = "/ Edit",
-                    tag = "EditButton"
-                )
-            }
-            else {
-                ActionButton(
-                    onPress = onDetail,
-                    fillColour = colourSecondary,
-                    label = "> Details",
-                    tag = "DetailButton"
-                )
-            }
-        }
-    ),
-    colourPrimary = colourPrimary,
-    colourSecondary = colourSecondary,
-    colourTitleText = colourTitleText,
-    colourActionText = colourActionText,
-    tag = tag
-)  //  end of owner campsite card
-
-
-
 /**CampsiteCard
  *
  * Subclass of ViewCard, CampsiteCard simply draws a card for a campsite with only a details button,
@@ -413,6 +281,183 @@ open class CampsiteCard(
     }
 
 }
+
+
+/**EntrantCampsiteCard
+ *
+ * Subclass of ViewCard, CampsiteCard simply draws a card for a campsite with only a details button,
+ *
+ * @param title             the name of the campsite
+ * @param subtitle          the park / area of the campsite
+ * @param maxOccupants      the value for Max Occupants quick detail box
+ * @param address           the address of the campsite
+ * @param rating            the star rating of the campsite
+ * @param onDetail          what happens when the `> Details` button is pressed, place some controller call here
+ * @param colourPrimary     the colour of the card's main background (the background of the upper part of the card)
+ * @param colourSecondary   the colour of the card's secondary background (quick details boxes, and the lower part of the card, were action buttons are)
+ * @param colourTitleText   the text colour of the title and subtitle
+ * @param colourActionText  the text colour of the `> Details` actionButton
+ * */
+open class EntrantCampsiteCard(
+    title: String,
+    subtitle: String,
+    val maxOccupants: String,
+    rating: String,
+    val onDetail: () -> Unit,
+    colourPrimary: Color,
+    colourSecondary: Color,
+    colourTitleText: Color,
+    colourActionText: Color,
+    tag: String,
+    val onReserve: () -> Unit = {},
+    val showReserve: Boolean = false,
+) : CampsiteCard(
+    title = title,
+    subtitle = subtitle,
+    rating = rating,
+    quickDetails = List<QuickDetail>(
+        size = 2,
+        init = {
+            if (it == 0){
+                QuickDetail(
+                    text = "Max Occupants: $maxOccupants",
+                    color = colourSecondary,
+                    tag = "maxOccupantsDetail"
+                )
+            } else {
+                QuickDetail(
+                    text = "Address: $subtitle",
+                    color = colourSecondary,
+                    tag = "addressDetail"
+                )
+            }
+        }
+    ),
+    actionButtons = if (!showReserve) {
+        List<ActionButton>(
+            size = 1,
+            init = {
+                ActionButton(
+                    onPress = onDetail,
+                    fillColour = colourSecondary,
+                    label = "> Details",
+                    tag = "DetailButton"
+                )
+            }
+        )
+    } else {
+        List<ActionButton>(
+            size = 2,
+            init = {
+                if (it == 0) {
+                    ActionButton(
+                        onPress = onDetail,
+                        fillColour = colourSecondary,
+                        label = "> Details",
+                        tag = "DetailButton"
+                    )
+                }
+                else {
+                    ActionButton(
+                        onPress = onReserve,
+                        fillColour = colourSecondary,
+                        label = "> Reserve",
+                        tag = "ReserveButton"
+                    )
+                }
+            }
+        )
+    },
+    colourPrimary = colourPrimary,
+    colourSecondary = colourSecondary,
+    colourTitleText = colourTitleText,
+    colourActionText = colourActionText,
+    tag = tag
+)  //  end of entrant campsite card
+
+///**Lottery Reservation Card
+// * */
+//open class LotteryReservationCard(
+//    title: String,
+//    subtitle: String,
+//    maxOccupants: String,
+//    rating: String,
+//    onDetail: () -> Unit,
+//    colourPrimary: Color,
+//    colourSecondary: Color,
+//    colourTitleText: Color,
+//    colourActionText: Color,
+//    tag: String
+//) : EntrantCampsiteCard (
+//    title = title,
+//    subtitle = subtitle,
+//    maxOccupants = maxOccupants,
+//    rating = rating ,
+//    onDetail = onDetail,
+//    colourPrimary = colourPrimary,
+//    colourSecondary = colourSecondary,
+//    colourTitleText = colourTitleText,
+//    colourActionText = colourActionText,
+//    tag = tag
+//)
+
+/**OwnerCampsiteCard
+ *
+ * Subclass of ViewCard, CampsiteCard simply draws a card for an owner's campsite with edit and details button,
+ *
+ * @param title             the name of the campsite
+ * @param subtitle          the park / area of the campsite
+ * @param rating            the star rating of the campsite
+ * @param onDetail          what happens when the `> Details` button is pressed, place some controller call here
+ * @param colourPrimary     the colour of the card's main background (the background of the upper part of the card)
+ * @param colourSecondary   the colour of the card's secondary background (quick details boxes, and the lower part of the card, were action buttons are)
+ * @param colourTitleText   the text colour of the title and subtitle
+ * @param colourActionText  the text colour of the `> Details` actionButton
+ * */
+open class OwnerCampsiteCard(
+    title: String,
+    subtitle: String,
+    rating: String,
+    val onDetail: () -> Unit,
+    val onEdit: () -> Unit,
+    colourPrimary: Color,
+    colourSecondary: Color,
+    colourTitleText: Color,
+    colourActionText: Color,
+    tag: String
+) : CampsiteCard(
+    title = title,
+    subtitle = subtitle,
+    rating = rating,
+    quickDetails = emptyList(),
+    actionButtons = List<ActionButton>(
+        size = 2, init = {
+            if (it == 0) {
+                ActionButton(
+                    onPress = onEdit,
+                    fillColour = colourSecondary,
+                    label = "/ Edit",
+                    tag = "EditButton"
+                )
+            }
+            else {
+                ActionButton(
+                    onPress = onDetail,
+                    fillColour = colourSecondary,
+                    label = "> Details",
+                    tag = "DetailButton"
+                )
+            }
+        }
+    ),
+    colourPrimary = colourPrimary,
+    colourSecondary = colourSecondary,
+    colourTitleText = colourTitleText,
+    colourActionText = colourActionText,
+    tag = tag
+)  //  end of owner campsite card
+
+
 //
 //class OwnerCampsiteCard(
 //    title: String,
