@@ -6,6 +6,7 @@ import androidx.navigation.compose.rememberNavController
 import Tab
 import View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
@@ -14,6 +15,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
@@ -44,6 +46,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.controllers.OwnerReservationsController
+import androidx.compose.ui.platform.testTag
+import androidx.compose.material.icons.outlined.Email
+import com.example.code.controllers.MessagesController
 import com.example.code.model.OwnerReservation
 
 /**
@@ -53,6 +58,8 @@ import com.example.code.model.OwnerReservation
 class OwnerReservationsView(model : Model) : View() {
 
     val controller by lazy { OwnerReservationsController(model = model) }
+    // opens the chat with the camper about a reservation (US 02.12.01)
+    private val messagesController = MessagesController(model)
     // one list per tab so each tab only shows its own reservations
     val activeReservations = mutableStateListOf<OwnerReservation>()
     val pastReservations = mutableStateListOf<OwnerReservation>()
@@ -100,7 +107,7 @@ class OwnerReservationsView(model : Model) : View() {
                     .height(14.dp),
             ) {
                 Text(
-                    text = startDate,
+                    text = prettyDate(startDate),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = primaryTextColor,
@@ -109,7 +116,7 @@ class OwnerReservationsView(model : Model) : View() {
                 VerticalDivider(modifier = Modifier)
                 Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing / 2))
                 Text(
-                    text = endDate,
+                    text = prettyDate(endDate),
                     fontSize = 12.sp,
                     fontWeight = FontWeight.Bold,
                     color = primaryTextColor,
@@ -166,24 +173,23 @@ class OwnerReservationsView(model : Model) : View() {
         onReject: (() -> Unit)?,
         label: String? = null,
         labelTag: String = "",
+        onMessage: (() -> Unit)?,
     ) {
         Column(
             modifier = Modifier
                 .clip(shape = RoundedCornerShape(12.dp))
                 .background(color = cardPrimary)
-                .fillMaxWidth()
-                .height(150.dp),
+                .fillMaxWidth(),
         ) {
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(10.dp)
-                    .weight(1f),
+                    .fillMaxWidth()
+                    .padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
             ) {
                 Row(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .weight(1f),
+                        .fillMaxWidth(),
                 ) {
                     Column(
                         modifier = Modifier,
@@ -195,7 +201,7 @@ class OwnerReservationsView(model : Model) : View() {
                             color = primaryGreenTextColor,
                         )
                         Text(
-                            text = "$campsiteName - $location",
+                            text = "$campsiteName · $location",
                             fontSize = 12.sp,
                             fontWeight = FontWeight.Bold,
                             color = primaryGreenTextColor,
@@ -235,30 +241,14 @@ class OwnerReservationsView(model : Model) : View() {
                 verticalAlignment = Alignment.CenterVertically,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .height(50.dp)
+                    .heightIn(min = 48.dp)
                     .background(color = cardAccent)
-                    .padding(10.dp),
+                    .padding(horizontal = 4.dp),
             ) {
                 // theres no accept since reservations are already booked when theyre made
-                // a plain button not an extended fab since the fab hides its label from screen readers
+                // see [26] in Citation.md
                 if (onReject != null) {
-                    Button(
-                        onClick = onReject,
-                        shape = CircleShape,
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = cardAccent,
-                            contentColor = primaryTextColor,
-                        ),
-                        contentPadding = PaddingValues(horizontal = 16.dp),
-                        modifier = Modifier.testTag(rejectTag),
-                    ) {
-                        Icon(
-                            imageVector = Icons.Outlined.Clear,
-                            contentDescription = null,
-                        )
-                        Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
-                        Text("Reject")
-                    }
+                    CardAction("Reject", Icons.Outlined.Clear, tag = rejectTag, onClick = onReject)
                 }
                 // rejected and cancelled both end up in the cancelled tab so the label tells them apart
                 if (label != null) {
@@ -270,6 +260,11 @@ class OwnerReservationsView(model : Model) : View() {
                         modifier = Modifier.padding(horizontal = 6.dp).testTag(labelTag),
                     )
                 }
+                // message the camper about this stay (US 02.12.01)
+                if (onMessage != null) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    CardAction("Message", Icons.Outlined.Email, tag = "messageEntrant", onClick = onMessage)
+                }
 
             }
         }
@@ -278,7 +273,7 @@ class OwnerReservationsView(model : Model) : View() {
 
     // This component is sandwiched between the tab manager and footer
     @Composable
-    private fun Content(state: String) {
+    private fun Content(state: String, navController: NavController) {
         val reservations = when (state) {
             "Active" -> activeReservations
             "Past" -> pastReservations
@@ -310,6 +305,14 @@ class OwnerReservationsView(model : Model) : View() {
                         else -> null
                     },
                     labelTag = "reservationLabel-${row.reservation.id}",
+                    // only active stays can be messaged about
+                    onMessage = if (state == "Active") ({
+                        messagesController.openConversation(
+                            navController,
+                            row.reservation.id,
+                            row.entrantName.ifBlank { "Camper" },
+                        )
+                    }) else null,
                 )
                 if (reservation != reservations.size - 1) {
                     Spacer(
@@ -332,13 +335,13 @@ class OwnerReservationsView(model : Model) : View() {
         val activeColor = if (state == "Active") primaryGreenColor else secondaryGreenColor
         val pastColor = if (state == "Past") primaryGreenColor else secondaryGreenColor
         val cancelledColor = if (state == "Cancelled") primaryGreenColor else secondaryGreenColor
-        val tabs = remember {
-            mutableStateListOf(
-                Tab(name = "Active", color = activeColor, option = {state = "Active"}),
-                Tab(name = "Past", color = pastColor, option = {state = "Past"}),
-                Tab(name = "Cancelled", color = cancelledColor, option = {state = "Cancelled"}),
-            )
-        }
+        // made on every redraw so the picked tab takes the list colour and the others go lighter
+        // see [28] in Citation.md
+        val tabs = listOf(
+            Tab(name = "Active", color = activeColor, option = {state = "Active"}),
+            Tab(name = "Past", color = pastColor, option = {state = "Past"}),
+            Tab(name = "Cancelled", color = cancelledColor, option = {state = "Cancelled"}),
+        )
         // load every tab when the screen opens so its fresh even if nothing notified the views
         LaunchedEffect(Unit) { reload() }
         Column(
@@ -365,7 +368,7 @@ class OwnerReservationsView(model : Model) : View() {
                         .background(primaryGreenColor)
                         .padding(20.dp),
                 ) {
-                    Content(state = state)
+                    Content(state = state, navController = navController)
                 }
             }
 

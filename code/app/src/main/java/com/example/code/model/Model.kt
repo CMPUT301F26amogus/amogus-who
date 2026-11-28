@@ -140,6 +140,30 @@ open class Model: ModelUpdater<View>{
         notifyViews()
     }
 
+    // see [19] in Citation.md
+    /**
+     * the lottery the reserve screen is booking a win from (US 01.04.01)
+     *
+     * null means the reserve screen books [tempCampsite] without a lottery
+     */
+    var lotteryToReserve: Lottery? = null
+        private set
+
+    // see [19] in Citation.md
+    /**
+     * picks a campsite from a lottery the user won for the reserve screen (US 01.04.02)
+     *
+     * sets both at once so the views only redraw once
+     *
+     * @param lottery the lottery they won or null to book without one
+     * @param campsite which of its campsites they picked
+     */
+    fun settLotteryReservation(lottery: Lottery?, campsite: Campsite?) {
+        lotteryToReserve = lottery
+        tempCampsite = campsite
+        notifyViews()
+    }
+
     /**
      * function that sets the device id of the user, this is needed by all models,
      * reference the currentDeviceId attribute.
@@ -1045,40 +1069,25 @@ open class Model: ModelUpdater<View>{
             }
     }
 
+    // rewritten in [19] in Citation.md
     /**
      * Gets a list of lotteries that the user is in
      *
-     * users dont hold a list of lotteries anymore so this finds the users waitlist
-     * entries across every lottery and loads the lotteries they belong to
-     * entries the user left (DECLINED) dont count
+     * waitlist entries live in the lottery document now so this finds the lotteries
+     * whose entrantIds has the user then keeps the ones where their entry has one of the statuses
+     * eg WAITING and SELECTED for the lotteries they can still do something about
      *
-     * this needs a collection group index on "entrants" for the field "deviceId",
-     * firestore logs a link to make it the first time this runs without one
-     *
+     * @param statuses which entry statuses count, every status if none are given
      * @param onResult gets the lotteries or an empty list if it failed
      */
-    fun getLotteriesIn(status: EntryStatus = EntryStatus.DECLINED, onResult: (List<Lottery>) -> Unit) {
-        db.collectionGroup("entrants")
-            .whereEqualTo("deviceId", currentDeviceId)
-            .get()
+    fun getLotteriesIn(vararg statuses: EntryStatus, onResult: (List<Lottery>) -> Unit) {
+        lotteryRef.whereArrayContains("entrantIds", currentDeviceId).get()
             .addOnSuccessListener { documents ->
-                val lotteryIds = documents.toObjects(WaitlistEntry::class.java)
-                    .filter { it.status == status }
-                    .map { it.lotteryId }
-                    .distinct()
-
-                if (lotteryIds.isEmpty()) {
-                    onResult(emptyList())
-                    return@addOnSuccessListener
+                val lotteries = documents.toObjects(Lottery::class.java).filter { lottery ->
+                    val entry = lottery.entryFor(currentDeviceId) ?: return@filter false
+                    statuses.isEmpty() || entry.status in statuses
                 }
-
-                Tasks.whenAllSuccess<DocumentSnapshot>(lotteryIds.map {
-                    lotteryRef.document(it).get()
-                })
-                    .addOnSuccessListener { snapshots ->
-                        onResult(snapshots.mapNotNull { it.toObject(Lottery::class.java) })
-                    }
-                    .addOnFailureListener { onResult(emptyList()) }
+                onResult(lotteries)
             }
             .addOnFailureListener { onResult(emptyList()) }
     }
@@ -1272,6 +1281,49 @@ open class Model: ModelUpdater<View>{
         }
     }
 
+    // see [19] in Citation.md
+    /**
+     * lets a lottery winner say no to their win (US 01.04.03)
+     *
+     * eg they changed their mind or none of the available dates work
+     * their entry goes from SELECTED to DECLINED in a transaction so it cant clash with reserving
+     * it stays on the waitlist so the owner can still see who declined
+     *
+     * @param lottery the lottery they won
+     * @param onResult success once its declined or a failure saying why eg they already reserved
+     */
+    fun declineLotteryWin(lottery: Lottery, onResult: (Result<Unit>) -> Unit = {}) {
+        if (lottery.id.isBlank()) {
+            onResult(Result.failure(IllegalArgumentException("Lottery not found")))
+            return
+        }
+        val lotteryDoc = lotteryRef.document(lottery.id)
+        // gives back why it couldnt decline or null if it did so the message isnt lost inside firestores exception
+        db.runTransaction<String?> { transaction ->
+            val current = transaction.get(lotteryDoc).toObject(Lottery::class.java)
+                ?: return@runTransaction "Lottery not found"
+            current.whyNotAWinner(currentDeviceId)?.let { return@runTransaction it }
+            transaction.update(lotteryDoc, "waitlist", withMyStatus(current, EntryStatus.DECLINED))
+            null
+        }
+            .addOnSuccessListener { error ->
+                if (error != null) {
+                    onResult(Result.failure(IllegalStateException(error)))
+                    return@addOnSuccessListener
+                }
+                onResult(Result.success(Unit))
+                notifyViews()
+            }
+            .addOnFailureListener { onResult(Result.failure(it)) }
+    }
+
+    // the lotterys waitlist with the current users entry set to a new status
+    // see [19] in Citation.md
+    private fun withMyStatus(lottery: Lottery, status: EntryStatus): List<WaitlistEntry> =
+        lottery.waitlist.map {
+            if (it.id == currentDeviceId) WaitlistEntry(id = it.id, lotteryId = it.lotteryId, status = status) else it
+        }
+
     fun getWaitlist(lottery: Lottery, onResult: (Result<List<WaitlistEntry>>) -> Unit) {
         lotteryRef.document(lottery.id).get()
             .addOnSuccessListener { snapshot ->
@@ -1339,6 +1391,85 @@ open class Model: ModelUpdater<View>{
                     notifyViews()
                 }
                 .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
+        }
+
+        // see [19] in Citation.md
+        /**
+         * books a stay at one of the campsites of a lottery the current user won (US 01.04.01 01.04.02)
+         *
+         * the stay has to fit in the campsites available dates and the winner can only reserve once
+         * the reservation is saved and their entry goes from SELECTED to RESERVED in one transaction
+         * so tapping twice cant book two stays
+         * once its saved the entrant gets a confirmation notification (US 01.05.01)
+         *
+         * the booked dates are read before the transaction since firestore transactions cant run queries
+         * so two winners booking the same nights at the exact same time could still both get them
+         *
+         * @param lottery the lottery they won
+         * @param campsite which of the lotterys campsites they picked
+         * @param checkIn check in date like 2027-05-01
+         * @param checkOut check out date like 2027-05-03
+         * @param guests number of guests
+         * @param rulesAccepted true if the entrant agreed to the campsite rules (US 02.11.01)
+         * @param today the date to compare against so tests can pick one
+         * @param onResult gets the saved reservation or a failure saying whats wrong
+         */
+        fun reserveLotteryWin(
+            lottery: Lottery,
+            campsite: Campsite,
+            checkIn: String,
+            checkOut: String,
+            guests: Int,
+            rulesAccepted: Boolean = false,
+            today: LocalDate = LocalDate.now(),
+            onResult: (Result<Reservation>) -> Unit = {}
+        ) {
+            val fail = { message: String -> onResult(Result.failure(IllegalArgumentException(message))) }
+            if (lottery.id.isBlank()) return fail("Lottery not found")
+            if (campsite.id !in lottery.campsiteIds) return fail("That campsite isn't part of this lottery")
+            if (!campsite.canHold(guests)) return fail("This campsite fits at most ${campsite.maxOccupancy} guests")
+            if (campsite.hasRules() && !rulesAccepted) return fail("You have to agree to the campsite rules first")
+
+            getBookedDates(campsite.id) { booked ->
+                if (!campsite.availability.canBook(DateRange(checkIn, checkOut), booked, today)) {
+                    return@getBookedDates fail("Those dates aren't available")
+                }
+
+                val lotteryDoc = lotteryRef.document(lottery.id)
+                val reservationDoc = reservationRef.document()
+                val newReservation = Reservation(
+                    id = reservationDoc.id,
+                    campsiteId = campsite.id,
+                    entrantId = currentDeviceId,
+                    checkIn = checkIn,
+                    checkOut = checkOut,
+                    numGuests = guests,
+                    status = ReservationStatus.ACTIVE,
+                    rulesAccepted = rulesAccepted,
+                    lotteryId = lottery.id
+                )
+
+                // gives back why it couldnt reserve or null if it did so the message isnt lost inside firestores exception
+                db.runTransaction<String?> { transaction ->
+                    // read the saved lottery since the one the view has might be out of date
+                    val current = transaction.get(lotteryDoc).toObject(Lottery::class.java)
+                        ?: return@runTransaction "Lottery not found"
+                    current.whyCantReserve(currentDeviceId, today)?.let { return@runTransaction it }
+                    transaction.set(reservationDoc, newReservation)
+                    transaction.update(lotteryDoc, "waitlist", withMyStatus(current, EntryStatus.RESERVED))
+                    null
+                }
+                    .addOnSuccessListener { error ->
+                        if (error != null) return@addOnSuccessListener fail(error)
+                        notifyUser(
+                            "Your reservation at ${campsite.name} from $checkIn to $checkOut is confirmed",
+                            currentDeviceId
+                        )
+                        onResult(Result.success(newReservation))
+                        notifyViews()
+                    }
+                    .addOnFailureListener { onResult(Result.failure(it)) }
+            }
         }
 
         /**
@@ -1691,6 +1822,22 @@ open class Model: ModelUpdater<View>{
                 onResult(emptyList())
             }
     }
+
+    // see [19] in Citation.md
+    /**
+     * gets the stays a lottery winner can still book at a campsite (US 01.04.01)
+     *
+     * the owners open period minus the past and every active reservation
+     *
+     * @param campsite the campsite to check
+     * @param today nights before this arent shown so tests can pick one
+     * @param onResult gets each free stretch as check in to latest check out sorted by date
+     */
+    fun getAvailableDates(campsite: Campsite, today: LocalDate = LocalDate.now(), onResult: (List<DateRange>) -> Unit) {
+        getBookedDates(campsite.id) { booked ->
+            onResult(campsite.availability.freeStays(booked, today))
+        }
+    }
     //endregion
 
 
@@ -1844,6 +1991,24 @@ open class Model: ModelUpdater<View>{
     //endregion
 
     //region Messages
+
+    // which conversation the Messages screen shows (US 01.14.01, 02.12.01)
+    // a blank id means the list of conversations
+    var messageReservationId: String = ""
+    var messageTitle: String = ""
+
+    /**
+     * picks the conversation the Messages screen shows, like settTempCampsite does for campsites
+     *
+     * @param reservationId the reservation the conversation is about, "" for the list of conversations
+     * @param title what to show at the top, eg the campsite or entrant name
+     */
+    fun settMessageConversation(reservationId: String, title: String) {
+        messageReservationId = reservationId
+        messageTitle = title
+        notifyViews()
+    }
+
     // The following functions are from Google, Gemini, "Implement entrant and owner reservation messaging in Model.kt", 2026-11-26
     // [1]
     /**

@@ -3,6 +3,8 @@ import com.example.code.Routes
 import com.example.code.goHome
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.gestures.snapping.rememberSnapFlingBehavior
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
@@ -244,12 +246,22 @@ abstract class View: ViewObserver<Model>{
 
     }
 
+    /**
+     * the row of folder style tabs under the header, rounded on top like the mockups
+     *
+     * @param tabs the tabs to draw in order
+     * @param state the name of the tab thats showing
+     * @param backgroundColor whats drawn behind the tabs so the rounded corners match the header,
+     * leave it unspecified when the screen already draws a background there
+     */
+    // rounded tabs see [27] in Citation.md
     @Composable
-    protected fun TabManager(tabs: List<Tab>, state: String) {
+    protected fun TabManager(tabs: List<Tab>, state: String, backgroundColor: Color = Color.Unspecified) {
         BoxWithConstraints(
             modifier = Modifier
                 .height(50.dp)
                 .fillMaxWidth()
+                .background(backgroundColor)
         ) {
             /*
             * The following value was defined by Gemini 3.6 Flash
@@ -275,32 +287,25 @@ abstract class View: ViewObserver<Model>{
     }
     @Composable
     private fun TabCol(tab: Tab, state: String, modifier: Modifier = Modifier) {
-        Column(
+        Box(
             modifier = modifier
                 .fillMaxHeight()
                 .widthIn(min = 120.dp)
-                .clickable(enabled = true, onClick = { tab.option(state) })
+                // a small gap around each tab so the header shows between them like the mockups
+                .padding(start = 4.dp, end = 4.dp, top = 6.dp)
+                .clip(RoundedCornerShape(topStart = 16.dp, topEnd = 16.dp))
+                .background(tab.color)
+                .clickable(enabled = true, onClick = { tab.option(state) }),
+            contentAlignment = Alignment.Center,
         ) {
-            Row(
-                modifier = Modifier
-                    .background(tab.color)
-                    .fillMaxSize()
-                    .weight(1f)
-            ) {
-                Spacer(modifier = Modifier.width(10.dp))
-                Column(Modifier.fillMaxSize()) {
-                    Spacer(modifier = Modifier.height(10.dp))
-                    Text(
-                        text = tab.name,
-                        fontSize = 25.sp,
-                        color = primaryGreenTextColor,
-                        fontWeight = FontWeight.Bold,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(15.dp))
-                }
-                Spacer(modifier = Modifier.height(5.dp))
-            }
+            Text(
+                text = tab.name,
+                fontSize = 22.sp,
+                color = primaryGreenTextColor,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center,
+                maxLines = 1,
+            )
         }
     }
 }
