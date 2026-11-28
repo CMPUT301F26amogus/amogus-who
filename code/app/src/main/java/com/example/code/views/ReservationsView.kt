@@ -7,6 +7,16 @@ import androidx.navigation.compose.rememberNavController
 import Tab
 import View
 import androidx.compose.foundation.background
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.PlayArrow
+import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.Share
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.draw.clip
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
@@ -97,9 +107,9 @@ class ReservationsView(model: Model): View() {
                 color = entrantFooterBackgroundColor,
                 option = {state = "Current"}),
             Tab(
-                name = "Past",
+                name = "Previous",
                 color = secondaryGreenColor,
-                option = {state = "Past"}),
+                option = {state = "Previous"}),
         )
         Column() {
             Row() {
@@ -114,7 +124,7 @@ class ReservationsView(model: Model): View() {
                     .height(50.dp)
                     .fillMaxWidth()
             ) {
-                TabManager(tabs,state)
+                TabManager(tabs, state, backgroundColor = headerbgColor)
             }
             message?.let {
                 Row(modifier = Modifier.fillMaxWidth().background(light).padding(10.dp)) {
@@ -124,14 +134,22 @@ class ReservationsView(model: Model): View() {
             if (state=="Current") {
                 Row(modifier = Modifier.weight(1f).background(primaryGreenColor)) {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(vertical = 10.dp),
                     ) {
                         itemsIndexed(currentReservations) { index, reservation ->
-                            CurrentReservationRow(
+                            ReservationCard(
                                 reservation = reservation,
                                 navController = navController,
                                 onCancel = { toCancel = reservation },
                                 onCsv = { saveCsv(reservation) },
+                                onMessage = {
+                                    messagesController.openConversation(
+                                        navController,
+                                        reservation.reservation.id,
+                                        reservation.campsite?.name ?: "Campsite owner",
+                                    )
+                                },
                             )
                         }
                     }
@@ -139,12 +157,14 @@ class ReservationsView(model: Model): View() {
             }else{
                 Row(modifier = Modifier.weight(1f).background(secondaryGreenColor)) {
                     LazyColumn(
-                        modifier = Modifier.fillMaxSize()
+                        modifier = Modifier.fillMaxSize(),
+                        contentPadding = PaddingValues(vertical = 10.dp),
                     ) {
                         itemsIndexed(previousReservations) { index, reservation ->
-                            PreviousReservationRow(
+                            ReservationCard(
                                 reservation = reservation,
                                 navController = navController,
+                                onCancel = null,
                                 onCsv = { saveCsv(reservation) },
                             )
                         }
@@ -220,132 +240,70 @@ class ReservationsView(model: Model): View() {
         }
     }
 
-    // the top part of a card with the campsite dates rating and guests
+    // one reservation drawn like the mockup, name and park with the rating pill, then the dates and guests
+    // the bottom bar has cancel only for current stays, csv for both (US 01.05.02) and details
+    // see [26] in Citation.md
     @Composable
-    private fun ReservationInfo(reservation: EntrantReservation, background: Color) {
+    private fun ReservationCard(
+        reservation: EntrantReservation,
+        navController: NavController,
+        onCancel: (() -> Unit)?,
+        onCsv: () -> Unit,
+        onMessage: (() -> Unit)? = null,
+    ) {
         val campsite = reservation.campsite
-        Row(
-            modifier = Modifier.height(120.dp).background(background)
-                .width(500.dp)
+        // no rating yet shows a dash instead of null
+        val rating = campsite?.averageRating?.let { "%.1f".format(it) } ?: "-"
+        Column(
+            modifier = Modifier
+                .padding(horizontal = 20.dp, vertical = 10.dp)
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(12.dp))
+                .background(cardPrimary),
         ) {
-            Column(modifier = Modifier.padding(horizontal = 15.dp).width(200.dp)){
-                Row() {
-                    // at most 2 lines so a long name cant push the dates out of the card
-                    Text(
-                        campsite?.name ?: "Unknown campsite",
-                        fontWeight = FontWeight.Bold,
-                        fontSize = 20.sp,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis,
-                    )
+            Column(
+                modifier = Modifier.padding(start = 14.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
+                verticalArrangement = Arrangement.spacedBy(10.dp),
+            ) {
+                Row(verticalAlignment = Alignment.Top) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        // at most 2 lines so a long name cant push the dates out of the card
+                        Text(
+                            campsite?.name ?: "Unknown campsite",
+                            fontWeight = FontWeight.Bold,
+                            fontSize = 20.sp,
+                            color = primaryGreenTextColor,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis,
+                        )
+                        Text(campsite?.location ?: "", fontSize = 13.sp, color = primaryGreenTextColor)
+                    }
+                    RatingPill(rating)
                 }
-                Row() {
-                    Text(campsite?.location ?: "")
-                }
-                Spacer(modifier = Modifier.height(15.dp))
-                Row(modifier = Modifier.background(light).padding(horizontal = 20.dp).fillMaxWidth()) {
-                    Text(
-                        "${formatDate(reservation.reservation.checkIn)} | ${formatDate(reservation.reservation.checkOut)}",
-                        fontSize = 13.sp,
-                    )
-                }
-            }
-            // labelled so its clear what each number is, same as the owner cards
-            Column(modifier = Modifier.width(80.dp)){
-                Spacer(modifier = Modifier.height(15.dp))
-                Row() {
-                    // no rating yet shows a dash instead of null
-                    val rating = campsite?.averageRating?.let { "%.1f".format(it) } ?: "-"
-                    Text("Rating: $rating", fontWeight = FontWeight.Bold, fontSize = 13.sp)
-                }
-                Spacer(modifier = Modifier.height(25.dp))
-                Row() {
-                    Text("Guests: ${reservation.reservation.numGuests}", fontWeight = FontWeight.Bold, fontSize = 13.sp)
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                ) {
+                    StayDatesBox(reservation.reservation.checkIn, reservation.reservation.checkOut, cardAccent)
+                    GuestsBox(reservation.reservation.numGuests, cardAccent)
                 }
             }
-        }
-    }
-
-    @Composable
-    private fun CurrentReservationRow(
-        reservation: EntrantReservation,
-        navController: NavController,
-        onCancel: () -> Unit,
-        onCsv: () -> Unit,
-    ) {
-        Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
-            Column() {
-                ReservationInfo(reservation, entrantFooterButtonColor)
-                Row(modifier = Modifier.height(30.dp).background(light).width(500.dp)) {
-                    Spacer(modifier = Modifier.width(10.dp))
-                    Text(
-                        "X Cancel", color = Color(0xff5530a4),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { onCancel() },
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    // download this reservation as a csv (US 01.05.02)
-                    Text(
-                        "CSV", color = Color(0xff5530a4),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { onCsv() }.testTag("reservationCsv"),
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    Text(
-                        "> Details", color = Color(0xff5530a4),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable {
-                            controller.viewCampsite(reservation.reservation.campsiteId, navController = navController)
-                        },
-                    )
-                    Spacer(modifier = Modifier.width(20.dp))
-                    // message the campsite owner about this stay (US 01.14.01)
-                    Text(
-                        "Message", color = Color(0xff5530a4),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable {
-                            messagesController.openConversation(
-                                navController,
-                                reservation.reservation.id,
-                                reservation.campsite?.name ?: "Campsite owner",
-                            )
-                        }.testTag("messageOwner"),
-                    )
+            Row(
+                modifier = Modifier.fillMaxWidth().background(cardAccent).padding(horizontal = 4.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                if (onCancel != null) {
+                    CardAction("Cancel", Icons.Outlined.Clear, onClick = onCancel)
                 }
-            }
-        }
-    }
-    @Composable
-    private fun PreviousReservationRow(
-        reservation: EntrantReservation,
-        navController: NavController,
-        onCsv: () -> Unit,
-    ) {
-        Row(modifier = Modifier.padding(50.dp).height(150.dp).width(500.dp)){
-            Column() {
-                ReservationInfo(reservation, Color(0xffcadac8))
-                Row(modifier = Modifier.height(30.dp).background(light).width(500.dp)) {
-                    Spacer(modifier = Modifier.width(10.dp))
-                    // download this reservation as a csv (US 01.05.02)
-                    Text(
-                        "CSV", color = Color(0xff5530a4),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable { onCsv() }.testTag("reservationCsv"),
-                    )
-                    Spacer(modifier = Modifier.width(120.dp))
-                    Text(
-                        "> Details", color = Color(0xff5530a4),
-                        fontSize = 20.sp,
-                        fontWeight = FontWeight.Bold,
-                        modifier = Modifier.clickable {
-                            controller.viewCampsite(reservation.reservation.campsiteId, navController = navController)
-                        },
-                    )
+                // download this reservation as a csv (US 01.05.02)
+                CardAction("CSV", Icons.Outlined.Share, tag = "reservationCsv", onClick = onCsv)
+                Spacer(modifier = Modifier.weight(1f))
+                // message the campsite owner about this stay (US 01.14.01)
+                if (onMessage != null) {
+                    CardAction("Message", Icons.Outlined.Email, tag = "messageOwner", onClick = onMessage)
+                }
+                CardAction("Details", Icons.Filled.PlayArrow) {
+                    controller.viewCampsite(reservation.reservation.campsiteId, navController = navController)
                 }
             }
         }

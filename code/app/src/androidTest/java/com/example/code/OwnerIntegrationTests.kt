@@ -1,5 +1,7 @@
 package com.example.code
 
+import androidx.compose.ui.test.onNodeWithContentDescription
+
 import com.google.firebase.Firebase
 import com.google.firebase.firestore.firestore
 import android.annotation.SuppressLint
@@ -132,11 +134,12 @@ class OwnerIntegrationTests {
     }
     @Test
     fun owner_navigate_to_notifications() {
-        // navigate to campsites
+        // navigate to notifications, the bell is labelled by its content description not a tag
+        // see [31] in Citation.md
         composeTestRule
-            .onNodeWithTag("Notifications")
+            .onNodeWithContentDescription("Notifications")
             .performClick()
-        // verify campsites
+        // verify notifications
         composeTestRule
             .onNodeWithTag("Header: Notifications")
             .assertExists()
