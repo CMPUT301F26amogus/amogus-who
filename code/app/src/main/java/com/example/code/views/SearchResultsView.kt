@@ -29,35 +29,58 @@ import com.example.code.controllers.SearchResultsController
 import com.example.code.model.Campsite
 import com.example.code.ui.theme.CodeTheme
 
+/**
+ * @property headerBackgroundColour
+ * @property headerTextColour       Colour of Text within the header ()
+ * @property bodyBackgroundColour   Colour of background of the body of the screen (between header and footer)
+ * @property footerTextColour       Colour of footer text (button text)
+ * @property footerBackgroundColor  Colour of footer Background
+ * @property footerButtonColor      Colour of footer buttons
+ * @property headerText             Text written in the header
+ *
+ * @property CampsiteList           List of campsites to display
+ * */
 open class SearchResultsView(M:Model): View() {
+    var headerBackgroundColour = entrantHeaderBackgroundColor
+    var headerTextColour = entrantHeaderTextColor
+    var bodyBackgroundColour = secondaryGreenColor
+    var footerTextColour = entrantFooterTextColor
+    var footerBackgroundColor = entrantFooterBackgroundColor
+    var footerButtonColor = entrantFooterButtonColor
+    var headerText = "Search Results"
     var CampsiteList: List<Campsite> = emptyList()
+
+    /**update
+     *
+     * Grabs list of campsites to display on call
+     * */
     override fun update(model: Model) {
         CampsiteList = model.campsiteList
     }
-    val controller = SearchResultsController(M)
+    open val controller = SearchResultsController(M)
     @Composable
     fun ShowScreen(navController: NavController) {
         Column() {
-            Row() {
+            Row() {  // Header section
                 Header(
-                    headerText = "Search Results",
-                    backgroundColor = entrantHeaderBackgroundColor,
-                    textColor = entrantHeaderTextColor,
+                    headerText = headerText,
+                    backgroundColor = headerBackgroundColour,
+                    textColor = headerTextColour,
                 )
             }
-            Row(
+            Row(  //  body section
                 modifier = Modifier
-                    .weight(1f)
-                    .background(color = secondaryGreenColor),
+                    .weight(1f)  //  in this case fills remaining space in the column without pushing other elements out
+                    .background(color = bodyBackgroundColour),
             ){
                 Contents(navController)
             }
             Row() {
-                Footer(
+                Footer(  //  footer section
                     navController = navController,
-                    textColor = entrantFooterTextColor,
-                    backgroundColor = entrantFooterBackgroundColor,
-                    buttonColor = entrantFooterButtonColor,
+                    textColor = footerTextColour,
+                    backgroundColor = footerBackgroundColor,
+                    buttonColor = footerButtonColor,
                 )
             }
         }
