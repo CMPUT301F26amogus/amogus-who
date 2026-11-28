@@ -32,7 +32,7 @@ import java.time.format.DateTimeParseException
 class Lottery(
     var name: String = "",
     val id: String = "",
-    val ownerId: String = "",
+    var ownerId: List<String> = emptyList(), // a lottery can have multiple owners, so ownerId is a list.
     var campsiteIds: List<String> = emptyList(),
     registrationStart: String = "",
     registrationEnd: String = "",
