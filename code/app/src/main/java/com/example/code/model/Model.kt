@@ -664,7 +664,7 @@ open class Model: ModelUpdater<View>{
             }
     }
 
-    fun getCampsiteByOwner(ownerId: String, onResult: (List<Campsite>) -> Unit) {
+    fun getCampsitesByOwner(ownerId: String, onResult: (List<Campsite>) -> Unit) {
         campsiteRef.whereEqualTo("ownerId", ownerId).get()
             .addOnSuccessListener { documents ->
                 val campsites = documents.toCampsites()
