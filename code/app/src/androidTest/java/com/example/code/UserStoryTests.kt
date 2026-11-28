@@ -15,9 +15,12 @@ import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
 import androidx.test.ext.junit.runners.AndroidJUnit4
 import androidx.test.platform.app.InstrumentationRegistry
+import com.example.code.controllers.AddEditLotteryController
 import com.example.code.controllers.ReserveCampsiteController
 import com.example.code.model.Campsite
 import com.example.code.model.EntrantReservation
+import com.example.code.model.Lottery
+import com.example.code.model.LotteryStatus
 import com.example.code.model.Reservation
 import com.example.code.model.ReservationStatus
 import com.example.code.model.Role
@@ -60,6 +63,7 @@ class UserStoryTests {
     private val campsiteRef by lazy { Firebase.firestore.collection("campsites") }
     private val reservationRef by lazy { Firebase.firestore.collection("reservations") }
     private val notificationRef by lazy { Firebase.firestore.collection("notifications") }
+    private val lotteryRef by lazy { Firebase.firestore.collection("lotteries") }
     private val userDoc by lazy { usersRef.document(deviceId) }
 
     // made up names so the test can find its own card and not someone elses
@@ -70,6 +74,22 @@ class UserStoryTests {
         name = "US 02.07.01 Campsite",
         location = "Test Park",
     )
+
+    /* START AI-generated implementation here [2] */
+    private val firstLotteryCampsite = Campsite(
+        id = "us-02-04-first-site-$deviceId",
+        ownerId = deviceId,
+        name = "US 02.04 Lottery Campsite One",
+        location = "Test Park",
+    )
+
+    private val secondLotteryCampsite = Campsite(
+        id = "us-02-04-second-site-$deviceId",
+        ownerId = deviceId,
+        name = "US 02.04 Lottery Campsite Two",
+        location = "Test Park",
+    )
+    /* END AI-generated implementation here [2]  */
 
     // reservations only keep the entrants id so each entrant gets a user doc for the name on the card
     private val seededEntrants = mutableListOf<User>()
@@ -219,6 +239,8 @@ class UserStoryTests {
                 // reserving and cancelling make docs with new ids so remember what was already there
                 val reservationsBefore = myDocIds(reservationRef)
                 val notificationsBefore = myDocIds(notificationRef)
+                val lotteriesBefore = await(lotteryRef.whereEqualTo("ownerId", deviceId).get())         // [2]
+                    .documents.map { it.id }.toSet()
                 try {
                     await(userDoc.set(User(
                         deviceId = deviceId,
@@ -226,7 +248,9 @@ class UserStoryTests {
                         notificationsEnabled = notificationsOn,
                         role = role,
                     )))
-                    await(campsiteRef.document(testCampsite.id).set(testCampsite))
+                    await(campsiteRef.document(testCampsite.id).set(testCampsite))                      // [2]
+                    await(campsiteRef.document(firstLotteryCampsite.id).set(firstLotteryCampsite))      // [2]
+                    await(campsiteRef.document(secondLotteryCampsite.id).set(secondLotteryCampsite))    // [2]
                     entrantCampsites.forEach { await(campsiteRef.document(it.id).set(it)) }
                     seededEntrants.forEach { await(usersRef.document(it.deviceId).set(it)) }
                     (seededReservations + entrantReservations).forEach {
@@ -244,6 +268,11 @@ class UserStoryTests {
                     }
                     entrantCampsites.forEach { await(campsiteRef.document(it.id).delete()) }
                     await(campsiteRef.document(testCampsite.id).delete())
+                    await(campsiteRef.document(firstLotteryCampsite.id).delete())                // [2]
+                    await(campsiteRef.document(secondLotteryCampsite.id).delete())               // [2]
+                    await(lotteryRef.whereEqualTo("ownerId", deviceId).get()).documents          // [2]
+                        .filter { it.id !in lotteriesBefore }                                                         // [2]
+                        .forEach { await(it.reference.delete()) }                                              // [2]
                     deleteNewDocs(reservationRef, reservationsBefore)
                     deleteNewDocs(notificationRef, notificationsBefore)
                     if (savedUser != null) await(userDoc.set(savedUser)) else await(userDoc.delete())
@@ -274,6 +303,46 @@ class UserStoryTests {
     private fun myNotifications(entrantId: String = deviceId): List<String> =
         await(notificationRef.whereEqualTo("entrantId", entrantId).get()).documents
             .mapNotNull { it.getString("content") }
+
+    /* START AI-generated implementation here [2] */
+    private fun lotteryDates(startOffset: Long = 30): List<String> {
+        val registrationStart = LocalDate.now().plusDays(startOffset)
+        val registrationEnd = registrationStart.plusDays(3)
+        return listOf(
+            registrationStart.toString(),
+            registrationEnd.toString(),
+            registrationEnd.plusDays(1).toString(),
+            registrationEnd.plusDays(8).toString(),
+        )
+    }
+
+    private fun createLottery(
+        campsiteIds: List<String>,
+        numWinners: Int = 1,
+        waitlistCapacity: Int = 0,
+        dates: List<String> = lotteryDates(),
+    ): Lottery {
+        var result: Result<Lottery>? = null
+        val completed = CountDownLatch(1)
+        Model().apply {
+            setDeviceInformation(deviceId)
+            createLottery(
+                campsiteIds = campsiteIds,
+                registrationStart = dates[0],
+                registrationEnd = dates[1],
+                bookingStart = dates[2],
+                bookingEnd = dates[3],
+                numWinners = numWinners,
+                waitlistCapacity = waitlistCapacity,
+            ) {
+                result = it
+                completed.countDown()
+            }
+        }
+        assertTrue("lottery creation never answered", completed.await(10, TimeUnit.SECONDS))
+        return result!!.getOrThrow()
+    }
+    /* END AI-generated implementation here [2]  */
 
     // the model sends notifications without handing back a task so keep checking until one shows up
     private fun waitForNotification(vararg parts: String): String = waitForNotificationTo(deviceId, *parts)
@@ -985,4 +1054,147 @@ class UserStoryTests {
         Thread.sleep(3_000)
         assertFalse(myNotifications().any { "was cancelled" in it })
     }
+
+    /* START AI-generated implementation here [2] */
+    @Test
+    fun us_02_04_01_owner_lists_campsite_in_lottery_for_period() {
+        val dates = lotteryDates()
+        val lottery = createLottery(listOf(firstLotteryCampsite.id), dates = dates)
+
+        assertEquals(deviceId, lottery.ownerId)
+        assertEquals(listOf(firstLotteryCampsite.id), lottery.campsiteIds)
+        assertEquals(LotteryStatus.OPEN, lottery.status)
+        assertEquals(dates[0], lottery.registrationStart)
+        assertEquals(dates[1], lottery.registrationEnd)
+        assertEquals(dates[2], lottery.bookingStart)
+        assertEquals(dates[3], lottery.bookingEnd)
+        assertEquals(
+            lottery.id,
+            await(campsiteRef.document(firstLotteryCampsite.id).get()).getString("lotteryId"),
+        )
+    }
+
+    @Test
+    fun us_02_04_02_owner_lists_multiple_campsites_in_one_lottery() {
+        val lottery = createLottery(
+            listOf(firstLotteryCampsite.id, secondLotteryCampsite.id),
+        )
+
+        assertEquals(
+            setOf(firstLotteryCampsite.id, secondLotteryCampsite.id),
+            lottery.campsiteIds.toSet(),
+        )
+        assertEquals(
+            lottery.id,
+            await(campsiteRef.document(firstLotteryCampsite.id).get()).getString("lotteryId"),
+        )
+        assertEquals(
+            lottery.id,
+            await(campsiteRef.document(secondLotteryCampsite.id).get()).getString("lotteryId"),
+        )
+    }
+
+    @Test
+    fun us_02_04_03_owner_sets_registration_period() {
+        val dates = lotteryDates()
+        val lottery = createLottery(listOf(firstLotteryCampsite.id), dates = dates)
+        val saved = await(lotteryRef.document(lottery.id).get())
+
+        assertEquals(dates[0], saved.getString("registrationStart"))
+        assertEquals(dates[1], saved.getString("registrationEnd"))
+        assertTrue(lottery.registrationOpenOn(LocalDate.parse(dates[0])))
+        assertFalse(lottery.registrationOpenOn(LocalDate.parse(dates[1])))
+    }
+
+    @Test
+    fun us_02_04_04_owner_sets_booking_period() {
+        val dates = lotteryDates()
+        val lottery = createLottery(listOf(firstLotteryCampsite.id), dates = dates)
+        val saved = await(lotteryRef.document(lottery.id).get())
+
+        assertEquals(dates[2], saved.getString("bookingStart"))
+        assertEquals(dates[3], saved.getString("bookingEnd"))
+        assertTrue(lottery.bookingOpenOn(LocalDate.parse(dates[2])))
+        assertFalse(lottery.bookingOpenOn(LocalDate.parse(dates[3])))
+    }
+
+    @Test
+    fun us_02_04_05_owner_sets_number_of_lottery_winners() {
+        val dates = lotteryDates()
+        val model = Model().apply { setDeviceInformation(deviceId) }
+        val completed = CountDownLatch(1)
+        var result: Result<Lottery>? = null
+
+        AddEditLotteryController(model).onSave(
+            campsites = listOf(firstLotteryCampsite.id),
+            numWinners = "4",
+            waitlistCapacity = "",
+            registrationStart = dates[0],
+            registrationEnd = dates[1],
+            bookingStart = dates[2],
+            bookingEnd = dates[3],
+        ) {
+            result = it
+            completed.countDown()
+        }
+
+        assertTrue("lottery creation never answered", completed.await(10, TimeUnit.SECONDS))
+        assertTrue("lottery creation failed: ${result?.exceptionOrNull()?.message}", result!!.isSuccess)
+        val lottery = result!!.getOrThrow()
+        assertEquals(4, lottery.numWinners)
+        assertEquals(0, lottery.waitlistCapacity)
+        val saved = await(lotteryRef.document(lottery.id).get())
+        assertEquals(4L, saved.getLong("numWinners"))
+        assertEquals(0L, saved.getLong("waitlistCapacity"))
+    }
+
+    @Test
+    fun us_02_04_06_owner_updates_lottery_listing() {
+        val original = createLottery(listOf(firstLotteryCampsite.id))
+        val updatedDates = lotteryDates(startOffset = 60)
+        val updated = Lottery(
+            id = original.id,
+            ownerId = original.ownerId,
+            campsiteIds = original.campsiteIds,
+            registrationStart = updatedDates[0],
+            registrationEnd = updatedDates[1],
+            bookingStart = updatedDates[2],
+            bookingEnd = updatedDates[3],
+            numWinners = 3,
+            waitlistCapacity = 8,
+            status = original.status,
+        )
+        var result: Result<Unit>? = null
+        val completed = CountDownLatch(1)
+        Model().updateLottery(updated) {
+            result = it
+            completed.countDown()
+        }
+
+        assertTrue("lottery update never answered", completed.await(10, TimeUnit.SECONDS))
+        assertTrue("lottery update failed: ${result?.exceptionOrNull()?.message}", result!!.isSuccess)
+        val saved = await(lotteryRef.document(original.id).get())
+        assertEquals(updatedDates[0], saved.getString("registrationStart"))
+        assertEquals(updatedDates[1], saved.getString("registrationEnd"))
+        assertEquals(updatedDates[2], saved.getString("bookingStart"))
+        assertEquals(updatedDates[3], saved.getString("bookingEnd"))
+        assertEquals(3L, saved.getLong("numWinners"))
+        assertEquals(8L, saved.getLong("waitlistCapacity"))
+    }
+
+    @Test
+    fun us_02_04_07_owner_can_set_optional_waitlist_capacity() {
+        val unlimited = createLottery(listOf(firstLotteryCampsite.id))
+        val capped = createLottery(
+            listOf(secondLotteryCampsite.id),
+            waitlistCapacity = 5,
+        )
+
+        assertEquals(0, unlimited.waitlistCapacity)
+        assertEquals(0L, await(lotteryRef.document(unlimited.id).get()).getLong("waitlistCapacity"))
+        assertEquals(5, capped.waitlistCapacity)
+        assertEquals(5L, await(lotteryRef.document(capped.id).get()).getLong("waitlistCapacity"))
+    }
+    /* END AI-generated implementation here [2]  */
+
 }

@@ -55,9 +55,8 @@ class OwnerLotteriesView(model : Model) : View() {
     // modify to pull real lotteries from model
     var lotteries: List<Lottery> = emptyList()
 
-    // TODO: add update() function which updates the lotteries list with values from model
     override fun update(model: Model) {
-        lotteries = emptyList()
+        model.getLotteriesByOwner(ownerId = model.currentDeviceId) { lotteries = it }
     }
 
     /**
@@ -79,7 +78,7 @@ class OwnerLotteriesView(model : Model) : View() {
         ) {
             Row(
                 modifier = Modifier
-                    .padding(10.dp),
+                    .padding(5.dp),
             ) {
                 Text(
                     text = "$info: ",
@@ -149,7 +148,7 @@ class OwnerLotteriesView(model : Model) : View() {
                             )
                             .width(90.dp)
                             .height(30.dp)
-                            .padding(7.dp)
+                            .padding(5.dp)
                     ) {
                         Text(
                             text = lottery.status.toString(),
@@ -164,7 +163,7 @@ class OwnerLotteriesView(model : Model) : View() {
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f)
+//                        .weight(1f)
                         .padding(top = 5.dp)
                 ) {
                     SiteInfoBox(
@@ -215,6 +214,8 @@ class OwnerLotteriesView(model : Model) : View() {
                     text = { Text("Edit") }
                 )
 
+                Spacer(modifier = Modifier.weight(1f))
+
                 ExtendedFloatingActionButton(
                     onClick = { controller.onWaitlist(navController, Lottery()) },
                     shape = CircleShape,
@@ -228,24 +229,6 @@ class OwnerLotteriesView(model : Model) : View() {
                     },
                     text = { Text("Waitlist") }
                 )
-
-                if (lottery.status == LotteryStatus.DRAWN) {
-                    ExtendedFloatingActionButton(
-                        onClick = {
-                            controller.onViewWinners(navController, Lottery())
-                        },
-                        shape = CircleShape,
-                        containerColor = primaryPurple,
-                        contentColor = secondaryPurple,
-                        icon = {
-                            Icon(
-                                imageVector = Icons.Filled.Star,
-                                contentDescription = "View winners",
-                            )
-                        },
-                        text = { Text("Winners") }
-                    )
-                }
             }
         }
 

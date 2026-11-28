@@ -1,10 +1,7 @@
 package com.example.code.controllers
 
 import Model
-import androidx.compose.runtime.MutableState
-import androidx.core.text.isDigitsOnly
 import androidx.navigation.NavController
-import com.example.code.Routes
 import com.example.code.model.Lottery
 import com.example.code.model.User
 
@@ -28,6 +25,7 @@ class AddEditLotteryController(
      * @param onResult optional callback with the created lottery or failure
      */
     fun onSave(
+        navController: NavController,
         campsites: List<String>,
         numWinners: String,
         waitlistCapacity: String,
@@ -35,20 +33,11 @@ class AddEditLotteryController(
         registrationEnd: String,
         bookingStart: String,
         bookingEnd: String,
-        name: String = "",
+        name: String = "Unnamed Lottery",
         onResult: (Result<Lottery>) -> Unit = {},
     ) : String {
-        var winners = 0
-        var waitlist = 0
+
         var errorMessage = ""
-
-        if (!numWinners.isDigitsOnly()) {
-            winners = numWinners.toInt()
-        }
-
-        if (!waitlistCapacity.isDigitsOnly()) {
-            waitlist = waitlistCapacity.toInt()
-        }
 
         model.createLottery(
             campsiteIds = campsites,
@@ -56,11 +45,15 @@ class AddEditLotteryController(
             registrationEnd = registrationEnd,
             bookingStart = bookingStart,
             bookingEnd = bookingEnd,
-            numWinners = winners,
-            waitlistCapacity = waitlist,
+            numWinners = numWinners.toIntOrNull() ?: 0,
+            waitlistCapacity = waitlistCapacity.toIntOrNull() ?: 0,
+            name = name
         ) {
             result ->
-            result.onSuccess { print("success") }
+            result.onSuccess {
+                print("success")
+                navController.popBackStack()
+            }
             result.onFailure { e ->
                 print(e.message) // The exception is caught in the model, this is error message if the exception is thrown.
                 errorMessage = e.message!!

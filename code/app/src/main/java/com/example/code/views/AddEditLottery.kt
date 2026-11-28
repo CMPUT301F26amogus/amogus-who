@@ -67,7 +67,6 @@ import java.util.Locale
 class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), InputFieldFunctions{
 
     private val controller = AddEditLotteryController(model)
-    private val availableCampsites = model.campsiteList
 
     var headerName = if (isEdit) { "Edit Lottery" } else { "Add Lottery" }
 
@@ -76,6 +75,8 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      *      the variable versions of each field within Lottery creation
      * */
     private var oldLottery: Lottery? = null
+    private val lotteryName = mutableStateOf("")
+    private val availableCampsites = mutableStateListOf<Campsite>()
     private val selectedCampsites = mutableStateListOf<String>()    // reference by ID
     private val maxWinners = mutableStateOf("")
     private val maxWaitlist = mutableStateOf("")
@@ -95,6 +96,14 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             oldLottery = model.gettTheLottery()
         }
         reset()
+
+        model.getCampsitesByOwner(
+            ownerId = model.currentDeviceId,
+            onResult = { result ->
+                availableCampsites.clear()
+                availableCampsites.addAll(result)
+            }
+        )
     }
 
     /**clear
@@ -103,16 +112,15 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      * */
     fun reset() {
         if (oldLottery != null) {
-            // TODO: Lotteries need some variable to represent the date in which it is automatically drawn
-            selectedCampsites.clear()
+            selectedCampsites.addAll(oldLottery!!.campsiteIds)
             maxWinners.value = oldLottery!!.numWinners.toString()
             maxWaitlist.value = oldLottery!!.waitlistCapacity.toString()
             registrationStart.value = oldLottery!!.registrationStart      // [1]
             registrationEnd.value = oldLottery!!.registrationEnd          // [1]
             bookingStart.value = oldLottery!!.bookingStart
             bookingEnd.value = oldLottery!!.bookingEnd
-        }
-        else {
+        } else {
+            selectedCampsites.clear()
             maxWinners.value = ""
             maxWaitlist.value = ""
             registrationStart.value = ""
@@ -171,7 +179,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         "Selected Campsite(s)"
                     },
                     modifier = Modifier.weight(1f),
-                    color = secondaryPurple
+                    color = primaryTextColor
                 )
                 Icon(
                     imageVector = Icons.Filled.ArrowDropDown,
@@ -389,7 +397,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         unfocusedContainerColor = tertiaryPurple,
                         focusedTextColor = primaryTextColor,
                         unfocusedTextColor = secondaryPurple,
-                    ),
+                        ),
                     modifier = Modifier
                         .fillMaxWidth()
                         .testTag("on${purpose}End")
@@ -455,6 +463,34 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                 LazyColumn(
                     modifier = Modifier.weight(1f)
                 ) {
+                    item {
+                        Row(
+                            modifier = Modifier
+                                .clip(shape = RoundedCornerShape(6.dp))
+                                .background(light)
+                                .fillMaxWidth()
+                                .padding(10.dp)
+                        ) {
+                            TextField(
+                                value = lotteryName.value,
+                                onValueChange = { lotteryName.value = it },
+                                label = { Text("Name") },
+                                placeholder = { Text("Name this lottery") },
+                                colors = TextFieldDefaults.colors(
+                                    focusedContainerColor = tertiaryPurple,
+                                    unfocusedContainerColor = tertiaryPurple,
+                                    focusedTextColor = primaryTextColor,
+                                    unfocusedTextColor = secondaryPurple,
+                                ),
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .testTag("onLotteryName")
+                            )
+                        }
+
+                        Spacer(modifier = Modifier.height(10.dp))
+                    }
+
                     item {
                         Row(
                             modifier = Modifier
@@ -604,6 +640,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                         shape = CircleShape,
                         onClick = {
                              errorMessage.value = controller.onSave(
+                                 navController = navController,
                                  campsites = selectedCampsites,
                                  numWinners = maxWinners.value,
                                  waitlistCapacity = maxWaitlist.value,
@@ -611,6 +648,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
                                  registrationEnd = registrationEnd.value,
                                  bookingStart = bookingStart.value,
                                  bookingEnd = bookingEnd.value,
+                                 name = lotteryName.value,
                              )
                         },
                         icon = {
