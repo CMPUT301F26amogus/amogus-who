@@ -17,6 +17,6 @@ class EntrantCampsitesInLotteryController(
      *
      * navigate to the reserve campsite page of the inputted campID*/
     fun onReserve(campID : String, navController: NavController) {
-
+        // TODO: implement traversal to Campsite Reservation view
     }
 }
