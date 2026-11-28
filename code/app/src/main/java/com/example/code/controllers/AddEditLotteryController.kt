@@ -2,7 +2,6 @@ package com.example.code.controllers
 
 import Model
 import androidx.navigation.NavController
-import com.example.code.Routes
 import com.example.code.model.Lottery
 import com.example.code.model.User
 
@@ -13,8 +12,9 @@ class AddEditLotteryController(
 ) {
 
     /**
-     * A campsite owner presses the save button and creates a lottery for one or more campsites.
-     *
+     * A campsite owner presses the save button and creates/updates a lottery
+     * 
+     * @param navController to switch out of this page once saved
      * @param campsites a list of campsite IDs
      * @param numWinners the number of the winner cap
      * @param waitlistCapacity the number of the waitlist cap, defaults to 0
@@ -25,31 +25,65 @@ class AddEditLotteryController(
      * @param name optional name of the lottery
      * @param onResult optional callback with the created lottery or failure
      */
-    fun onSaveLottery(
+    fun onSave(
+        navController: NavController? = null, // [4]
         campsites: List<String>,
-        numWinners: Int,
-        waitlistCapacity: Int = 0,
+        numWinners: String,
+        waitlistCapacity: String,
         registrationStart: String,
         registrationEnd: String,
         bookingStart: String,
         bookingEnd: String,
-        name: String = "",
+        name: String = "Unnamed Lottery",
         onResult: (Result<Lottery>) -> Unit = {},
-    ) {
-        model.createLottery(
-            campsiteIds = campsites,
-            registrationStart = registrationStart,
-            registrationEnd = registrationEnd,
-            bookingStart = bookingStart,
-            bookingEnd = bookingEnd,
-            numWinners = numWinners,
-            waitlistCapacity = waitlistCapacity,
-            name = name,
-        ) { result ->
-            result.onSuccess { print("success") }
-            result.onFailure { e -> print(e.message) }
-            onResult(result)
+    ) : String {
+
+        var errorMessage = ""
+
+        if (model.gettTheLottery() == null) {
+            model.createLottery(
+                campsiteIds = campsites,
+                registrationStart = registrationStart,
+                registrationEnd = registrationEnd,
+                bookingStart = bookingStart,
+                bookingEnd = bookingEnd,
+                numWinners = numWinners.toIntOrNull() ?: 0,
+                waitlistCapacity = waitlistCapacity.toIntOrNull() ?: 0,
+                name = name
+            ) {
+                result ->
+                result.onSuccess {
+                    print("success")
+                    navController?.popBackStack() // [4]
+                }
+                result.onFailure { e ->
+                    print(e.message) // The exception is caught in the model, this is error message if the exception is thrown.
+                    errorMessage = e.message!!
+                }
+                onResult(result)
+            }
+        } else { // the following else block is AI-generated [3]
+            val lottery = model.gettTheLottery()!!
+            model.updateLottery(
+                lotteryId = lottery.id,
+                campsiteIds = campsites,
+                registrationStart = registrationStart,
+                registrationEnd = registrationEnd,
+                bookingStart = bookingStart,
+                bookingEnd = bookingEnd,
+                numWinners = numWinners.toIntOrNull() ?: 0,
+                waitlistCapacity = waitlistCapacity.toIntOrNull() ?: 0,
+                name = name,
+            ) { result -> // START citation [4]
+                result.onSuccess {
+                    navController?.popBackStack()
+                }
+                result.onFailure { exception ->
+                    print(exception.message)
+                } // END citation [4]
+            }
         }
+        return errorMessage
     }
 
     /**
@@ -76,6 +110,7 @@ class AddEditLotteryController(
         )
     }
 
+
     /**
      * Accepts a lottery invite for the current owner and attaches their campsite.
      */
@@ -93,8 +128,20 @@ class AddEditLotteryController(
 
     /**
      * Cancel lottery creation/update
+     * @param navController to switch out of this page
      */
     fun onCancel(navController: NavController) {
-        navController.navigate(Routes.LOTTERIES)
+        navController.popBackStack()
+    }
+
+    /**
+     * Delete the lottery being edited
+     * @param lottery to be deleted
+     * @param navController to switch out of this page once deleted
+     */
+    fun onDelete(lottery: Lottery,navController: NavController) { // the following fn was modded [4]
+        model.deleteLottery(lottery) { deleted ->
+            if (deleted) navController.popBackStack()
+        }
     }
 }
