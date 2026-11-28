@@ -64,17 +64,15 @@ import java.time.LocalDate
 import java.time.format.DateTimeParseException
 import java.util.Locale
 
-class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), InputFieldFunctions{
+class AddEditLottery(model: Model) : View(), InputFieldFunctions{
 
     private val controller = AddEditLotteryController(model)
-
-    var headerName = if (isEdit) { "Edit Lottery" } else { "Add Lottery" }
-
 
     /** Display variables
      *      the variable versions of each field within Lottery creation
      * */
-    private var oldLottery: Lottery? = null
+    private var oldLottery = model.gettTheLottery()
+
     private val lotteryName = mutableStateOf("")
     private val availableCampsites = mutableStateListOf<Campsite>()
     private val selectedCampsites = mutableStateListOf<String>()    // reference by ID
@@ -85,6 +83,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     private val bookingStart = mutableStateOf("")
     private val bookingEnd = mutableStateOf("")
 
+
     private val errorMessage = mutableStateOf("")
 
     /** Update
@@ -92,9 +91,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      *      otherwise it will clear the variables to be empty fields to act as an add view
      * */
     override fun update(model: Model){
-        if (isEdit){
-            oldLottery = model.gettTheLottery()
-        }
+        oldLottery = model.gettTheLottery()
         reset()
 
         model.getCampsitesByOwner(
@@ -111,7 +108,9 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
      * resets fields when cancel is pressed
      * */
     fun reset() {
+        selectedCampsites.clear()       // must clear selectedCampsites before re-adding them
         if (oldLottery != null) {
+            lotteryName.value = oldLottery!!.name
             selectedCampsites.addAll(oldLottery!!.campsiteIds)
             maxWinners.value = oldLottery!!.numWinners.toString()
             maxWaitlist.value = oldLottery!!.waitlistCapacity.toString()
@@ -120,7 +119,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             bookingStart.value = oldLottery!!.bookingStart
             bookingEnd.value = oldLottery!!.bookingEnd
         } else {
-            selectedCampsites.clear()
+            lotteryName.value = ""
             maxWinners.value = ""
             maxWaitlist.value = ""
             registrationStart.value = ""
@@ -132,7 +131,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
     }
 
     /*
-     * Function implemented by GPT-6 Luna (Github Copilot) to create the component
+     * Function implemented by GPT-6 Luna (GitHub Copilot) to create the component
      * 
      * "Use the screenshot as reference. I want to make a campsite dropdown menu as shown in the photo, 
      *  and it should be implemented in CampsiteSelect(). Don't provide any functionality outside of 
@@ -447,7 +446,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
             modifier = Modifier
         ) {
             Header(
-                headerText = headerName,
+                headerText = if (oldLottery != null) { "Edit Lottery" } else { "Add Lottery" },
                 backgroundColor = ownerHeaderBackgroundColor,
                 textColor = ownerHeaderTextColor,
             )
@@ -684,7 +683,7 @@ class AddEditLottery(model: Model, val isEdit : Boolean = false) : View(), Input
 @Composable
 fun AddLotteryViewPreview() {
     val m = Model()
-    val mp = AddEditLottery(m, false)
+    val mp = AddEditLottery(m)
     CodeTheme {
         (
             mp.ShowScreen(rememberNavController())

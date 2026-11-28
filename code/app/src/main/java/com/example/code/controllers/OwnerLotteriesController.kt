@@ -13,8 +13,9 @@ class OwnerLotteriesController(
      * Navigates to the owner lottery screen.
      */
     fun onEditLottery(navController: NavController, lotteryToDisplay: Lottery? = null) {  // Needs to take a NavController and Lottery object
-        model.settTheLottery(lotteryToDisplay)
-        navController.navigate(ADD_EDIT_LOTTERY)
+        model.settTheLottery(lotteryToDisplay) { // [4]
+            navController.navigate(ADD_EDIT_LOTTERY) // [4]
+        } // [4]
     }
 
     fun onNewLottery(navController: NavController) {

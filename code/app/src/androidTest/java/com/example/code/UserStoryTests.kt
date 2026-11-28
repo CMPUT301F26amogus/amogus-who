@@ -1166,7 +1166,17 @@ class UserStoryTests {
         )
         var result: Result<Unit>? = null
         val completed = CountDownLatch(1)
-        Model().updateLottery(updated) {
+        Model().updateLottery( // This function was altered by AI following a definition change [3]
+            lotteryId = updated.id,
+            campsiteIds = updated.campsiteIds,
+            registrationStart = updatedDates[0],
+            registrationEnd = updatedDates[1],
+            bookingStart = updatedDates[2],
+            bookingEnd = updatedDates[3],
+            numWinners = updated.numWinners,
+            waitlistCapacity = updated.waitlistCapacity,
+            name = updated.name,
+        ) {
             result = it
             completed.countDown()
         }

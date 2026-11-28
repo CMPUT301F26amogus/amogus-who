@@ -19,14 +19,15 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.Add
-import androidx.compose.material.icons.filled.PlayArrow
-import androidx.compose.material.icons.filled.Star
 import androidx.compose.material.icons.outlined.AccountCircle
 import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.getValue        // [4]
+import androidx.compose.runtime.mutableStateOf  // [4]
+import androidx.compose.runtime.setValue        // [4]
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -53,7 +54,7 @@ class OwnerLotteriesView(model : Model) : View() {
     val controller by lazy { OwnerLotteriesController(model = model) }
 
     // modify to pull real lotteries from model
-    var lotteries: List<Lottery> = emptyList()
+    var lotteries by mutableStateOf<List<Lottery>>(emptyList()) // [4]
 
     override fun update(model: Model) {
         model.getLotteriesByOwner(ownerId = model.currentDeviceId) { lotteries = it }
@@ -201,7 +202,12 @@ class OwnerLotteriesView(model : Model) : View() {
                     .padding(10.dp),
             ) {
                 ExtendedFloatingActionButton(
-                    onClick = { controller.onEditLottery(navController) },
+                    onClick = {
+                        controller.onEditLottery(
+                            navController = navController,
+                            lotteryToDisplay = lottery
+                        )
+                    },
                     shape = CircleShape,
                     containerColor = cardAccent,
                     contentColor = primaryTextColor,

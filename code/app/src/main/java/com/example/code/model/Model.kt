@@ -799,9 +799,10 @@ open class Model: ModelUpdater<View>{
     }
 
     /** Sets the specific lottery to be displayed */
-    fun settTheLottery(newLottery: Lottery?) {
+    fun settTheLottery(newLottery: Lottery?, afterNotify: () -> Unit = {}) { // [4]
         theLottery = newLottery
         notifyViews()
+        afterNotify() // [4]
     }
 
     /**
@@ -876,8 +877,8 @@ open class Model: ModelUpdater<View>{
 
         batch.commit()
             .addOnSuccessListener {
-                onResult(Result.success(lottery))
-                notifyViews()
+                notifyViews() // [4]
+                onResult(Result.success(lottery)) // [4]
             }
             .addOnFailureListener { onResult(Result.failure(it)) }
     }
@@ -1004,31 +1005,40 @@ open class Model: ModelUpdater<View>{
         lottery.campsiteIds.forEach { batch.update(campsiteRef.document(it), "lotteryId", "") }
         batch.commit()
             .addOnSuccessListener {
-                onResult(true)
-                notifyViews()
+                notifyViews() // [4]
+                onResult(true) // [4]
             }
             .addOnFailureListener { onResult(false) }
     }
 
-    // TODO: this doesnt work, still need to fix this.
-    fun updateLottery(lottery: Lottery, onResult: (Result<Unit>) -> Unit) {
+    fun updateLottery( // The following portion of this function was modified with AI [3]
+        lotteryId: String,
+        campsiteIds: List<String>,
+        registrationStart: String,
+        registrationEnd: String,
+        bookingStart: String,
+        bookingEnd: String,
+        numWinners: Int,
+        waitlistCapacity: Int = 0,
+        name: String = "",
+        onResult: (Result<Unit>) -> Unit
+    ) {
         val updates = mapOf(
-            "name" to lottery.name,
-            "campsiteIds" to lottery.campsiteIds,
-            "registrationStart" to lottery.registrationStart,
-            "registrationEnd" to lottery.registrationEnd,
-            "bookingStart" to lottery.bookingStart,
-            "bookingEnd" to lottery.bookingEnd,
-            "numWinners" to lottery.numWinners,
-            "waitlistCapacity" to lottery.waitlistCapacity,
-            "status" to lottery.status.name
+            "name" to name,
+            "campsiteIds" to campsiteIds,
+            "registrationStart" to registrationStart,
+            "registrationEnd" to registrationEnd,
+            "bookingStart" to bookingStart,
+            "bookingEnd" to bookingEnd,
+            "numWinners" to numWinners,
+            "waitlistCapacity" to waitlistCapacity
         )
 
-        lotteryRef.document(lottery.id)
-            .update(updates)
+        lotteryRef.document(lotteryId)
+            .update(updates)                   // the rest of this fn was not modified by [3]
             .addOnSuccessListener {
-                onResult(Result.success(Unit))
-                notifyViews()
+                notifyViews() // [4]
+                onResult(Result.success(Unit)) // [4]
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
