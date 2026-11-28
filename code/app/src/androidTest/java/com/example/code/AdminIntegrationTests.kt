@@ -1,5 +1,19 @@
 package com.example.code
 
+import android.annotation.SuppressLint
+import android.provider.Settings
+import androidx.compose.ui.test.onAllNodesWithTag
+import androidx.test.platform.app.InstrumentationRegistry
+import com.example.code.model.Role
+import com.example.code.model.User
+import com.google.android.gms.tasks.Task
+import com.google.android.gms.tasks.Tasks
+import com.google.firebase.Firebase
+import com.google.firebase.firestore.firestore
+import org.junit.Before
+import org.junit.rules.ExternalResource
+import java.util.concurrent.TimeUnit
+
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
 import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
@@ -10,9 +24,48 @@ import org.junit.Test
 import org.junit.runner.RunWith
 @RunWith(AndroidJUnit4::class)
 class AdminIntegrationTests {
-    @get:Rule
+    // the device id the app will read in MainActivity
+    @SuppressLint("HardwareIds")
+    private val deviceId: String = Settings.Secure.getString(
+        InstrumentationRegistry.getInstrumentation().targetContext.contentResolver,
+        Settings.Secure.ANDROID_ID,
+    )
+
+    private val userDoc by lazy { Firebase.firestore.collection("users").document(deviceId) }
+
+    // blocks until firestore answers so the admin is saved before the app opens
+    private fun <T> await(task: Task<T>): T = Tasks.await(task, 10, TimeUnit.SECONDS)
+
+    // signs this device in as an admin then puts its real profile back after
+    // runs before the compose rule because the app picks which home to show as soon as it opens
+    // see [30] in Citation.md
+    @get:Rule(order = 0)
+    val signInAsAdmin = object : ExternalResource() {
+        private var savedUser: Map<String, Any>? = null
+
+        override fun before() {
+            savedUser = await(userDoc.get()).data
+            await(userDoc.set(User(deviceId = deviceId, name = "Admin Integration Test", role = Role.ADMIN)))
+        }
+
+        override fun after() {
+            val user = savedUser
+            if (user != null) await(userDoc.set(user)) else await(userDoc.delete())
+        }
+    }
+
+    @get:Rule(order = 1)
     val composeTestRule = createAndroidComposeRule<MainActivity>() // access MainActivity
-    //TODO Write a before to fill role
+
+    // the app shows a spinner until it loads the user so wait for the admin home
+    @Before
+    fun waitForAdminHome() {
+        composeTestRule.waitUntil(10_000) {
+            composeTestRule.onAllNodesWithTag("Browse Profiles")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+    }
+
     @Test
     fun admin_navigate_to_browse_profiles() {
         // navigate to browse profiles

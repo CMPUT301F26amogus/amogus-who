@@ -111,6 +111,7 @@ class CampsiteRulesUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.11.01
     // the owner writes rules when listing a new campsite and they get saved with it
@@ -131,6 +132,7 @@ class CampsiteRulesUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.11.01
     // editing a campsite shows the rules it has now and saves the new ones

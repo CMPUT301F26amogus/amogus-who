@@ -32,7 +32,7 @@ import java.time.format.DateTimeParseException
 class Lottery(
     var name: String = "",
     val id: String = "",
-    val ownerId: String = "",
+    var ownerId: List<String> = emptyList(), // a lottery can have multiple owners, so ownerId is a list.
     var campsiteIds: List<String> = emptyList(),
     registrationStart: String = "",
     registrationEnd: String = "",
@@ -155,6 +155,52 @@ class Lottery(
      */
     fun bookingOpenOn(date: LocalDate = LocalDate.now()): Boolean =
         isWithin(bookingStart, bookingEnd, date)
+
+    // see [19] in Citation.md
+    /**
+     * finds an entrants spot on the waitlist eg to see if they won
+     *
+     * has a param so firestore doesnt try to save it
+     *
+     * @param deviceId device id of the entrant
+     * @return their entry or null if theyre not on the waitlist
+     */
+    fun entryFor(deviceId: String): WaitlistEntry? = waitlist.firstOrNull { it.id == deviceId }
+
+    // see [19] in Citation.md
+    /**
+     * checks if an entrant won and hasnt reserved or declined yet (US 01.04.03)
+     *
+     * has a param so firestore doesnt try to save it
+     *
+     * @param deviceId device id of the entrant
+     * @return what to tell the entrant or null if theyre a winner who hasnt answered yet
+     */
+    fun whyNotAWinner(deviceId: String): String? = when (entryFor(deviceId)?.status) {
+        EntryStatus.SELECTED -> null
+        EntryStatus.RESERVED -> "You already reserved a campsite from this lottery"
+        EntryStatus.DECLINED -> "You already declined this lottery"
+        else -> "Only lottery winners can do that"
+    }
+
+    // see [19] in Citation.md
+    /**
+     * checks if a winner can reserve on a day (US 01.04.01 01.04.02)
+     *
+     * they have to be a winner who hasnt answered yet and if the owner set a booking period it has to be open
+     * a lottery without a booking period lets winners reserve any time
+     *
+     * @param deviceId device id of the entrant
+     * @param date the day to check, today by default
+     * @return what to tell the entrant or null if they can go ahead
+     */
+    fun whyCantReserve(deviceId: String, date: LocalDate = LocalDate.now()): String? {
+        whyNotAWinner(deviceId)?.let { return it }
+        val booking = bookingPeriod() ?: return null
+        if (date.isBefore(LocalDate.parse(booking.start))) return "Booking for this lottery opens ${booking.start}"
+        if (!bookingOpenOn(date)) return "Booking for this lottery has closed"
+        return null
+    }
 
     // saved dates were checked when they were set so they parse
     private fun dateOrNull(value: String): LocalDate? =

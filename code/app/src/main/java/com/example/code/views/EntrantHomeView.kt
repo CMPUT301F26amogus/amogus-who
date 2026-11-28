@@ -36,7 +36,7 @@ class EntrantHomeView : HomeView() {
         Option("My Lotteries", Routes.LOTTERIES),
         Option("Search", Routes.SEARCH),
         Option("Scan QR Codes", ""),
-        Option("Messages", ""),
+        Option("Messages", Routes.MESSAGES),
     )
 
     @Composable
