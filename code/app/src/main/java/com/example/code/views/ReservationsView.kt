@@ -13,6 +13,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.PlayArrow
 import androidx.compose.material.icons.outlined.Clear
+import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Share
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.draw.clip
@@ -45,6 +46,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.controllers.EntrantReservationsController
+import com.example.code.controllers.MessagesController
 import com.example.code.model.EntrantReservation
 import com.example.code.ui.theme.CodeTheme
 import java.time.LocalDate
@@ -55,6 +57,8 @@ class ReservationsView(model: Model): View() {
     val currentReservations = mutableStateListOf<EntrantReservation>()
     val previousReservations = mutableStateListOf<EntrantReservation>()
     var controller = EntrantReservationsController(model)
+    // opens the chat with the campsite owner about a reservation (US 01.14.01)
+    private val messagesController = MessagesController(model)
 
     // swaps a lists contents with what firestore sent back
     private fun replaceWith(list: MutableList<EntrantReservation>, result: List<EntrantReservation>) {
@@ -139,6 +143,13 @@ class ReservationsView(model: Model): View() {
                                 navController = navController,
                                 onCancel = { toCancel = reservation },
                                 onCsv = { saveCsv(reservation) },
+                                onMessage = {
+                                    messagesController.openConversation(
+                                        navController,
+                                        reservation.reservation.id,
+                                        reservation.campsite?.name ?: "Campsite owner",
+                                    )
+                                },
                             )
                         }
                     }
@@ -238,6 +249,7 @@ class ReservationsView(model: Model): View() {
         navController: NavController,
         onCancel: (() -> Unit)?,
         onCsv: () -> Unit,
+        onMessage: (() -> Unit)? = null,
     ) {
         val campsite = reservation.campsite
         // no rating yet shows a dash instead of null
@@ -286,6 +298,10 @@ class ReservationsView(model: Model): View() {
                 // download this reservation as a csv (US 01.05.02)
                 CardAction("CSV", Icons.Outlined.Share, tag = "reservationCsv", onClick = onCsv)
                 Spacer(modifier = Modifier.weight(1f))
+                // message the campsite owner about this stay (US 01.14.01)
+                if (onMessage != null) {
+                    CardAction("Message", Icons.Outlined.Email, tag = "messageOwner", onClick = onMessage)
+                }
                 CardAction("Details", Icons.Filled.PlayArrow) {
                     controller.viewCampsite(reservation.reservation.campsiteId, navController = navController)
                 }

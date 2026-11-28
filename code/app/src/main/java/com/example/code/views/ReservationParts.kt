@@ -2,6 +2,7 @@ package com.example.code.views
 
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
@@ -130,7 +131,12 @@ fun GuestsBox(guests: Int, background: Color) {
  */
 @Composable
 fun CardAction(label: String, icon: ImageVector?, tag: String = "", onClick: () -> Unit) {
-    TextButton(onClick = onClick, modifier = Modifier.testTag(tag)) {
+    // less side padding than a normal text button so four fit across a card
+    TextButton(
+        onClick = onClick,
+        contentPadding = PaddingValues(horizontal = 8.dp, vertical = 8.dp),
+        modifier = Modifier.testTag(tag),
+    ) {
         if (icon != null) {
             Icon(icon, contentDescription = null, tint = pillText, modifier = Modifier.size(18.dp))
             Spacer(Modifier.width(6.dp))

@@ -27,6 +27,7 @@ import com.example.code.views.EntrantHomeView
 import com.example.code.views.LotteriesView
 import com.example.code.views.MapView
 import com.example.code.views.NotificationsView
+import com.example.code.views.MessagesView
 import com.example.code.views.OwnerCampsiteListView
 import com.example.code.views.OwnerLotteriesView
 import com.example.code.views.OwnerReservationsView
@@ -52,6 +53,7 @@ object Routes {
     // shared screens
     const val PROFILE = "profile"
     const val NOTIFICATIONS = "notifications"
+    const val MESSAGES = "messages"
     const val CAMPSITE_DETAILS = "campsite_details"
     const val MAP = "map"
 
@@ -111,6 +113,7 @@ fun App(id: String, model: Model) {
     val adminHomeView = remember { AdminHomeView() }
     val profileView = remember { ProfileSettingsView(model) }
     val notificationsView = remember { NotificationsView(model) }
+    val messagesView = remember { MessagesView(model) }
     val campsiteDetailsView = remember { CampsiteDetailsView(model) }
     val mapView = remember { MapView() }
     val reservationsView = remember { ReservationsView(model) }
@@ -156,6 +159,9 @@ fun App(id: String, model: Model) {
 
         model.addView(notificationsView)
         composable(Routes.NOTIFICATIONS) { notificationsView.ShowScreen(navController) }
+
+        model.addView(messagesView)
+        composable(Routes.MESSAGES) { messagesView.ShowScreen(navController) }
 
         model.addView(campsiteDetailsView)
         composable(Routes.CAMPSITE_DETAILS) { campsiteDetailsView.ShowScreen(navController) }

@@ -1092,7 +1092,7 @@ class LotteryWinUserStoryTests {
     private val lottery = Lottery(
         name = "US 01.04 Lottery",
         id = lotteryId,
-        ownerId = ownerId,
+        ownerId = listOf(ownerId),
         campsiteIds = listOf(firstCampsite.id, secondCampsite.id),
         registrationStart = today.minusDays(10).toString(),
         registrationEnd = today.minusDays(1).toString(),
