@@ -1834,6 +1834,24 @@ open class Model: ModelUpdater<View>{
     //endregion
 
     //region Messages
+
+    // which conversation the Messages screen shows (US 01.14.01, 02.12.01)
+    // a blank id means the list of conversations
+    var messageReservationId: String = ""
+    var messageTitle: String = ""
+
+    /**
+     * picks the conversation the Messages screen shows, like settTempCampsite does for campsites
+     *
+     * @param reservationId the reservation the conversation is about, "" for the list of conversations
+     * @param title what to show at the top, eg the campsite or entrant name
+     */
+    fun settMessageConversation(reservationId: String, title: String) {
+        messageReservationId = reservationId
+        messageTitle = title
+        notifyViews()
+    }
+
     // The following functions are from Google, Gemini, "Implement entrant and owner reservation messaging in Model.kt", 2026-11-26
     // [1]
     /**

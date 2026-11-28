@@ -44,6 +44,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.controllers.OwnerReservationsController
+import androidx.compose.ui.platform.testTag
+import androidx.compose.material.icons.outlined.Email
+import com.example.code.controllers.MessagesController
 import com.example.code.model.OwnerReservation
 
 /**
@@ -53,6 +56,8 @@ import com.example.code.model.OwnerReservation
 class OwnerReservationsView(model : Model) : View() {
 
     val controller by lazy { OwnerReservationsController(model = model) }
+    // opens the chat with the camper about a reservation (US 02.12.01)
+    private val messagesController = MessagesController(model)
     // one list per tab so each tab only shows its own reservations
     val activeReservations = mutableStateListOf<OwnerReservation>()
     val pastReservations = mutableStateListOf<OwnerReservation>()
@@ -166,6 +171,7 @@ class OwnerReservationsView(model : Model) : View() {
         onReject: (() -> Unit)?,
         label: String? = null,
         labelTag: String = "",
+        onMessage: (() -> Unit)?,
     ) {
         Column(
             modifier = Modifier
@@ -270,6 +276,27 @@ class OwnerReservationsView(model : Model) : View() {
                         modifier = Modifier.padding(horizontal = 6.dp).testTag(labelTag),
                     )
                 }
+                // message the camper about this stay (US 02.12.01)
+                if (onMessage != null) {
+                    Spacer(modifier = Modifier.weight(1f))
+                    Button(
+                        onClick = onMessage,
+                        shape = CircleShape,
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = cardAccent,
+                            contentColor = primaryTextColor,
+                        ),
+                        contentPadding = PaddingValues(horizontal = 16.dp),
+                        modifier = Modifier.testTag("messageEntrant"),
+                    ) {
+                        Icon(
+                            imageVector = Icons.Outlined.Email,
+                            contentDescription = null,
+                        )
+                        Spacer(modifier = Modifier.width(ButtonDefaults.IconSpacing))
+                        Text("Message")
+                    }
+                }
 
             }
         }
@@ -278,7 +305,7 @@ class OwnerReservationsView(model : Model) : View() {
 
     // This component is sandwiched between the tab manager and footer
     @Composable
-    private fun Content(state: String) {
+    private fun Content(state: String, navController: NavController) {
         val reservations = when (state) {
             "Active" -> activeReservations
             "Past" -> pastReservations
@@ -310,6 +337,14 @@ class OwnerReservationsView(model : Model) : View() {
                         else -> null
                     },
                     labelTag = "reservationLabel-${row.reservation.id}",
+                    // only active stays can be messaged about
+                    onMessage = if (state == "Active") ({
+                        messagesController.openConversation(
+                            navController,
+                            row.reservation.id,
+                            row.entrantName.ifBlank { "Camper" },
+                        )
+                    }) else null,
                 )
                 if (reservation != reservations.size - 1) {
                     Spacer(
@@ -365,7 +400,7 @@ class OwnerReservationsView(model : Model) : View() {
                         .background(primaryGreenColor)
                         .padding(20.dp),
                 ) {
-                    Content(state = state)
+                    Content(state = state, navController = navController)
                 }
             }
 
