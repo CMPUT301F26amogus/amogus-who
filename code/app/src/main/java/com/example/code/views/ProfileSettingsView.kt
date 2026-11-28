@@ -39,13 +39,30 @@ import Model
 import com.example.code.controllers.ProfileSettingsController
 
 class ProfileSettingsView(M: Model): View() {
+
+    var oldName: String =""
+    var oldEmail: String = ""
+    var oldNumber: String = ""
+    var oldNotifications = true
+
+    override fun update(model: Model) {
+        model.getUserObj { result ->
+            if (result != null) {
+                oldName = result.name
+                oldEmail = result.email.toString()
+                oldNumber = result.phone.toString()
+                oldNotifications = result.notificationsEnabled
+            }
+        }
+    }
+
     private var controller = ProfileSettingsController(M)
     @Composable
     public fun ShowScreen(navController: NavController) {
-        var name by remember { mutableStateOf("") }
-        var email by remember { mutableStateOf("") }
-        var number by remember { mutableStateOf("") }
-        var notifications by remember { mutableStateOf(true) }
+        var name by remember { mutableStateOf(oldName) }
+        var email by remember { mutableStateOf(oldEmail) }
+        var number by remember { mutableStateOf(oldNumber) }
+        var notifications by remember { mutableStateOf(oldNotifications) }
         // start the toggle at the user's saved setting
         LaunchedEffect(Unit) {
             controller.loadNotificationsEnabled { notifications = it }

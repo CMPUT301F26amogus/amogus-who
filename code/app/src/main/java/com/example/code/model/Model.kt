@@ -97,6 +97,17 @@ open class Model: ModelUpdater<View>{
     protected fun notifyViews(){
         views.forEach { it.update(this) }
     }
+
+    /**
+     * gives every registered view its data once, called by App right after the app starts.
+     *
+     * update() normally only runs when data changes, so without this screens like
+     * My Campsites are empty on a fresh launch until something changes.
+     * safe to call because get functions never call notifyViews (no loop)
+     */
+    fun loadViews() {
+        notifyViews()
+    }
     //endregion
 
 
@@ -346,6 +357,7 @@ open class Model: ModelUpdater<View>{
         maxOcc: Int,
         price: Double,
         availability: AvailabilitySchedule,
+        rules: String = "",
         onResult: (Boolean) -> Unit
     ) {
         if (currentDeviceId.isBlank()) {
@@ -362,6 +374,7 @@ open class Model: ModelUpdater<View>{
                 description = desc,
                 maxOccupancy = maxOcc,
                 pricePerNight = price,
+                rulesAndPolicy = rules.trim(),
                 availability = availability
             )
         } catch (e: IllegalArgumentException) {
@@ -713,6 +726,55 @@ open class Model: ModelUpdater<View>{
             }
             .addOnFailureListener {
                 onResult(emptyList())
+            }
+    }
+
+    fun filterCampsite(filter: Campsite, onResult: (List<Campsite>) -> Unit) {
+        campsiteRef.get()
+            .addOnSuccessListener { result ->
+                val campsites = result.toCampsites()
+
+                val filtered = campsites.filter { campsite ->
+
+                    val matchesLocation = filter.location.isBlank() ||
+                            campsite.location.contains(filter.location, ignoreCase = true)
+
+                    val matchesGuest = campsite.maxOccupancy >= filter.maxOccupancy
+
+                    matchesLocation && matchesGuest
+                }
+                onResult(filtered)
+            }
+            .addOnFailureListener {
+                onResult(emptyList())
+            }
+    }
+
+    fun getCampsiteDetails(onResult: (List<Campsite>, String?) -> Unit) {
+        campsiteRef.get()
+            .addOnSuccessListener { result ->
+                val summaries = result.documents.mapNotNull { document ->
+                    val campsite = document.toObject(Campsite::class.java)
+
+                    campsite?.let {
+                        Campsite(
+                            name = it.name,
+                            location = it.location,
+                            maxOccupancy = it.maxOccupancy,
+                            pricePerNight = it.pricePerNight,
+                            description = it.description,
+                            rulesAndPolicy = it.rulesAndPolicy,
+                            imageUrl = it.imageUrl,
+                            amenities = it.amenities,
+                            availability = it.availability,
+                            ratings = it.ratings
+                        )
+                    }
+                }
+                onResult(summaries, null)
+            }
+            .addOnFailureListener { exception ->
+                onResult(emptyList(), exception.message?: "Failed to retrieve campsite details")
             }
     }
 
@@ -1077,7 +1139,6 @@ open class Model: ModelUpdater<View>{
                     return@addOnSuccessListener
                 }
                 onResult(Result.success(current.waitlist.filter { it.status == EntryStatus.WAITING }))
-                notifyViews()
             }
             .addOnFailureListener { exception ->
                 onResult(Result.failure(exception))
@@ -1091,20 +1152,28 @@ open class Model: ModelUpdater<View>{
          * Create a reservation for a campsite
          *
          * the current user is the entrant and the lottery is the one the campsite is in
+         * once its saved the entrant gets a confirmation notification (US 01.05.01)
+         * if the campsite has rules the entrant has to have agreed to them first (US 02.11.01)
          *
          * @param checkIn check in date like 2027-05-01
          * @param checkOut check out date like 2027-05-03
          * @param guests number of guests
          * @param campsite the campsite to book
          * @param rulesAccepted true if the entrant agreed to the campsite rules
+         * @param onResult gets the saved reservation or a failure if the rules werent agreed to or saving failed
          */
         fun makeReservation(
             checkIn: String,
             checkOut: String,
             guests: Int,
             campsite: Campsite,
-            rulesAccepted: Boolean = false
+            rulesAccepted: Boolean = false,
+            onResult: (Result<Reservation>) -> Unit = {}
         ) {
+            if (campsite.hasRules() && !rulesAccepted) {
+                onResult(Result.failure(IllegalArgumentException("You have to agree to the campsite rules first")))
+                return
+            }
             val doc = reservationRef.document()
             val newReservation = Reservation(
                 id = doc.id,
@@ -1117,19 +1186,37 @@ open class Model: ModelUpdater<View>{
                 rulesAccepted = rulesAccepted,
                 lotteryId = campsite.lotteryId
             )
-            doc.set(newReservation).addOnSuccessListener { notifyViews() }
+            doc.set(newReservation)
+                .addOnSuccessListener {
+                    // notifyUser skips it if they opted out so the csv download is the backup (US 01.05.02)
+                    notifyUser(
+                        "Your reservation at ${campsite.name} from $checkIn to $checkOut is confirmed",
+                        currentDeviceId
+                    )
+                    onResult(Result.success(newReservation))
+                    notifyViews()
+                }
+                .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
         }
 
         /**
-         * lets an owner reject a booked reservation eg when a fire closes the campsite
+         * lets an owner reject a booked reservation eg when a fire closes the campsite (US 02.08.01)
          *
          * only stays that are active and not over yet can be rejected
+         * rejecting frees the dates since booked dates only count active reservations
+         *
+         * once its rejected the entrant who booked it gets a notification
          *
          * @param reservation the reservation to reject
          * @param onResult success once its rejected or a failure if it wasnt found wasnt active or saving failed
          */
         fun rejectReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
-            endActiveReservation(reservation.id, ReservationStatus.REJECTED, onResult)
+            endActiveReservation(reservation.id, ReservationStatus.REJECTED) { result ->
+                if (result.isSuccess) {
+                    notifyReservationEnded(reservation, reservation.entrantId, "was rejected by the campsite owner")
+                }
+                onResult(result)
+            }
         }
 
         /**
@@ -1138,11 +1225,42 @@ open class Model: ModelUpdater<View>{
          * only stays that are active and not over yet can be cancelled
          * cancelling frees the dates since booked dates only count active reservations
          *
+         * once its cancelled the entrant gets a confirmation notification (US 01.07.02)
+         *
          * @param reservation the reservation to cancel
          * @param onResult success once its cancelled or a failure if it wasnt found wasnt active or saving failed
          */
         fun cancelReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
-            endActiveReservation(reservation.id, ReservationStatus.CANCELLED, onResult)
+            endActiveReservation(reservation.id, ReservationStatus.CANCELLED) { result ->
+                if (result.isSuccess) {
+                    // the entrant is cancelling their own so its them if the id wasnt saved
+                    notifyReservationEnded(reservation, reservation.entrantId.ifBlank { currentDeviceId }, "was cancelled")
+                }
+                onResult(result)
+            }
+        }
+
+        /**
+         * tells the entrant who booked a reservation that it was cancelled or rejected
+         *
+         * reservations only keep the campsite id so this looks up the name for the message
+         *
+         * @param reservation the reservation that ended
+         * @param entrantId who to tell and nobody gets told if its blank
+         * @param what how it ended like was cancelled
+         */
+        private fun notifyReservationEnded(reservation: Reservation, entrantId: String, what: String) {
+            if (entrantId.isBlank()) return
+            val sendNotification = { campsite: Campsite? ->
+                val where = campsite?.name ?: "your campsite"
+                notifyUser(
+                    "Your reservation at $where from ${reservation.checkIn} to ${reservation.checkOut} $what",
+                    entrantId
+                )
+            }
+            // firestore throws on a blank document id so skip the lookup then
+            if (reservation.campsiteId.isBlank()) sendNotification(null)
+            else getCampsite(reservation.campsiteId, sendNotification)
         }
 
         /**
@@ -1331,13 +1449,16 @@ open class Model: ModelUpdater<View>{
         }
 
         /**
-         * gets the cancelled reservations at all of the current owners campsites
+         * gets the cancelled and rejected reservations at all of the current owners campsites
+         *
+         * rejected ones are in here too so they dont disappear after the owner rejects them (US 02.08.01)
          *
          * @param onResult gets the reservations sorted by check in or an empty list if it failed
          */
         fun getOwnerCancelledReservations(onResult: (List<OwnerReservation>) -> Unit) {
             getOwnerReservations { all ->
-                onResult(all.filter { it.reservation.isCancelled() }.sortedBy { it.reservation.checkIn })
+                onResult(all.filter { it.reservation.isCancelled() || it.reservation.isRejected() }
+                    .sortedBy { it.reservation.checkIn })
             }
         }
 
