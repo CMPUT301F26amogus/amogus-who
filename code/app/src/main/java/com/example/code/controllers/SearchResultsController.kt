@@ -4,7 +4,7 @@ import Model
 import androidx.navigation.NavController
 import com.example.code.Routes
 
-class SearchResultsController(
+open class SearchResultsController(
     private val model : Model
 ) {
     /**
