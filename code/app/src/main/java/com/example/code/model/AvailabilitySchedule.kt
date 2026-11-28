@@ -19,6 +19,7 @@ class AvailabilitySchedule(
     val bookings: List<DateRange> = emptyList(),
 ) {
 
+    // see [19] in Citation.md
     /**
      * the stays that can still be booked (US 01.04.01)
      *
@@ -59,6 +60,7 @@ class AvailabilitySchedule(
         return free
     }
 
+    // see [19] in Citation.md
     /**
      * checks if a whole stay fits inside one of the [freeStays]
      *

@@ -106,6 +106,7 @@ class ReserveCampsiteControllerTest {
     }
 
     // US 01.04.01 lottery winners pick their days on the calendar and get told if one is missing
+    // see [21] in Citation.md
     private fun lotteryReserve(lottery: Lottery?, checkIn: LocalDate?, checkOut: LocalDate?): String? {
         var message: String? = null
         controller.makeLotteryReservation(campsite, lottery, checkIn, checkOut, "2", today = today) {
@@ -114,6 +115,7 @@ class ReserveCampsiteControllerTest {
         return message
     }
 
+    // see [21] in Citation.md
     @Test
     fun calendar_needsBothDaysPicked() {
         val lottery = Lottery(id = "lottery-1", campsiteIds = listOf(campsite.id))
@@ -123,6 +125,7 @@ class ReserveCampsiteControllerTest {
         assertEquals("There's no lottery win to reserve from", lotteryReserve(null, may1, may1.plusDays(2)))
     }
 
+    // see [21] in Citation.md
     @Test
     fun calendar_daysStillGetChecked() {
         val lottery = Lottery(id = "lottery-1", campsiteIds = listOf(campsite.id))

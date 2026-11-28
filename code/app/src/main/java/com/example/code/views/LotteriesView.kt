@@ -50,6 +50,7 @@ class LotteriesView(M: Model): View() {
     // a lottery only stores campsite ids, so the campsites are kept here by id
     val campsites = mutableStateMapOf<String, Campsite>()
     // where this user is in each lottery by lottery id so winners get reserve and decline (US 01.04.01)
+    // see [19] in Citation.md
     val myStatus = mutableStateMapOf<String, EntryStatus>()
     var previousLotteries = emptyList<Reservation>()
 
@@ -90,6 +91,7 @@ class LotteriesView(M: Model): View() {
     public fun ShowScreen(navController: NavController) {
         var state by remember {mutableStateOf("Current")}
         // the won lottery waiting on the are you sure popup before its declined (US 01.04.03)
+        // the decline popup is from [19] in Citation.md
         var toDecline by remember { mutableStateOf<Lottery?>(null) }
         val context = LocalContext.current
         val tabs = mutableListOf<Tab>(
@@ -179,6 +181,7 @@ class LotteriesView(M: Model): View() {
             )
         }
     }
+    // the won decline and reserve parts are from [19] in Citation.md
     /**
      * one campsite of a lottery the user is in
      *

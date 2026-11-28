@@ -9,6 +9,7 @@ import com.example.code.Routes
 class EntrantLotteriesController(
     private val model : Model
 ) {
+    // see [19] in Citation.md
     /**
      * opens the reserve screen for one campsite of a lottery the user won (US 01.04.01 01.04.02)
      *
@@ -24,6 +25,7 @@ class EntrantLotteriesController(
         navController.navigate(Routes.RESERVE_CAMPSITE)
     }
 
+    // see [19] in Citation.md
     /**
      * says no to a lottery win eg they changed their mind (US 01.04.03)
      *

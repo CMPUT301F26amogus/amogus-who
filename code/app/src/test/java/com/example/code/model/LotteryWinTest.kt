@@ -6,6 +6,7 @@ import org.junit.Test
 import java.time.LocalDate
 
 // US 01.04.01 01.04.02 01.04.03 only a winner who hasnt answered yet can reserve or decline
+// see [19] in Citation.md
 class LotteryWinTest {
 
     private fun lottery(status: EntryStatus?, bookingStart: String = "2027-04-10", bookingEnd: String = "2027-04-20") =

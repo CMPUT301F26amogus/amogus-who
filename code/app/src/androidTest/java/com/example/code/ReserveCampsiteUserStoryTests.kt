@@ -175,6 +175,7 @@ class ReserveCampsiteUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.05.01), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.05.01
     // as an entrant i want to receive confirmation of my campsite reservation
@@ -204,6 +205,7 @@ class ReserveCampsiteUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.05.02), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.05.02
     // the confirmation lets the entrant download the reservation as a csv
@@ -225,6 +227,7 @@ class ReserveCampsiteUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.05.01), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.05.01
     // bad input isnt confirmed and nothing gets saved
@@ -239,6 +242,7 @@ class ReserveCampsiteUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.11.01
     // the entrant sees the owners rules with a box to agree to them that starts unticked
@@ -254,6 +258,7 @@ class ReserveCampsiteUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.11.01
     // as a campsite owner i want entrants to confirm theyve read the rules before confirming a reservation
@@ -273,6 +278,7 @@ class ReserveCampsiteUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.11.01
     // the reservation remembers the entrant agreed to the rules
@@ -287,6 +293,7 @@ class ReserveCampsiteUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.11.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.11.01
     // a campsite with no rules has nothing to agree to so theres no box and reserving still works

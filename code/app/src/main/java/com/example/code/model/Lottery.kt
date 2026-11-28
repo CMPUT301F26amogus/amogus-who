@@ -156,6 +156,7 @@ class Lottery(
     fun bookingOpenOn(date: LocalDate = LocalDate.now()): Boolean =
         isWithin(bookingStart, bookingEnd, date)
 
+    // see [19] in Citation.md
     /**
      * finds an entrants spot on the waitlist eg to see if they won
      *
@@ -166,6 +167,7 @@ class Lottery(
      */
     fun entryFor(deviceId: String): WaitlistEntry? = waitlist.firstOrNull { it.id == deviceId }
 
+    // see [19] in Citation.md
     /**
      * checks if an entrant won and hasnt reserved or declined yet (US 01.04.03)
      *
@@ -181,6 +183,7 @@ class Lottery(
         else -> "Only lottery winners can do that"
     }
 
+    // see [19] in Citation.md
     /**
      * checks if a winner can reserve on a day (US 01.04.01 01.04.02)
      *

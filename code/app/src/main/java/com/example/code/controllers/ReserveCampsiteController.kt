@@ -11,6 +11,7 @@ import java.time.format.ResolverStyle
 class ReserveCampsiteController(
     private val model: Model
 ) {
+    // the lottery part is from [19] in Citation.md
     /**
      * checks what the entrant typed and books the campsite (US 01.05.01)
      *
@@ -81,6 +82,7 @@ class ReserveCampsiteController(
         }
     }
 
+    // see [21] in Citation.md
     /**
      * books the days a lottery winner picked on the calendar (US 01.04.01 01.04.02)
      *
@@ -128,6 +130,7 @@ class ReserveCampsiteController(
         )
     }
 
+    // see [19] in Citation.md
     /**
      * says no to a lottery win eg none of the available dates work (US 01.04.03)
      *

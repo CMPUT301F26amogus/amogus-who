@@ -65,6 +65,7 @@ data class DateRange(val start: String = "", val end: String = "") {
 
     //the above code used to work for LocalDate, in UML we agreeed to change it to String cause of firebase.
 
+    // see [21] in Citation.md
     /**
      * every day a stay inside this range could check in or check out on (US 01.04.01)
      *

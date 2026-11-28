@@ -12,6 +12,7 @@ import androidx.compose.ui.test.hasAnyAncestor
 import androidx.compose.ui.test.hasClickAction
 import androidx.compose.ui.test.hasContentDescription
 import androidx.compose.ui.test.hasScrollAction
+import androidx.compose.ui.test.hasText
 import androidx.compose.ui.test.hasTestTag
 import androidx.compose.ui.test.performScrollToNode
 import androidx.compose.ui.test.junit4.createComposeRule
@@ -55,6 +56,7 @@ import java.time.format.DateTimeFormatter
 import java.util.Locale
 import java.util.concurrent.TimeUnit
 
+// see [19] in Citation.md
 /**
  * user story tests for a lottery winner reserving or declining (US 01.04.01 01.04.02 01.04.03)
  *
@@ -228,11 +230,16 @@ class LotteryWinUserStoryTests {
     private val dayLabel = DateTimeFormatter.ofPattern("EEEE, MMMM d, yyyy", Locale.US)
 
     // a day on the availability calendar
-    private fun day(date: LocalDate): SemanticsMatcher =
-        hasContentDescription(date.format(dayLabel), substring = true) and hasClickAction() and
-            hasAnyAncestor(hasTestTag("availabilityCalendar"))
+    // material3 puts the date in the days text in newer versions and its content description in older ones
+    // checking the text as well as the content description is from [23] in Citation.md
+    private fun day(date: LocalDate): SemanticsMatcher {
+        val label = date.format(dayLabel)
+        return (hasText(label, substring = true) or hasContentDescription(label, substring = true)) and
+            hasClickAction() and hasAnyAncestor(hasTestTag("availabilityCalendar"))
+    }
 
     // scrolls the calendar to a days month so it can be checked or tapped
+    // see [21] in Citation.md
     private fun showDay(date: LocalDate) = composeTestRule.run {
         onNodeWithTag("availabilityCalendar").performScrollTo()
         onNode(hasScrollAction() and hasAnyAncestor(hasTestTag("availabilityCalendar")))
@@ -252,6 +259,7 @@ class LotteryWinUserStoryTests {
     private fun shown(date: LocalDate): String = date.format(DateTimeFormatter.ofPattern("MM/dd/yy"))
 
     /* The following function is from Anthropic, Claude Opus 5.5, "i am trying to implement user stories 01.04.03, 01.04.01, 01.04.02" (US 01.04.01), 2026-11-27
+    see [19] in Citation.md
     */
     // US 01.04.01
     // as an entrant if i win i want to see the available dates i can reserve the campsite for
@@ -281,6 +289,7 @@ class LotteryWinUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "i thought we were supposed to do something with the calender for this" (US 01.04.01), 2026-11-27
+    see [21] in Citation.md
     */
     // US 01.04.01
     // the winner has to pick both days on the calendar before reserving
@@ -300,6 +309,7 @@ class LotteryWinUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "i am trying to implement user stories 01.04.03, 01.04.01, 01.04.02" (US 01.04.01), 2026-11-27
+    see [19] in Citation.md
     */
     // US 01.04.01
     // dates that arent available cant be reserved and the win isnt used up
@@ -318,6 +328,7 @@ class LotteryWinUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "i am trying to implement user stories 01.04.03, 01.04.01, 01.04.02" (US 01.04.02), 2026-11-27
+    see [19] in Citation.md
     */
     // US 01.04.02
     // as an entrant if i win a multiple campsite lottery i want to choose which campsite and which dates to reserve
@@ -351,6 +362,7 @@ class LotteryWinUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "i am trying to implement user stories 01.04.03, 01.04.01, 01.04.02" (US 01.04.02), 2026-11-27
+    see [19] in Citation.md
     */
     // US 01.04.02
     // a winner can only reserve one stay from a lottery
@@ -377,6 +389,7 @@ class LotteryWinUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "i am trying to implement user stories 01.04.03, 01.04.01, 01.04.02" (US 01.04.03), 2026-11-27
+    see [19] in Citation.md
     */
     // US 01.04.03
     // as an entrant if i win i want to decline if i changed my mind
@@ -405,6 +418,7 @@ class LotteryWinUserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "i am trying to implement user stories 01.04.03, 01.04.01, 01.04.02" (US 01.04.03), 2026-11-27
+    see [19] in Citation.md
     */
     // US 01.04.03
     // as an entrant if i win i want to decline when none of the remaining dates work

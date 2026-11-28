@@ -412,6 +412,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.01", 2026-11-23
+    see [1] in Citation.md
     */
     // US 02.07.01
     // as a campsite owner i want to view a list of active reservations
@@ -458,6 +459,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.02", 2026-11-23
+    see [2] in Citation.md
     */
     // US 02.07.02
     // as a campsite owner i want to view a list of past reservations
@@ -493,6 +495,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.03", 2026-11-23
+    see [3] in Citation.md
     */
     // US 02.07.03
     // as a campsite owner i want to view a list of cancelled reservations
@@ -518,6 +521,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 02.07.03", 2026-11-23
+    see [3] in Citation.md
     */
     // US 02.07.03
     // an entrant cancelling or declining through the app should land in the owners cancelled list
@@ -544,6 +548,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.08.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.08.01
     // as a campsite owner i want to reject a reservation
@@ -593,6 +598,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.08.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.08.01
     // the entrant gets told when the owner rejects their reservation
@@ -620,6 +626,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "lets start with writing the user story tests for these" (US 02.08.01), 2026-11-26
+    see [12] in Citation.md
     */
     // US 02.08.01
     // a stay thats already over cant be rejected even though its still saved as active
@@ -643,6 +650,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.06.01", 2026-11-24
+    see [4] in Citation.md
     */
     // US 01.06.01
     // as an entrant i want to view a list of my active reservations
@@ -670,6 +678,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.06.02", 2026-11-24
+    see [5] in Citation.md
     */
     // US 01.06.02
     // as an entrant i want to view a list of my past reservations
@@ -704,6 +713,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.07.01", 2026-11-24
+    see [6] in Citation.md
     */
     // US 01.07.01
     // as an entrant i want to cancel my campsite reservation
@@ -765,6 +775,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "Implement an android test case for user story 01.07.01", 2026-11-24
+    see [6] in Citation.md
     */
     // US 01.07.01
     // a stay thats already over cant be cancelled even though its still saved as active
@@ -786,6 +797,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.05.01), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.05.01
     // as an entrant i want to receive confirmation of my campsite reservation
@@ -817,6 +829,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.05.01), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.05.01
     // dates someone already booked arent confirmed and nothing is sent
@@ -836,6 +849,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.05.02), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.05.02
     // as an entrant i want to receive my reservation by notification or downloadable csv
@@ -865,6 +879,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.05.02), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.05.02
     // an entrant who turned notifications off still gets their reservation as a csv
@@ -887,6 +902,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.07.02), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.07.02
     // as an entrant i want to receive confirmation of cancellation by notification or downloadable csv
@@ -924,6 +940,7 @@ class UserStoryTests {
     }
 
     /* The following function is from Anthropic, Claude Opus 5.5, "make the userstorytests" (US 01.07.02), 2026-11-26
+    see [8] in Citation.md
     */
     // US 01.07.02
     // an entrant who turned notifications off can download the cancellation as a csv instead

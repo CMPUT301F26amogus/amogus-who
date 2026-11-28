@@ -7,6 +7,7 @@ import org.junit.Test
 import java.time.LocalDate
 
 // US 01.04.01 a lottery winner sees the dates still free at a campsite
+// see [19] in Citation.md
 class AvailabilityScheduleTest {
 
     // open for may 2027 so the last check out is june 1
@@ -97,6 +98,7 @@ class AvailabilityScheduleTest {
     }
 
     // the calendar lets a stay start or end on any of these days
+    // see [21] in Citation.md
     @Test
     fun checkInAndOutDays_includeTheLastCheckOut() {
         val days = stay("2027-05-30", "2027-06-02").checkInAndOutDays()
@@ -106,6 +108,7 @@ class AvailabilityScheduleTest {
         )
     }
 
+    // see [21] in Citation.md
     @Test
     fun checkInAndOutDays_emptyForBadRanges() {
         assertTrue(stay("", "2027-05-02").checkInAndOutDays().isEmpty())

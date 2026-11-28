@@ -68,6 +68,7 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
     // state so the screen redraws when update() gives it the campsite
     var campsite by mutableStateOf<Campsite?>(model.gettTempCampsite())
     // the lottery they won to get here or null if theres no lottery
+    // see [19] in Citation.md
     var lottery by mutableStateOf<Lottery?>(model.lotteryToReserve)
     // the stays still free at the campsite as check in to latest check out (US 01.04.01)
     val availableDates = mutableStateListOf<DateRange>()
@@ -100,12 +101,15 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
     val rating get() = campsite?.averageRating?.let { "%.1f".format(it) } ?: "-"
 
     // the calendar works in utc midnight millis so these turn days into that and back
+    // see [21] in Citation.md
     private fun millisOf(day: LocalDate): Long = day.atStartOfDay(ZoneOffset.UTC).toInstant().toEpochMilli()
 
+    // see [21] in Citation.md
     private fun dayOf(millis: Long?): LocalDate? =
         millis?.let { Instant.ofEpochMilli(it).atZone(ZoneOffset.UTC).toLocalDate() }
 
     // a calendar that opens on the first free month and only lets the pickable days be tapped
+    // see [21] in Citation.md
     @OptIn(ExperimentalMaterial3Api::class)
     private fun calendarStateFor(pickable: Set<LocalDate>): DateRangePickerState {
         val first = pickable.minOrNull() ?: LocalDate.now()
@@ -140,6 +144,7 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
     }
 
     // asks the model for the free dates when its a lottery win, a get so it doesnt loop back into update
+    // see [19] in Citation.md
     private fun loadAvailableDates(model: Model) {
         val site = campsite
         if (lottery == null || site == null) {
@@ -173,8 +178,10 @@ class ReserveCampsite(model: Model) : View(), InputFieldFunctions {
         // keyed on the campsite so ticking it for one campsite doesnt count for another
         var rulesAccepted by remember(campsite?.id) { mutableStateOf(false) }
         // shows the are you sure popup before declining the lottery win (US 01.04.03)
+        // the decline button and popup are from [19] in Citation.md
         var askDecline by remember { mutableStateOf(false) }
         // every day a stay could start or end on, the calendar greys out the rest (US 01.04.01)
+        // the calendar is from [21] in Citation.md
         val pickable = remember(availableDates.toList()) {
             availableDates.flatMap { it.checkInAndOutDays() }.toSet()
         }

@@ -139,6 +139,7 @@ open class Model: ModelUpdater<View>{
         notifyViews()
     }
 
+    // see [19] in Citation.md
     /**
      * the lottery the reserve screen is booking a win from (US 01.04.01)
      *
@@ -147,6 +148,7 @@ open class Model: ModelUpdater<View>{
     var lotteryToReserve: Lottery? = null
         private set
 
+    // see [19] in Citation.md
     /**
      * picks a campsite from a lottery the user won for the reserve screen (US 01.04.02)
      *
@@ -900,6 +902,7 @@ open class Model: ModelUpdater<View>{
                 }
         }
 
+        // rewritten in [19] in Citation.md
         /**
          * Gets a list of lotteries that the user is in
          *
@@ -1073,6 +1076,7 @@ open class Model: ModelUpdater<View>{
         }
     }
 
+    // see [19] in Citation.md
     /**
      * lets a lottery winner say no to their win (US 01.04.03)
      *
@@ -1109,6 +1113,7 @@ open class Model: ModelUpdater<View>{
     }
 
     // the lotterys waitlist with the current users entry set to a new status
+    // see [19] in Citation.md
     private fun withMyStatus(lottery: Lottery, status: EntryStatus): List<WaitlistEntry> =
         lottery.waitlist.map {
             if (it.id == currentDeviceId) WaitlistEntry(id = it.id, lotteryId = it.lotteryId, status = status) else it
@@ -1183,6 +1188,7 @@ open class Model: ModelUpdater<View>{
                 .addOnFailureListener { exception -> onResult(Result.failure(exception)) }
         }
 
+        // see [19] in Citation.md
         /**
          * books a stay at one of the campsites of a lottery the current user won (US 01.04.01 01.04.02)
          *
@@ -1609,6 +1615,7 @@ open class Model: ModelUpdater<View>{
                 }
         }
 
+        // see [19] in Citation.md
         /**
          * gets the stays a lottery winner can still book at a campsite (US 01.04.01)
          *
