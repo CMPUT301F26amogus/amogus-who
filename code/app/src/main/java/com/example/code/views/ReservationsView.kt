@@ -36,6 +36,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.example.code.controllers.EntrantReservationsController
+import com.example.code.controllers.MessagesController
 import com.example.code.model.EntrantReservation
 import com.example.code.ui.theme.CodeTheme
 import java.time.LocalDate
@@ -46,6 +47,8 @@ class ReservationsView(model: Model): View() {
     val currentReservations = mutableStateListOf<EntrantReservation>()
     val previousReservations = mutableStateListOf<EntrantReservation>()
     var controller = EntrantReservationsController(model)
+    // opens the chat with the campsite owner about a reservation (US 01.14.01)
+    private val messagesController = MessagesController(model)
 
     // swaps a lists contents with what firestore sent back
     private fun replaceWith(list: MutableList<EntrantReservation>, result: List<EntrantReservation>) {
@@ -297,6 +300,20 @@ class ReservationsView(model: Model): View() {
                         modifier = Modifier.clickable {
                             controller.viewCampsite(reservation.reservation.campsiteId, navController = navController)
                         },
+                    )
+                    Spacer(modifier = Modifier.width(20.dp))
+                    // message the campsite owner about this stay (US 01.14.01)
+                    Text(
+                        "Message", color = Color(0xff5530a4),
+                        fontSize = 20.sp,
+                        fontWeight = FontWeight.Bold,
+                        modifier = Modifier.clickable {
+                            messagesController.openConversation(
+                                navController,
+                                reservation.reservation.id,
+                                reservation.campsite?.name ?: "Campsite owner",
+                            )
+                        }.testTag("messageOwner"),
                     )
                 }
             }

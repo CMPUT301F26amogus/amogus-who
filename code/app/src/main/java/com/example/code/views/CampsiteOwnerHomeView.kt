@@ -27,7 +27,7 @@ class CampsiteOwnerHomeView : HomeView() {
         Option("Reservations", Routes.OWNER_RESERVATIONS),
         Option("Lotteries", Routes.OWNER_LOTTERIES),
         Option("QR Codes", ""),
-        Option("Messages", ""),
+        Option("Messages", Routes.MESSAGES),
     )
 
     @Composable
