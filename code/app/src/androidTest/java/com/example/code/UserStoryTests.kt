@@ -62,7 +62,6 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.code.model.AvailabilitySchedule
 import com.example.code.model.EntryStatus
-import com.example.code.model.Lottery
 import com.example.code.model.WaitlistEntry
 import com.example.code.views.LotteriesView
 import com.example.code.views.ReserveCampsite
@@ -1250,6 +1249,73 @@ class UserStoryTests {
     }
     /* END AI-generated implementation here [2]  */
 
+    /* The following function is from Anthropic, Claude Opus 5.5, "ok lets do # 17" (US 02.10.02), 2026-11-27
+    */
+    // US 02.10.02
+    // as a campsite owner i want to view a list of all notifications i have sent
+    @Test
+    fun us_02_10_02_owner_views_sent_notifications() {
+        // rejecting tells the entrant, so the owner has sent them a notification
+        openOwnerReservations("Active")
+        waitForText(nameOf(toRejectReservation))
+        composeTestRule
+            .onNodeWithTag("rejectReservation-${toRejectReservation.id}")
+            .performClick()
+        composeTestRule
+            .onNodeWithText("Yes, reject")
+            .performClick()
+        waitForNotificationTo(toRejectReservation.entrantId, "rejected", testCampsite.name)
+
+        // it shows up on the sent notifications screen from the owner home
+        composeTestRule
+            .onNodeWithText("Home")
+            .performClick()
+        composeTestRule.waitUntil(10_000) {
+            composeTestRule.onAllNodesWithTag("Sent Notifications")
+                .fetchSemanticsNodes().isNotEmpty()
+        }
+        composeTestRule
+            .onNodeWithTag("Sent Notifications")
+            .performClick()
+        composeTestRule
+            .onNodeWithTag("Header: Sent Notifications")
+            .assertExists()
+        waitForText("was rejected by the campsite owner")
+        composeTestRule
+            .onAllNodesWithText(testCampsite.name, substring = true)
+            .onFirst()
+            .assertIsDisplayed()
+    }
+
+    /* The following function is from Anthropic, Claude Opus 5.5, "ok lets do # 17" (US 02.10.02), 2026-11-27
+    */
+    // US 02.10.02
+    // only notifications the owner sent are listed, not ones the app sent on its own
+    @Test
+    fun us_02_10_02_sent_list_only_has_owners_notifications() {
+        // the app confirms a reservation by itself so that one has no sender
+        assertTrue(reserve(reserveCampsite, LocalDate.now().plusDays(40), LocalDate.now().plusDays(42), "2").isSuccess)
+        waitForNotification("is confirmed", reserveCampsite.name)
+
+        // the owner rejecting a stay is sent by the owner
+        val model = Model().apply { setDeviceInformation(deviceId) }
+        val rejected = CountDownLatch(1)
+        model.rejectReservation(toRejectReservation) { rejected.countDown() }
+        assertTrue("reject never answered", rejected.await(10, TimeUnit.SECONDS))
+        waitForNotificationTo(toRejectReservation.entrantId, "rejected", testCampsite.name)
+
+        var sent: List<com.example.code.model.Notification> = emptyList()
+        val loaded = CountDownLatch(1)
+        model.getSentNotifications {
+            sent = it
+            loaded.countDown()
+        }
+        assertTrue("sent notifications never loaded", loaded.await(10, TimeUnit.SECONDS))
+
+        assertTrue(sent.any { "rejected" in it.content && testCampsite.name in it.content })
+        assertTrue(sent.all { it.ownerId == deviceId })
+        assertFalse(sent.any { "is confirmed" in it.content })
+    }
 }
 
 // see [19] in Citation.md

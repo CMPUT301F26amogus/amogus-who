@@ -30,6 +30,7 @@ import com.example.code.views.NotificationsView
 import com.example.code.views.MessagesView
 import com.example.code.views.OwnerCampsiteListView
 import com.example.code.views.OwnerLotteriesView
+import com.example.code.views.OwnerSentNotificationsView
 import com.example.code.views.OwnerReservationsView
 import com.example.code.views.ProfileSettingsView
 import com.example.code.views.RegistrationView
@@ -68,6 +69,7 @@ object Routes {
     const val OWNER_CAMPSITES = "owner_campsites"
     const val OWNER_RESERVATIONS = "owner_reservations"
     const val OWNER_LOTTERIES = "owner_lotteries"
+    const val OWNER_SENT_NOTIFICATIONS = "owner_sent_notifications"
     const val ADD_EDIT_CAMPSITE = "add_edit_campsite"
 
     const val ADD_EDIT_LOTTERY = "add_edit_lottery"
@@ -124,6 +126,7 @@ fun App(id: String, model: Model) {
     val ownerCampsitesView = remember { OwnerCampsiteListView(model) }
     val ownerReservationsView = remember { OwnerReservationsView(model) }
     val ownerLotteriesView = remember { OwnerLotteriesView(model) }
+    val ownerSentNotificationsView = remember { OwnerSentNotificationsView(model) }
     val addEditCampsiteView = remember { AddEditCampsite(model) }
     val addEditLotteryView = remember { AddEditLottery(model) }
 
@@ -192,6 +195,9 @@ fun App(id: String, model: Model) {
 
         model.addView(ownerLotteriesView)
         composable(Routes.OWNER_LOTTERIES) { ownerLotteriesView.ShowScreen(navController) }
+
+        model.addView(ownerSentNotificationsView)
+        composable(Routes.OWNER_SENT_NOTIFICATIONS) { ownerSentNotificationsView.ShowScreen(navController) }
 
         model.addView(addEditCampsiteView)
         composable(Routes.ADD_EDIT_CAMPSITE) { addEditCampsiteView.ShowScreen(navController) }
