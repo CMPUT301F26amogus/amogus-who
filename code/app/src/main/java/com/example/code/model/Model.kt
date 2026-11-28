@@ -1074,17 +1074,55 @@ open class Model: ModelUpdater<View>{
     }
 
     /**
-     * get lottery associated with campsite
+     * gets one lottery by its id
      *
-     * @param lotteryId id of the campsite
+     * @param lotteryId id of the lottery, eg a campsites lotteryId, blank means no lottery
+     * @param onResult gets the lottery or null if there isnt one or it couldnt be read
      */
     fun getLotteryById(lotteryId: String, onResult: (Lottery?) -> Unit) {
-
+        if (lotteryId.isBlank()) {
+            onResult(null)
+            return
+        }
         lotteryRef.document(lotteryId).get()
-            .addOnSuccessListener { lotterySnapshot ->
-                onResult(lotterySnapshot.toObject(Lottery::class.java))
+            .addOnSuccessListener { snapshot ->
+                val lottery = try {
+                    snapshot.toObject(Lottery::class.java)
+                } catch (e: RuntimeException) {
+                    Log.e("Model", "Skipping unreadable lottery ${snapshot.id}", e)
+                    null
+                }
+                onResult(lottery)
             }
             .addOnFailureListener { onResult(null) }
+    }
+
+    /**
+     * gets the lotteries an owner runs or co-owns
+     *
+     * Lottery.ownerId is a list so an owner who accepted an invite is found too
+     *
+     * @param ownerId device id of the owner, the current user by default
+     * @param onResult gets the lotteries or an empty list if it failed
+     */
+    fun getLotteriesByOwner(ownerId: String = currentDeviceId, onResult: (List<Lottery>) -> Unit) {
+        if (ownerId.isBlank()) {
+            onResult(emptyList())
+            return
+        }
+        lotteryRef.whereArrayContains("ownerId", ownerId).get()
+            .addOnSuccessListener { documents ->
+                // one bad document shouldnt hide the rest, same as toCampsites
+                onResult(documents.documents.mapNotNull { d ->
+                    try {
+                        d.toObject(Lottery::class.java)
+                    } catch (e: RuntimeException) {
+                        Log.e("Model", "Skipping unreadable lottery ${d.id}", e)
+                        null
+                    }
+                })
+            }
+            .addOnFailureListener { onResult(emptyList()) }
     }
 
     /**
