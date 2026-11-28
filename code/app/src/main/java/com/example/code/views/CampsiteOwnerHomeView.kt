@@ -26,6 +26,7 @@ class CampsiteOwnerHomeView : HomeView() {
         Option("My Campsites", Routes.OWNER_CAMPSITES),
         Option("Reservations", Routes.OWNER_RESERVATIONS),
         Option("Lotteries", Routes.OWNER_LOTTERIES),
+        Option("Sent Notifications", Routes.OWNER_SENT_NOTIFICATIONS),
         Option("QR Codes", ""),
         Option("Messages", Routes.MESSAGES),
     )

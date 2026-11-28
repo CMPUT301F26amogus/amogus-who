@@ -1178,8 +1178,13 @@ open class Model: ModelUpdater<View>{
         }
             .addOnSuccessListener { (winners, others) ->
                 // only the device whose transaction went through gets here, so nobody is notified twice
-                winners.forEach { notifyUser("You won the lottery, you can book your dates now", it) }
-                others.forEach { notifyUser("You were not selected in the lottery this time", it) }
+                // the owner drawing is the sender so it shows in their sent notifications (US 02.10.02)
+                winners.forEach {
+                    notifyUser("You won the lottery, you can book your dates now", it, currentDeviceId, lotId)
+                }
+                others.forEach {
+                    notifyUser("You were not selected in the lottery this time", it, currentDeviceId, lotId)
+                }
                 onResult(Result.success(winners))
                 notifyViews()
             }
@@ -1476,7 +1481,7 @@ open class Model: ModelUpdater<View>{
         fun rejectReservation(reservation: Reservation, onResult: (Result<Unit>) -> Unit = {}) {
             endActiveReservation(reservation.id, ReservationStatus.REJECTED) { result ->
                 if (result.isSuccess) {
-                    notifyReservationEnded(reservation, reservation.entrantId, "was rejected by the campsite owner")
+                    notifyReservationEnded(reservation, reservation.entrantId, "was rejected by the campsite owner", currentDeviceId)
                 }
                 onResult(result)
             }
@@ -1511,14 +1516,16 @@ open class Model: ModelUpdater<View>{
          * @param reservation the reservation that ended
          * @param entrantId who to tell and nobody gets told if its blank
          * @param what how it ended like was cancelled
+         * @param ownerId the owner who ended it, or blank if the entrant cancelled it themselves (US 02.10.02)
          */
-        private fun notifyReservationEnded(reservation: Reservation, entrantId: String, what: String) {
+        private fun notifyReservationEnded(reservation: Reservation, entrantId: String, what: String, ownerId: String = "") {
             if (entrantId.isBlank()) return
             val sendNotification = { campsite: Campsite? ->
                 val where = campsite?.name ?: "your campsite"
                 notifyUser(
                     "Your reservation at $where from ${reservation.checkIn} to ${reservation.checkOut} $what",
-                    entrantId
+                    entrantId,
+                    ownerId
                 )
             }
             // firestore throws on a blank document id so skip the lookup then
@@ -2286,7 +2293,8 @@ open class Model: ModelUpdater<View>{
                 snapshot.documents.mapNotNull { it.getString("entrantId") }.distinct().forEach {
                     notifyUser(
                         "Your reservation was cancelled because the owner removed their campsite",
-                        it
+                        it,
+                        currentDeviceId
                     )
                 }
                 batch.commit()
